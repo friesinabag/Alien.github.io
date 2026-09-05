@@ -1,1 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ALIEN</title>
+    <link rel="stylesheet" href="style.css">
+</head>
 
+<body>
+
+<div id="app">
+
+    <!-- =========================
+         SETUP SCREEN
+    ========================== -->
+    <section id="setupScreen" class="screen active">
+
+        <div class="logo">
+            <div class="logo-icon">👽</div>
+            <h1>ALIEN</h1>
+            <p>WHO CAN YOU TRUST?</p>
+        </div>
+
+        <div class="panel">
+
+            <h2>GAME SETUP</h2>
+
+            <div class="player-count">
+                <button id="removePlayer" class="small-btn">−</button>
+
+                <div>
+                    <span id="playerCount">6</span>
+                    <small>PLAYERS</small>
+                </div>
+
+                <button id="addPlayer" class="small-btn">+</button>
+            </div>
+
+            <button id="randomizeRoles" class="secondary-btn">
+                🎲 RANDOMIZE ROLES
+            </button>
+
+            <div id="playersSetup"></div>
+
+            <button id="startGame" class="primary-btn">
+                🚀 START GAME
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         PASS PHONE SCREEN
+    ========================== -->
+    <section id="passScreen" class="screen">
+
+        <div class="pass-container">
+
+            <div class="pass-icon">📱</div>
+
+            <h1 id="passTitle">PASS THE PHONE</h1>
+
+            <p id="passText">
+                Give the phone to the next player.
+            </p>
+
+            <button id="readyButton" class="primary-btn">
+                I'M READY
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         SECRET ACTION SCREEN
+    ========================== -->
+    <section id="actionScreen" class="screen">
+
+        <div class="top-bar">
+            <div>
+                <span id="actionRound">ROUND 1</span>
+                <span id="actionStage">STAGE 1/10</span>
+            </div>
+        </div>
+
+        <div class="action-container">
+
+            <p class="secret-label">🔒 SECRET ACTION</p>
+
+            <h1 id="actionPlayer">Player</h1>
+
+            <div id="actionRole" class="role-card"></div>
+
+            <p id="actionDescription" class="action-description"></p>
+
+            <div id="actionOptions"></div>
+
+            <button id="confirmAction" class="primary-btn" disabled>
+                CONFIRM
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         ACTION COMPLETE
+    ========================== -->
+    <section id="actionDoneScreen" class="screen">
+
+        <div class="pass-container">
+
+            <div class="pass-icon">🔒</div>
+
+            <h1>ACTION COMPLETE</h1>
+
+            <p>
+                Pass the phone to the next player.
+            </p>
+
+            <button id="nextPlayerButton" class="primary-btn">
+                NEXT PLAYER
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         ROUND RESULTS
+    ========================== -->
+    <section id="resultsScreen" class="screen">
+
+        <div class="panel">
+
+            <h1>ROUND RESULTS</h1>
+
+            <div id="resultsContent"></div>
+
+            <button id="discussionButton" class="primary-btn">
+                START DISCUSSION
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         DISCUSSION
+    ========================== -->
+    <section id="discussionScreen" class="screen">
+
+        <div class="panel center">
+
+            <div class="discussion-icon">🗣️</div>
+
+            <h1>DISCUSS</h1>
+
+            <p>
+                Talk with the crew and decide who you trust.
+            </p>
+
+            <div id="discussionInfo"></div>
+
+            <button id="voteButton" class="primary-btn">
+                GO TO VOTE
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         VOTING
+    ========================== -->
+    <section id="voteScreen" class="screen">
+
+        <div class="panel">
+
+            <div class="vote-header">
+                <h1>🗳️ VOTING</h1>
+
+                <div class="round-stage">
+                    <strong id="voteRound">ROUND 1</strong>
+                    <strong id="voteStage">STAGE 1 / 10</strong>
+                </div>
+            </div>
+
+            <p class="vote-instruction">
+                Choose a player to eject or skip.
+            </p>
+
+            <div id="voteOptions"></div>
+
+            <button id="skipVote" class="secondary-btn">
+                ⏭️ SKIP
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         VOTE RESULTS
+    ========================== -->
+    <section id="voteResultScreen" class="screen">
+
+        <div class="panel center">
+
+            <h1>VOTE RESULT</h1>
+
+            <div id="voteResultContent"></div>
+
+            <button id="continueAfterVote" class="primary-btn">
+                CONTINUE
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         CAPTAIN TIE BREAK
+    ========================== -->
+    <section id="captainScreen" class="screen">
+
+        <div class="panel">
+
+            <div class="discussion-icon">👨‍✈️</div>
+
+            <h1>CAPTAIN'S DECISION</h1>
+
+            <p>
+                The vote is tied.
+                The Captain must choose who is ejected.
+            </p>
+
+            <div id="captainOptions"></div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         EARTH LIFELINE
+    ========================== -->
+    <section id="lifelineScreen" class="screen">
+
+        <div class="panel center">
+
+            <div class="earth-icon">🌍</div>
+
+            <h1>MESSAGE FROM EARTH</h1>
+
+            <div id="lifelineMessage" class="lifeline"></div>
+
+            <button id="lifelineContinue" class="primary-btn">
+                CONTINUE
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         EJECTED PLAYER
+    ========================== -->
+    <section id="ejectedScreen" class="screen">
+
+        <div class="panel center">
+
+            <div id="ejectedIcon" class="big-icon">🚪</div>
+
+            <h1 id="ejectedTitle">PLAYER EJECTED</h1>
+
+            <div id="ejectedContent"></div>
+
+            <button id="ejectedContinue" class="primary-btn">
+                CONTINUE
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         STAGE PROGRESS
+    ========================== -->
+    <section id="stageScreen" class="screen">
+
+        <div class="panel center">
+
+            <div class="stage-icon">🚀</div>
+
+            <h1>STAGE COMPLETE</h1>
+
+            <div id="stageContent"></div>
+
+            <button id="stageContinue" class="primary-btn">
+                NEXT ROUND
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         WIN SCREEN
+    ========================== -->
+    <section id="winScreen" class="screen">
+
+        <div class="panel center">
+
+            <div id="winIcon" class="win-icon">🏆</div>
+
+            <h1 id="winTitle">HUMANS WIN!</h1>
+
+            <p id="winReason"></p>
+
+            <button onclick="location.reload()" class="primary-btn">
+                PLAY AGAIN
+            </button>
+
+        </div>
+
+    </section>
+
+
+</div>
+
+<script src="game.js"></script>
+
+</body>
+</html>
