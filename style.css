@@ -19,9 +19,19 @@
 
 body {
   background:
-    radial-gradient(circle at top, #182331 0%, #080b10 55%);
+    radial-gradient(
+      circle at top,
+      #182331 0%,
+      #080b10 55%
+    );
+
   color: var(--text);
-  font-family: Arial, Helvetica, sans-serif;
+
+  font-family:
+    Arial,
+    Helvetica,
+    sans-serif;
+
   min-height: 100vh;
 }
 
@@ -39,15 +49,21 @@ button {
   display: none !important;
 }
 
+
 /* =========================
    TOP BAR
 ========================= */
 
 .top-bar {
   min-height: 70px;
+
   padding: 15px 20px;
-  border-bottom: 1px solid var(--border);
-  background: rgba(8, 11, 16, 0.95);
+
+  border-bottom:
+    1px solid var(--border);
+
+  background:
+    rgba(8, 11, 16, 0.95);
 
   display: flex;
   justify-content: space-between;
@@ -65,26 +81,33 @@ button {
 
 .game-info {
   display: flex;
-  gap: 10px;
+  gap: 8px;
+
   font-size: 12px;
   font-weight: bold;
 }
 
-.game-info span,
-.round-stage span {
+.game-info span {
   border: 1px solid var(--border);
+
   padding: 7px 9px;
+
   border-radius: 7px;
+
   background: var(--panel);
 }
 
+
 /* =========================
-   SCREENS
+   SCREEN
 ========================= */
 
 .screen {
   width: 100%;
-  min-height: calc(100vh - 70px);
+
+  min-height:
+    calc(100vh - 70px);
+
   padding: 25px 15px;
 
   display: flex;
@@ -95,12 +118,20 @@ button {
 .panel {
   width: 100%;
   max-width: 650px;
-  background: rgba(17, 22, 29, 0.97);
-  border: 1px solid var(--border);
+
+  background:
+    rgba(17, 22, 29, 0.97);
+
+  border:
+    1px solid var(--border);
+
   border-radius: 18px;
+
   padding: 25px;
 
-  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.35);
+  box-shadow:
+    0 15px 50px
+    rgba(0, 0, 0, 0.35);
 }
 
 .center {
@@ -117,25 +148,36 @@ button {
   margin-bottom: 25px;
 }
 
+
 /* =========================
    FORMS
 ========================= */
 
 label {
   display: block;
+
   margin-bottom: 8px;
+
   color: var(--muted);
+
   font-size: 14px;
 }
 
 select,
 input {
   width: 100%;
+
   background: #0c1016;
+
   color: var(--text);
-  border: 1px solid var(--border);
+
+  border:
+    1px solid var(--border);
+
   border-radius: 9px;
+
   padding: 13px;
+
   outline: none;
 }
 
@@ -144,16 +186,23 @@ input:focus {
   border-color: var(--accent);
 }
 
+
 /* =========================
    BUTTONS
 ========================= */
 
 button {
   border: none;
+
   border-radius: 10px;
+
   padding: 14px 18px;
+
   font-weight: bold;
-  transition: transform 0.12s, opacity 0.12s;
+
+  transition:
+    transform 0.12s,
+    opacity 0.12s;
 }
 
 button:active {
@@ -166,50 +215,85 @@ button:hover {
 
 .primary-button {
   width: 100%;
+
   margin-top: 18px;
+
   background: var(--accent);
+
   color: #061016;
 }
 
 .secondary-button {
   width: 100%;
+
   margin-top: 12px;
+
   background: var(--panel-light);
+
   color: var(--text);
-  border: 1px solid var(--border);
+
+  border:
+    1px solid var(--border);
 }
 
-.danger-button {
-  background: var(--danger);
-  color: white;
-}
 
 /* =========================
-   SETUP
+   RANDOM ROLE STATUS
 ========================= */
 
-.setup-actions {
-  margin: 15px 0;
+.random-status {
+  margin-top: 12px;
+
+  padding: 12px;
+
+  border-radius: 10px;
+
+  background:
+    rgba(98, 216, 255, 0.08);
+
+  border:
+    1px solid var(--accent);
+
+  color: var(--accent);
+
+  text-align: center;
+
+  font-size: 13px;
 }
+
+
+/* =========================
+   PLAYER SETUP
+========================= */
 
 .players-setup {
   display: flex;
+
   flex-direction: column;
+
   gap: 12px;
+
   margin-top: 18px;
 }
 
 .player-setup {
   background: #0c1016;
-  border: 1px solid var(--border);
+
+  border:
+    1px solid var(--border);
+
   border-radius: 12px;
+
   padding: 14px;
 }
 
 .player-header {
   display: flex;
+
   justify-content: space-between;
+
   align-items: center;
+
   margin-bottom: 10px;
 }
 
@@ -219,6 +303,7 @@ button:hover {
 
 .player-role-status {
   font-size: 12px;
+
   color: var(--muted);
 }
 
@@ -226,52 +311,91 @@ button:hover {
   margin-top: 8px;
 }
 
+
+/*
+   IMPORTANT:
+
+   When roles are randomised, the visible
+   role control becomes a simple RANDOM
+   display. The actual role is NOT placed
+   inside this select.
+*/
+
+.role-select.random-hidden {
+  pointer-events: none;
+
+  color: var(--text);
+
+  opacity: 1;
+
+  background: #0c1016;
+}
+
+
 /* =========================
-   ROLE
+   ROLE SCREEN
 ========================= */
 
 .big-icon {
   font-size: 55px;
+
   margin-bottom: 15px;
 }
 
 .role-icon {
   font-size: 65px;
+
   margin: 10px 0;
 }
 
 .small-label {
   color: var(--muted);
+
   font-size: 12px;
+
   letter-spacing: 2px;
+
   font-weight: bold;
 }
 
 .role-description {
   color: var(--muted);
+
   line-height: 1.6;
+
   margin: 15px 0;
 }
 
 .hostiles-box {
   margin-top: 20px;
+
   padding: 15px;
-  border: 1px solid var(--danger);
+
+  border:
+    1px solid var(--danger);
+
   border-radius: 12px;
-  background: rgba(255, 93, 105, 0.08);
+
+  background:
+    rgba(255, 93, 105, 0.08);
 }
 
 .hostiles-box h3 {
   color: var(--danger);
+
   font-size: 14px;
+
   margin-bottom: 10px;
 }
 
 #hostilesList {
   display: flex;
+
   flex-direction: column;
+
   gap: 6px;
 }
+
 
 /* =========================
    ACTIONS
@@ -279,22 +403,32 @@ button:hover {
 
 .action-options {
   display: grid;
+
   gap: 10px;
+
   margin-top: 20px;
 }
 
 .action-option {
   width: 100%;
+
   text-align: left;
+
   background: #0c1016;
-  border: 1px solid var(--border);
+
+  border:
+    1px solid var(--border);
+
   color: var(--text);
 }
 
 .action-option.selected {
   border-color: var(--accent);
-  background: rgba(98, 216, 255, 0.1);
+
+  background:
+    rgba(98, 216, 255, 0.1);
 }
+
 
 /* =========================
    DISCUSSION / VOTING
@@ -302,41 +436,76 @@ button:hover {
 
 .round-stage {
   display: flex;
+
   gap: 8px;
+
   flex-wrap: wrap;
+
   margin-bottom: 20px;
+}
+
+.round-stage span {
+  border:
+    1px solid var(--border);
+
+  padding: 7px 9px;
+
+  border-radius: 7px;
+
+  background: var(--panel);
+
+  font-size: 12px;
+
+  font-weight: bold;
 }
 
 .results-box {
   background: #0c1016;
-  border: 1px solid var(--border);
+
+  border:
+    1px solid var(--border);
+
   border-radius: 12px;
+
   padding: 16px;
+
   margin: 15px 0;
+
   line-height: 1.6;
 }
 
 .vote-options {
   display: grid;
+
   gap: 10px;
+
   margin-top: 18px;
 }
 
 .vote-option {
   background: #0c1016;
+
   color: var(--text);
-  border: 1px solid var(--border);
+
+  border:
+    1px solid var(--border);
+
   text-align: left;
+
+  width: 100%;
 }
 
 .vote-option.selected {
   border-color: var(--accent);
-  background: rgba(98, 216, 255, 0.1);
+
+  background:
+    rgba(98, 216, 255, 0.1);
 }
 
 .vote-option.skip {
   border-color: var(--warning);
 }
+
 
 /* =========================
    LIFELINE
@@ -344,14 +513,24 @@ button:hover {
 
 .lifeline-message {
   padding: 22px;
+
   margin-top: 20px;
-  border: 1px solid var(--warning);
+
+  border:
+    1px solid var(--warning);
+
   border-radius: 12px;
-  background: rgba(255, 209, 102, 0.08);
+
+  background:
+    rgba(255, 209, 102, 0.08);
+
   font-size: 19px;
+
   font-weight: bold;
+
   line-height: 1.5;
 }
+
 
 /* =========================
    SYSTEMS
@@ -359,18 +538,26 @@ button:hover {
 
 .systems-list {
   display: grid;
+
   gap: 10px;
+
   margin-top: 20px;
 }
 
 .system {
   padding: 15px;
+
   border-radius: 11px;
-  border: 1px solid var(--border);
+
+  border:
+    1px solid var(--border);
+
   background: #0c1016;
 
   display: flex;
+
   justify-content: space-between;
+
   align-items: center;
 }
 
@@ -380,6 +567,7 @@ button:hover {
 
 .system-status {
   font-size: 12px;
+
   font-weight: bold;
 }
 
@@ -391,11 +579,13 @@ button:hover {
   color: var(--danger);
 }
 
+
 /* =========================
    MOBILE
 ========================= */
 
 @media (max-width: 500px) {
+
   .top-bar {
     padding: 12px 14px;
   }
@@ -405,8 +595,9 @@ button:hover {
   }
 
   .game-info {
-    gap: 5px;
-    font-size: 10px;
+    gap: 4px;
+
+    font-size: 9px;
   }
 
   .game-info span {
@@ -415,6 +606,7 @@ button:hover {
 
   .panel {
     padding: 20px 16px;
+
     border-radius: 14px;
   }
 
