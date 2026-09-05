@@ -1,1 +1,508 @@
 
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+:root {
+    --bg: #070b12;
+    --panel: #101722;
+    --panel2: #151e2b;
+    --border: #293545;
+    --text: #f4f7fb;
+    --muted: #8d9aaa;
+    --accent: #58a6ff;
+    --danger: #ff5364;
+    --success: #51d88a;
+    --warning: #ffc857;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+    min-height: 100vh;
+}
+
+button,
+input,
+select {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+#app {
+    min-height: 100vh;
+}
+
+
+/* =========================
+   SCREENS
+========================= */
+
+.screen {
+    display: none;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.screen.active {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+
+/* =========================
+   LOGO
+========================= */
+
+.logo {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.logo-icon {
+    font-size: 65px;
+}
+
+.logo h1 {
+    margin: 5px 0;
+    font-size: 50px;
+    letter-spacing: 8px;
+}
+
+.logo p {
+    color: var(--muted);
+    letter-spacing: 3px;
+    font-size: 12px;
+}
+
+
+/* =========================
+   PANELS
+========================= */
+
+.panel {
+    width: 100%;
+    max-width: 550px;
+    margin: 0 auto;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 22px;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+}
+
+.panel h1,
+.panel h2 {
+    text-align: center;
+    margin-top: 0;
+}
+
+.center {
+    text-align: center;
+}
+
+
+/* =========================
+   BUTTONS
+========================= */
+
+.primary-btn,
+.secondary-btn,
+.small-btn {
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-weight: bold;
+}
+
+.primary-btn {
+    width: 100%;
+    padding: 16px;
+    margin-top: 18px;
+    background: var(--accent);
+    font-size: 16px;
+}
+
+.primary-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.secondary-btn {
+    width: 100%;
+    padding: 14px;
+    margin: 10px 0;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+}
+
+.small-btn {
+    width: 55px;
+    height: 55px;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    font-size: 26px;
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+
+/* =========================
+   PLAYER COUNT
+========================= */
+
+.player-count {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 25px;
+    margin: 20px 0;
+}
+
+.player-count > div {
+    min-width: 80px;
+    text-align: center;
+}
+
+.player-count span {
+    display: block;
+    font-size: 32px;
+    font-weight: bold;
+}
+
+.player-count small {
+    color: var(--muted);
+}
+
+
+/* =========================
+   PLAYER SETUP
+========================= */
+
+.setup-player {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    margin: 10px 0;
+}
+
+.setup-player-title {
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.setup-row {
+    display: flex;
+    gap: 8px;
+}
+
+.setup-row input,
+.setup-row select {
+    width: 50%;
+    min-width: 0;
+    background: #0b111a;
+    color: white;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 11px;
+}
+
+
+/* =========================
+   PASS SCREEN
+========================= */
+
+.pass-container {
+    width: 100%;
+    max-width: 450px;
+    margin: auto;
+    text-align: center;
+}
+
+.pass-icon {
+    font-size: 75px;
+    margin-bottom: 20px;
+}
+
+.pass-container h1 {
+    font-size: 30px;
+}
+
+.pass-container p {
+    color: var(--muted);
+}
+
+
+/* =========================
+   TOP BAR
+========================= */
+
+.top-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 14px 18px;
+    background: #0a1019;
+    border-bottom: 1px solid var(--border);
+    z-index: 5;
+}
+
+.top-bar div {
+    display: flex;
+    justify-content: space-between;
+    max-width: 600px;
+    margin: auto;
+}
+
+.top-bar span {
+    font-size: 13px;
+    font-weight: bold;
+}
+
+
+/* =========================
+   ACTION
+========================= */
+
+.action-container {
+    width: 100%;
+    max-width: 550px;
+    margin: 60px auto 0;
+}
+
+.secret-label {
+    text-align: center;
+    color: var(--warning);
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+.action-container h1 {
+    text-align: center;
+}
+
+.role-card {
+    padding: 18px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 15px;
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    margin: 15px 0;
+}
+
+.action-description {
+    text-align: center;
+    color: var(--muted);
+    line-height: 1.5;
+}
+
+.option-grid {
+    display: grid;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.action-option {
+    width: 100%;
+    padding: 15px;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: white;
+    text-align: left;
+}
+
+.action-option.selected {
+    border-color: var(--accent);
+    background: rgba(88, 166, 255, 0.12);
+}
+
+
+/* =========================
+   RESULTS
+========================= */
+
+.result-card {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 15px;
+    margin: 10px 0;
+}
+
+.result-card strong {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.online {
+    color: var(--success);
+}
+
+.offline {
+    color: var(--danger);
+}
+
+
+/* =========================
+   DISCUSSION
+========================= */
+
+.discussion-icon,
+.earth-icon,
+.stage-icon,
+.win-icon {
+    font-size: 65px;
+}
+
+
+/* =========================
+   VOTING
+========================= */
+
+.vote-header {
+    text-align: center;
+}
+
+.round-stage {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 15px 0;
+    flex-wrap: wrap;
+}
+
+.round-stage strong {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+}
+
+.vote-instruction {
+    text-align: center;
+    color: var(--muted);
+}
+
+.vote-option {
+    width: 100%;
+    padding: 15px;
+    margin: 7px 0;
+    background: var(--panel2);
+    color: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    text-align: left;
+}
+
+.vote-option small {
+    display: block;
+    color: var(--muted);
+    margin-top: 3px;
+}
+
+.vote-option:disabled {
+    opacity: 0.35;
+}
+
+
+/* =========================
+   LIFELINE
+========================= */
+
+.lifeline {
+    margin: 25px 0;
+    padding: 25px 18px;
+    border: 1px solid var(--accent);
+    border-radius: 15px;
+    background: rgba(88, 166, 255, 0.08);
+    font-size: 20px;
+    font-weight: bold;
+    line-height: 1.5;
+}
+
+
+/* =========================
+   STAGE
+========================= */
+
+.stage-icon {
+    margin-bottom: 10px;
+}
+
+.stage-progress {
+    margin: 20px 0;
+}
+
+.stage-bar {
+    height: 18px;
+    background: #090e15;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
+.stage-fill {
+    height: 100%;
+    background: var(--success);
+}
+
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 500px) {
+
+    .screen {
+        padding: 14px;
+    }
+
+    .panel {
+        padding: 18px;
+    }
+
+    .logo h1 {
+        font-size: 42px;
+    }
+
+    .logo-icon {
+        font-size: 55px;
+    }
+
+    .setup-row {
+        flex-direction: column;
+    }
+
+    .setup-row input,
+    .setup-row select {
+        width: 100%;
+    }
+
+    .action-container {
+        margin-top: 65px;
+    }
+}
