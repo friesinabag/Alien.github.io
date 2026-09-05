@@ -1,508 +1,428 @@
-
 * {
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 :root {
-    --bg: #070b12;
-    --panel: #101722;
-    --panel2: #151e2b;
-    --border: #293545;
-    --text: #f4f7fb;
-    --muted: #8d9aaa;
-    --accent: #58a6ff;
-    --danger: #ff5364;
-    --success: #51d88a;
-    --warning: #ffc857;
-}
-
-html,
-body {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    min-height: 100%;
-    background: var(--bg);
-    color: var(--text);
-    font-family: Arial, Helvetica, sans-serif;
+  --bg: #080b10;
+  --panel: #11161d;
+  --panel-light: #19212b;
+  --border: #303a46;
+  --text: #f1f4f7;
+  --muted: #9ba7b5;
+  --accent: #62d8ff;
+  --danger: #ff5d69;
+  --success: #63e6a5;
+  --warning: #ffd166;
 }
 
 body {
-    min-height: 100vh;
+  background:
+    radial-gradient(circle at top, #182331 0%, #080b10 55%);
+  color: var(--text);
+  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
 }
 
 button,
-input,
-select {
-    font: inherit;
+select,
+input {
+  font: inherit;
 }
 
 button {
-    cursor: pointer;
-    touch-action: manipulation;
+  cursor: pointer;
 }
 
-#app {
-    min-height: 100vh;
+.hidden {
+  display: none !important;
 }
-
-
-/* =========================
-   SCREENS
-========================= */
-
-.screen {
-    display: none;
-    min-height: 100vh;
-    padding: 20px;
-}
-
-.screen.active {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-
-/* =========================
-   LOGO
-========================= */
-
-.logo {
-    text-align: center;
-    margin-bottom: 25px;
-}
-
-.logo-icon {
-    font-size: 65px;
-}
-
-.logo h1 {
-    margin: 5px 0;
-    font-size: 50px;
-    letter-spacing: 8px;
-}
-
-.logo p {
-    color: var(--muted);
-    letter-spacing: 3px;
-    font-size: 12px;
-}
-
-
-/* =========================
-   PANELS
-========================= */
-
-.panel {
-    width: 100%;
-    max-width: 550px;
-    margin: 0 auto;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 18px;
-    padding: 22px;
-    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
-}
-
-.panel h1,
-.panel h2 {
-    text-align: center;
-    margin-top: 0;
-}
-
-.center {
-    text-align: center;
-}
-
-
-/* =========================
-   BUTTONS
-========================= */
-
-.primary-btn,
-.secondary-btn,
-.small-btn {
-    border: none;
-    border-radius: 12px;
-    color: white;
-    font-weight: bold;
-}
-
-.primary-btn {
-    width: 100%;
-    padding: 16px;
-    margin-top: 18px;
-    background: var(--accent);
-    font-size: 16px;
-}
-
-.primary-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-
-.secondary-btn {
-    width: 100%;
-    padding: 14px;
-    margin: 10px 0;
-    background: var(--panel2);
-    border: 1px solid var(--border);
-}
-
-.small-btn {
-    width: 55px;
-    height: 55px;
-    background: var(--panel2);
-    border: 1px solid var(--border);
-    font-size: 26px;
-}
-
-button:active {
-    transform: scale(0.98);
-}
-
-
-/* =========================
-   PLAYER COUNT
-========================= */
-
-.player-count {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 25px;
-    margin: 20px 0;
-}
-
-.player-count > div {
-    min-width: 80px;
-    text-align: center;
-}
-
-.player-count span {
-    display: block;
-    font-size: 32px;
-    font-weight: bold;
-}
-
-.player-count small {
-    color: var(--muted);
-}
-
-
-/* =========================
-   PLAYER SETUP
-========================= */
-
-.setup-player {
-    background: var(--panel2);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 12px;
-    margin: 10px 0;
-}
-
-.setup-player-title {
-    font-weight: bold;
-    margin-bottom: 8px;
-}
-
-.setup-row {
-    display: flex;
-    gap: 8px;
-}
-
-.setup-row input,
-.setup-row select {
-    width: 50%;
-    min-width: 0;
-    background: #0b111a;
-    color: white;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 11px;
-}
-
-
-/* =========================
-   PASS SCREEN
-========================= */
-
-.pass-container {
-    width: 100%;
-    max-width: 450px;
-    margin: auto;
-    text-align: center;
-}
-
-.pass-icon {
-    font-size: 75px;
-    margin-bottom: 20px;
-}
-
-.pass-container h1 {
-    font-size: 30px;
-}
-
-.pass-container p {
-    color: var(--muted);
-}
-
 
 /* =========================
    TOP BAR
 ========================= */
 
 .top-bar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    padding: 14px 18px;
-    background: #0a1019;
-    border-bottom: 1px solid var(--border);
-    z-index: 5;
+  min-height: 70px;
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(8, 11, 16, 0.95);
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
-.top-bar div {
-    display: flex;
-    justify-content: space-between;
-    max-width: 600px;
-    margin: auto;
+.top-bar h1 {
+  font-size: 25px;
+  letter-spacing: 2px;
 }
 
-.top-bar span {
-    font-size: 13px;
-    font-weight: bold;
+.game-info {
+  display: flex;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: bold;
 }
 
+.game-info span,
+.round-stage span {
+  border: 1px solid var(--border);
+  padding: 7px 9px;
+  border-radius: 7px;
+  background: var(--panel);
+}
 
 /* =========================
-   ACTION
+   SCREENS
 ========================= */
 
-.action-container {
-    width: 100%;
-    max-width: 550px;
-    margin: 60px auto 0;
+.screen {
+  width: 100%;
+  min-height: calc(100vh - 70px);
+  padding: 25px 15px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.secret-label {
-    text-align: center;
-    color: var(--warning);
-    font-size: 12px;
-    font-weight: bold;
-    letter-spacing: 2px;
+.panel {
+  width: 100%;
+  max-width: 650px;
+  background: rgba(17, 22, 29, 0.97);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 25px;
+
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.35);
 }
 
-.action-container h1 {
-    text-align: center;
+.center {
+  text-align: center;
 }
 
-.role-card {
-    padding: 18px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 15px;
-    text-align: center;
-    font-size: 24px;
-    font-weight: bold;
-    margin: 15px 0;
+.panel h2 {
+  margin-bottom: 15px;
+  font-size: 25px;
 }
 
-.action-description {
-    text-align: center;
-    color: var(--muted);
-    line-height: 1.5;
+.subtitle {
+  color: var(--muted);
+  margin-bottom: 25px;
 }
 
-.option-grid {
-    display: grid;
-    gap: 10px;
-    margin-top: 18px;
+/* =========================
+   FORMS
+========================= */
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+select,
+input {
+  width: 100%;
+  background: #0c1016;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 13px;
+  outline: none;
+}
+
+select:focus,
+input:focus {
+  border-color: var(--accent);
+}
+
+/* =========================
+   BUTTONS
+========================= */
+
+button {
+  border: none;
+  border-radius: 10px;
+  padding: 14px 18px;
+  font-weight: bold;
+  transition: transform 0.12s, opacity 0.12s;
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+.primary-button {
+  width: 100%;
+  margin-top: 18px;
+  background: var(--accent);
+  color: #061016;
+}
+
+.secondary-button {
+  width: 100%;
+  margin-top: 12px;
+  background: var(--panel-light);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.danger-button {
+  background: var(--danger);
+  color: white;
+}
+
+/* =========================
+   SETUP
+========================= */
+
+.setup-actions {
+  margin: 15px 0;
+}
+
+.players-setup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.player-setup {
+  background: #0c1016;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.player-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.player-number {
+  font-weight: bold;
+}
+
+.player-role-status {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.role-select {
+  margin-top: 8px;
+}
+
+/* =========================
+   ROLE
+========================= */
+
+.big-icon {
+  font-size: 55px;
+  margin-bottom: 15px;
+}
+
+.role-icon {
+  font-size: 65px;
+  margin: 10px 0;
+}
+
+.small-label {
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 2px;
+  font-weight: bold;
+}
+
+.role-description {
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 15px 0;
+}
+
+.hostiles-box {
+  margin-top: 20px;
+  padding: 15px;
+  border: 1px solid var(--danger);
+  border-radius: 12px;
+  background: rgba(255, 93, 105, 0.08);
+}
+
+.hostiles-box h3 {
+  color: var(--danger);
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+#hostilesList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* =========================
+   ACTIONS
+========================= */
+
+.action-options {
+  display: grid;
+  gap: 10px;
+  margin-top: 20px;
 }
 
 .action-option {
-    width: 100%;
-    padding: 15px;
-    background: var(--panel2);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    color: white;
-    text-align: left;
+  width: 100%;
+  text-align: left;
+  background: #0c1016;
+  border: 1px solid var(--border);
+  color: var(--text);
 }
 
 .action-option.selected {
-    border-color: var(--accent);
-    background: rgba(88, 166, 255, 0.12);
+  border-color: var(--accent);
+  background: rgba(98, 216, 255, 0.1);
 }
-
 
 /* =========================
-   RESULTS
+   DISCUSSION / VOTING
 ========================= */
-
-.result-card {
-    background: var(--panel2);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 15px;
-    margin: 10px 0;
-}
-
-.result-card strong {
-    display: block;
-    margin-bottom: 5px;
-}
-
-.online {
-    color: var(--success);
-}
-
-.offline {
-    color: var(--danger);
-}
-
-
-/* =========================
-   DISCUSSION
-========================= */
-
-.discussion-icon,
-.earth-icon,
-.stage-icon,
-.win-icon {
-    font-size: 65px;
-}
-
-
-/* =========================
-   VOTING
-========================= */
-
-.vote-header {
-    text-align: center;
-}
 
 .round-stage {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin: 15px 0;
-    flex-wrap: wrap;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
 }
 
-.round-stage strong {
-    background: var(--panel2);
-    border: 1px solid var(--border);
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-size: 12px;
+.results-box {
+  background: #0c1016;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 15px 0;
+  line-height: 1.6;
 }
 
-.vote-instruction {
-    text-align: center;
-    color: var(--muted);
+.vote-options {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
 }
 
 .vote-option {
-    width: 100%;
-    padding: 15px;
-    margin: 7px 0;
-    background: var(--panel2);
-    color: white;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    text-align: left;
+  background: #0c1016;
+  color: var(--text);
+  border: 1px solid var(--border);
+  text-align: left;
 }
 
-.vote-option small {
-    display: block;
-    color: var(--muted);
-    margin-top: 3px;
+.vote-option.selected {
+  border-color: var(--accent);
+  background: rgba(98, 216, 255, 0.1);
 }
 
-.vote-option:disabled {
-    opacity: 0.35;
+.vote-option.skip {
+  border-color: var(--warning);
 }
-
 
 /* =========================
    LIFELINE
 ========================= */
 
-.lifeline {
-    margin: 25px 0;
-    padding: 25px 18px;
-    border: 1px solid var(--accent);
-    border-radius: 15px;
-    background: rgba(88, 166, 255, 0.08);
-    font-size: 20px;
-    font-weight: bold;
-    line-height: 1.5;
+.lifeline-message {
+  padding: 22px;
+  margin-top: 20px;
+  border: 1px solid var(--warning);
+  border-radius: 12px;
+  background: rgba(255, 209, 102, 0.08);
+  font-size: 19px;
+  font-weight: bold;
+  line-height: 1.5;
 }
-
 
 /* =========================
-   STAGE
+   SYSTEMS
 ========================= */
 
-.stage-icon {
-    margin-bottom: 10px;
+.systems-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 20px;
 }
 
-.stage-progress {
-    margin: 20px 0;
+.system {
+  padding: 15px;
+  border-radius: 11px;
+  border: 1px solid var(--border);
+  background: #0c1016;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.stage-bar {
-    height: 18px;
-    background: #090e15;
-    border-radius: 20px;
-    overflow: hidden;
-    border: 1px solid var(--border);
+.system-name {
+  font-weight: bold;
 }
 
-.stage-fill {
-    height: 100%;
-    background: var(--success);
+.system-status {
+  font-size: 12px;
+  font-weight: bold;
 }
 
+.online {
+  color: var(--success);
+}
+
+.offline {
+  color: var(--danger);
+}
 
 /* =========================
    MOBILE
 ========================= */
 
 @media (max-width: 500px) {
+  .top-bar {
+    padding: 12px 14px;
+  }
 
-    .screen {
-        padding: 14px;
-    }
+  .top-bar h1 {
+    font-size: 21px;
+  }
 
-    .panel {
-        padding: 18px;
-    }
+  .game-info {
+    gap: 5px;
+    font-size: 10px;
+  }
 
-    .logo h1 {
-        font-size: 42px;
-    }
+  .game-info span {
+    padding: 6px;
+  }
 
-    .logo-icon {
-        font-size: 55px;
-    }
+  .panel {
+    padding: 20px 16px;
+    border-radius: 14px;
+  }
 
-    .setup-row {
-        flex-direction: column;
-    }
+  .panel h2 {
+    font-size: 22px;
+  }
 
-    .setup-row input,
-    .setup-row select {
-        width: 100%;
-    }
-
-    .action-container {
-        margin-top: 65px;
-    }
+  .screen {
+    padding: 15px 10px;
+  }
 }
