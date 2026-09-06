@@ -9439,17 +9439,80 @@ async function joinRoom(){
      ONLINE MESSAGE HANDLER
      ========================================================= */
 
-  function handleOnlineMessage(message) {
+function handle(m){
 
-    if (
-      !message ||
-      typeof message !== "object"
-    ) {
+  if(m.type==='hello'&&ONLINE.host){
+    // existing code
+  }
 
-      return;
+  else if(m.type==='welcome'&&!ONLINE.host){
+    // existing code
+  }
 
-    }
+  else if(m.type==='public'){
+    // existing code
+  }
 
+else if(m.type==='public'){applyPublic(m);}
+
+else if(m.type==='changeName' && ONLINE.host){
+
+  const playerId = ONLINE.peerToPlayer[m.clientId];
+
+  if(!playerId) return;
+
+  const player = getPlayer(playerId);
+
+  if(!player) return;
+
+  const newName = (m.name || '')
+    .trim()
+    .slice(0,20);
+
+  if(!newName) return;
+
+  player.name = newName;
+
+  if(ONLINE.peers[m.clientId]){
+    ONLINE.peers[m.clientId].name = newName;
+  }
+
+  renderLobby();
+
+  send({
+    type:'nameChanged',
+    playerId:playerId,
+    name:newName
+  });
+
+  send({
+    type:'public',
+    ...publicState()
+  });
+}
+
+else if(m.type==='nameChanged'){
+
+  const player = getPlayer(m.playerId);
+
+  if(!player) return;
+
+  player.name = (m.name || player.name)
+    .trim()
+    .slice(0,20);
+
+  renderLobby();
+}
+
+  else if(m.type==='changeName' && ONLINE.host){
+    // change-name code
+  }
+
+  else if(m.type==='nameChanged'){
+    // name update code
+  }
+
+} 
 
     /* -----------------------------------------
        PLAYER JOINED
