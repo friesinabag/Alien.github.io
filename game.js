@@ -9240,244 +9240,112 @@ if (
      CREATE ROOM
      ========================================================= */
 
-  async function createOnlineRoom() {
+  async function createRoom(){
+  try{
+    const name = ($('hostName').value || 'Player 1')
+      .trim()
+      .slice(0,20) || 'Player 1';
 
-    try {
+    ONLINE.mode = true;
+    ONLINE.host = true;
+    ONLINE.code = code();
 
-      if (!onlineSupabase) {
+    game.players = [{
+      id:'p1',
+      name:name,
+      role:'survivor',
+      alive:true,
+      originalRole:'survivor',
+      infectionRound:null,
+      hasInfected:false
+    }];
 
-        throw new Error(
-          "Supabase is not available."
-        );
+    await connect(ONLINE.code);
 
-      }
+    ONLINE.peers[ONLINE.clientId] = {
+      clientId:ONLINE.clientId,
+      name:name,
+      playerId:'p1'
+    };
 
+    ONLINE.playerToPeer.p1 = ONLINE.clientId;
+    ONLINE.peerToPlayer[ONLINE.clientId] = 'p1';
 
-      const name =
-        (
-          $("onlineHostName").value ||
-          "Player 1"
-        )
-          .trim()
-          .slice(0, 20) ||
-        "Player 1";
+    $('createBox').style.display = 'none';
+    $('onlineLobby').style.display = 'block';
+    $('onlineCode').textContent = ONLINE.code;
+    $('onlineSetupBtn').disabled = true;
 
+    renderLobby();
+    status('Room created. Share the code with the other players.');
 
-      ONLINE.mode = true;
-      ONLINE.host = true;
+    await send({
+      type:'hello',
+      clientId:ONLINE.clientId,
+      name:name,
+      host:true
+    });
 
-
-      const roomCode =
-        generateRoomCode();
-
-
-      game.players = [
-
-        {
-
-          id: "p1",
-
-          name: name,
-
-          role: "survivor",
-
-          alive: true,
-
-          originalRole: "survivor",
-
-          infectionRound: null,
-
-          hasInfected: false
-
-        }
-
-      ];
-
-
-      ONLINE.myPlayerId =
-        "p1";
-
-
-      await connectToOnlineRoom(
-        roomCode
-      );
-
-
-      ONLINE.peers[
-        ONLINE.clientId
-      ] = {
-
-        clientId:
-          ONLINE.clientId,
-
-        name: name,
-
-        playerId: "p1"
-
-      };
-
-
-      ONLINE.peerToPlayer[
-        ONLINE.clientId
-      ] = "p1";
-
-
-      ONLINE.playerToPeer[
-        "p1"
-      ] = ONLINE.clientId;
-
-
-      $("createRoomBox")
-        .style.display =
-        "none";
-
-
-      $("onlineLobby")
-        .style.display =
-        "block";
-
-
-      $("onlineLobbyCode")
-        .textContent =
-        ONLINE.code;
-
-
-      renderOnlineLobby();
-
-
-      onlineStatus(
-        "Room created! Give this code to the other players."
-      );
-
-
-      await onlineSend({
-
-        type: "roomCreated",
-
-        code:
-          ONLINE.code
-
-      });
-
-
-    } catch (error) {
-
-      console.error(error);
-
-      onlineStatus(
-        "❌ Could not connect to the online servers."
-      );
-
-      alert(
-        "Could not connect to the online servers.\n\n" +
-        error.message
-      );
-
-    }
-
+  }catch(e){
+    status('Could not connect to the online service: ' + e.message);
   }
+}
 
 
+
+  
   /* =========================================================
      JOIN ROOM
      ========================================================= */
 
-  async function joinOnlineRoom() {
+async function joinRoom(){
+  const name = ($('joinName').value || '')
+    .trim()
+    .slice(0,20);
 
-    const name =
-      (
-        $("onlineJoinName").value ||
-        "Player"
-      )
-        .trim()
-        .slice(0, 20) ||
-      "Player";
+  const c = ($('roomCodeInput').value || '')
+    .trim()
+    .toUpperCase();
 
-
-    const roomCode =
-      (
-        $("onlineRoomCode").value ||
-        ""
-      )
-        .trim()
-        .toUpperCase();
-
-
-    if (roomCode.length !== 5) {
-
-      alert(
-        "Enter the 5-character room code."
-      );
-
-      return;
-
-    }
-
-
-    try {
-
-      ONLINE.mode = true;
-      ONLINE.host = false;
-
-
-      await connectToOnlineRoom(
-        roomCode
-      );
-
-
-      $("joinRoomBox")
-        .style.display =
-        "none";
-
-
-      $("onlineLobby")
-        .style.display =
-        "block";
-
-
-      $("onlineLobbyCode")
-        .textContent =
-        roomCode;
-
-
-      $("onlineSetupButton")
-        .style.display =
-        "none";
-
-
-      onlineStatus(
-        "Connected! Waiting for the host..."
-      );
-
-
-      await onlineSend({
-
-        type: "hello",
-
-        clientId:
-          ONLINE.clientId,
-
-        name: name
-
-      });
-
-
-    } catch (error) {
-
-      console.error(error);
-
-      onlineStatus(
-        "❌ Could not connect to the room."
-      );
-
-      alert(
-        "Could not connect to this room.\n\n" +
-        error.message
-      );
-
-    }
-
+  if(!name){
+    alert('Please enter your name first.');
+    $('joinName').focus();
+    return;
   }
+
+  if(c.length !== 5){
+    alert('Enter the 5-character room code.');
+    $('roomCodeInput').focus();
+    return;
+  }
+
+  try{
+    ONLINE.mode = true;
+    ONLINE.host = false;
+    ONLINE.code = c;
+    ONLINE.joinName = name;
+
+    await connect(c);
+
+    $('joinBox').style.display = 'none';
+    $('onlineLobby').style.display = 'block';
+    $('onlineCode').textContent = c;
+    $('onlineSetupBtn').style.display = 'none';
+
+    status('Connected. Waiting for the host...');
+
+    await send({
+      type:'hello',
+      clientId:ONLINE.clientId,
+      name:name,
+      host:false
+    });
+
+  }catch(e){
+    status('Could not connect to this room: ' + e.message);
+  }
+}
+  
 
 
   /* =========================================================
