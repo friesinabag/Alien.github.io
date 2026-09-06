@@ -1,18 +1,41 @@
 "use strict";
 
+/* =========================================================
+   ALIEN
+   COMPLETE GAME.JS
+   ========================================================= */
+
+
+/* =========================================================
+   BASIC HELPERS
+   ========================================================= */
+
 const $ = id => document.getElementById(id);
+
 const alive = p => p && p.alive;
-const rand = arr => arr[Math.floor(Math.random() * arr.length)];
-const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
-const esc = s => String(s).replace(/[&<>"']/g, c => ({
-  '&':'&amp;',
-  '<':'&lt;',
-  '>':'&gt;',
-  '"':'&quot;',
-  "'":'&#039;'
-}[c]));
+
+const rand = arr =>
+  arr[Math.floor(Math.random() * arr.length)];
+
+const shuffle = arr =>
+  [...arr].sort(() => Math.random() - 0.5);
+
+const esc = s =>
+  String(s).replace(/[&<>"']/g, c => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#039;"
+  }[c]));
+
+
+/* =========================================================
+   ROLE DATA
+   ========================================================= */
 
 const ROLE_DATA = {
+
   alien:{
     icon:"👽",
     name:"Alien",
@@ -94,14 +117,14 @@ const ROLE_DATA = {
     icon:"📻",
     name:"Radio Operator",
     team:"Human",
-    desc:"Once per round, receive a private message from Earth while Communications is online."
+    desc:"Receive a private message from Earth while Communications is online."
   },
 
   judge:{
     icon:"⚖️",
     name:"Judge",
     team:"Human",
-    desc:"Once per game, cancel a Captain's tie-breaker ejection."
+    desc:"Once per game, cancel ANY vote that would eject a player."
   },
 
   jester:{
@@ -139,8 +162,9 @@ const ROLE_DATA = {
     name:"Diseased",
     team:"Hostile",
     sub:true,
-    desc:"The second infection stage. You know you are Diseased and on the Hostile Team. You cannot use an ability."
+    desc:"You are now Diseased and on the Hostile Team. You cannot use an ability."
   }
+
 };
 
 const ROLE_KEYS = Object.keys(ROLE_DATA);
@@ -173,6 +197,11 @@ const CONCEPTS = [
   "trickster"
 ];
 
+
+/* =========================================================
+   ROLE COUNTS
+   ========================================================= */
+
 const HOSTILE_COUNTS = {
   4:1,
   5:1,
@@ -185,7 +214,13 @@ const HOSTILE_COUNTS = {
   12:4
 };
 
+
+/* =========================================================
+   HUMAN RANDOM WEIGHTS
+   ========================================================= */
+
 const HUMAN_WEIGHTS = {
+
   survivor:25,
   medic:15,
   detective:12.5,
@@ -194,40 +229,73 @@ const HUMAN_WEIGHTS = {
   radio:10,
   captain:7.5,
   judge:7.5
+
 };
 
+
+/* =========================================================
+   SETTINGS
+   ========================================================= */
+
 let settings = {
-  enabled: Object.fromEntries(
-    [...HOSTILES,...HUMANS,...NEUTRALS,...CONCEPTS]
-      .map(r => [r, r !== "trickster"])
+
+  enabled:Object.fromEntries(
+    [
+      ...HOSTILES,
+      ...HUMANS,
+      ...NEUTRALS,
+      ...CONCEPTS
+    ].map(r => [
+      r,
+      r !== "trickster"
+    ])
   ),
 
-  counts: Object.fromEntries(
-    [...HOSTILES,...HUMANS,...NEUTRALS,...CONCEPTS]
-      .map(r => [r, 0])
+  counts:Object.fromEntries(
+    [
+      ...HOSTILES,
+      ...HUMANS,
+      ...NEUTRALS,
+      ...CONCEPTS
+    ].map(r => [
+      r,
+      0
+    ])
   )
+
 };
 
 settings.counts.engineer = 1;
 
+
+/* =========================================================
+   GAME STATE
+   ========================================================= */
+
 let game = {
-  players: [],
+
+  players:[],
 
   round:1,
+
   stage:1,
 
   abilityQueue:[],
+
   abilityIndex:0,
 
   reactionQueue:[],
+
   reactionIndex:0,
 
   roundStartAliveIds:[],
 
   actions:{},
+
   previousActions:{},
 
   blockedPlayers:new Set(),
+
   protectedPlayers:new Set(),
 
   silencedUntil:{},
@@ -235,222 +303,343 @@ let game = {
   votes:{},
 
   selectedAction:null,
+
   selectedVote:null,
 
   randomisedRoles:false,
+
   randomRoles:{},
 
   reactionInfo:{},
+
   lastRoundResults:[],
 
   lifelineNumber:0,
+
   gameOver:false,
 
   voteResolutionDone:false,
 
   tricksterUsed:false,
+
   displaySwap:null,
 
   judgeUsed:false,
 
+  pendingEjection:null,
+
   systems:{
+
     engines:true,
+
     o2:true,
+
     communications:true,
+
     power:true
+
   }
+
 };
 
 
 /* =========================================================
-   TEAM COLOURS
+   TEAM HELPERS
    ========================================================= */
 
-function teamClass(team) {
+function teamClass(team){
 
-  if(team === "Human") {
-    return "human";
-  }
+  if(team === "Human") return "human";
 
-  if(team === "Hostile") {
-    return "hostile";
-  }
+  if(team === "Hostile") return "hostile";
 
-  if(team === "Neutral") {
-    return "neutral";
-  }
+  if(team === "Neutral") return "neutral";
 
   return "infection";
+
 }
 
 
-function roleTeam(role) {
+/*
+   IMPORTANT:
 
-  if(role === "infected") {
+   Infected is still secretly Human until they
+   actually become Diseased.
+*/
+
+function roleTeam(roleOrPlayer){
+
+  const role =
+    typeof roleOrPlayer === "string"
+      ? roleOrPlayer
+      : roleOrPlayer?.role;
+
+  if(role === "infected")
     return "Human";
-  }
 
-  if(role === "diseased") {
+  if(role === "diseased")
     return "Hostile";
-  }
 
   return ROLE_DATA[role]?.team || "Human";
+
+}
+
+function isHostile(p){
+
+  return alive(p) &&
+    roleTeam(p) === "Hostile";
+
+}
+
+function isNeutral(p){
+
+  return alive(p) &&
+    roleTeam(p) === "Neutral";
+
+}
+
+function isHuman(p){
+
+  return alive(p) &&
+    roleTeam(p) === "Human";
+
 }
 
 
 /* =========================================================
-   BASIC HELPERS
+   PLAYER HELPERS
    ========================================================= */
 
-function isHostile(p) {
-  return alive(p) && roleTeam(p.role) === "Hostile";
+function getPlayer(id){
+
+  return game.players.find(
+    p => p.id === id
+  );
+
 }
 
+function living(){
 
-function isNeutral(p) {
-  return alive(p) && roleTeam(p.role) === "Neutral";
-}
-
-
-function isHuman(p) {
-  return alive(p) && roleTeam(p.role) === "Human";
-}
-
-
-function getPlayer(id) {
-  return game.players.find(p => p.id === id);
-}
-
-
-function living() {
   return game.players.filter(alive);
+
 }
 
+function activeRole(p){
 
-function activeRole(p) {
   return ROLE_DATA[p.role];
+
 }
 
 
-function canAct(p) {
+/* =========================================================
+   ABILITY AVAILABILITY
+   ========================================================= */
 
-  if(!alive(p)) {
+function canAct(p){
+
+  if(!alive(p))
     return false;
-  }
 
-  if(p.role === "engineer") {
+  /*
+     Engineer always works, even with
+     Power offline.
+  */
+  if(p.role === "engineer")
     return true;
-  }
 
+  /*
+     These roles have no usable ability.
+  */
   if(
     p.role === "diseased" ||
     p.role === "infected" ||
     p.role === "survivor" ||
     p.role === "jester" ||
     p.role === "king"
-  ) {
+  ){
+
     return false;
+
   }
 
-  if(!game.systems.power) {
+  /*
+     Power disables abilities.
+  */
+  if(!game.systems.power)
     return false;
-  }
 
-  if(game.blockedPlayers.has(p.id)) {
+  /*
+     Guarded players cannot use abilities.
+  */
+  if(game.blockedPlayers.has(p.id))
     return false;
-  }
 
-  if(p.role === "judge" && game.judgeUsed) {
+  /*
+     Judge can only be used once.
+  */
+  if(
+    p.role === "judge" &&
+    game.judgeUsed
+  ){
+
     return false;
+
   }
 
   return true;
+
 }
 
 
-function realName(id) {
+/* =========================================================
+   DISPLAY / TRICKSTER HELPERS
+   ========================================================= */
+
+function realName(id){
+
   return getPlayer(id)?.name || "";
+
 }
 
-
-function displayMap() {
+function displayMap(){
 
   const map = Object.fromEntries(
-    living().map(p => [p.id,p.id])
+    living().map(p => [
+      p.id,
+      p.id
+    ])
   );
 
-  if(game.displaySwap) {
+  if(game.displaySwap){
 
-    const [a,b] = game.displaySwap;
+    const [a,b] =
+      game.displaySwap;
 
-    if(map[a] && map[b]) {
+    if(
+      map[a] &&
+      map[b]
+    ){
+
       map[a] = b;
       map[b] = a;
+
     }
+
   }
 
   return map;
+
+}
+
+function displayName(id){
+
+  return realName(
+    displayMap()[id]
+  );
+
 }
 
 
-function displayName(id) {
-  return realName(displayMap()[id]);
-}
+/*
+   Converts a displayed player name back
+   to the real underlying player ID.
+*/
 
-
-function displayIdFromName(name) {
+function displayIdFromName(name){
 
   const map = displayMap();
 
-  const hit = Object.entries(map)
-    .find(([,realId]) => realName(realId) === name);
+  const hit =
+    Object.entries(map).find(
+      ([,realId]) =>
+        realName(realId) === name
+    );
 
-  return hit ? hit[0] : null;
+  return hit
+    ? hit[0]
+    : null;
+
 }
 
 
-function targetOptions(actor=null, excludeId=null) {
+/* =========================================================
+   TARGET OPTIONS
+   ========================================================= */
+
+function targetOptions(
+  actor = null,
+  excludeId = null
+){
 
   return living()
+
     .filter(p => {
 
-      if(p.id === excludeId) {
+      if(
+        p.id === excludeId
+      ){
+
         return false;
+
       }
+
+      /*
+         Hostiles normally cannot target
+         other Hostiles.
+
+         Trickster can cause a displayed identity
+         to make this look different.
+      */
 
       if(
         actor &&
         roleTeam(actor) === "Hostile" &&
         isHostile(p) &&
-        !(game.displaySwap && game.displaySwap.includes(p.id))
-      ) {
+        !(
+          game.displaySwap &&
+          game.displaySwap.includes(p.id)
+        )
+      ){
+
         return false;
+
       }
 
       return true;
+
     })
+
     .map(p => ({
+
       id:p.id,
+
       label:displayName(p.id)
+
     }));
+
 }
 
 
 /* =========================================================
-   ROUND RESET
+   RESET ROUND-ONLY STATE
    ========================================================= */
 
-function resetTransient() {
+function resetTransient(){
 
   game.actions = {};
 
-  game.blockedPlayers = new Set();
+  game.blockedPlayers =
+    new Set();
 
-  game.protectedPlayers = new Set();
+  game.protectedPlayers =
+    new Set();
 
-  game.selectedAction = null;
+  game.selectedAction =
+    null;
 
-  game.reactionInfo = {};
+  game.reactionInfo =
+    {};
+
 }
 
 
@@ -458,23 +647,33 @@ function resetTransient() {
    SCREEN CONTROL
    ========================================================= */
 
-function setScreen(id) {
+function setScreen(id){
 
   document
     .querySelectorAll(".screen")
-    .forEach(s => s.classList.remove("active"));
+    .forEach(s =>
+      s.classList.remove("active")
+    );
 
   $(id)?.classList.add("active");
 
-  window.scrollTo(0,0);
+  window.scrollTo(
+    0,
+    0
+  );
+
 }
 
 
 /* =========================================================
-   BUTTON CREATOR
+   BUTTON HTML
    ========================================================= */
 
-function button(text,value,cls="choice-button") {
+function button(
+  text,
+  value,
+  cls = "choice-button"
+){
 
   return `
     <button
@@ -485,6 +684,7 @@ function button(text,value,cls="choice-button") {
       ${text}
     </button>
   `;
+
 }
 
 
@@ -492,27 +692,52 @@ function button(text,value,cls="choice-button") {
    SETUP
    ========================================================= */
 
-function showSetup() {
+function showSetup(){
 
-  setScreen("setupScreen");
+  setScreen(
+    "setupScreen"
+  );
 
   renderSetup();
+
 }
 
 
-function renderSetup() {
+function renderSetup(){
 
   $("playersSetup").innerHTML =
     game.players.length
+
       ? game.players.map((p,i) => `
 
         <div class="setup-player">
 
           <label>
-            Player ${i+1}
+            Player ${i + 1}
+
+            <input
+              class="player-name-input"
+              type="text"
+              maxlength="20"
+              value="${esc(p.name)}"
+              data-name-index="${i}"
+              autocomplete="off"
+              placeholder="Player ${i + 1}"
+            >
+
+          </label>
+
+          <label>
+
+            Role
 
             <select
-              class="role-select ${game.randomisedRoles && game.randomRoles[i] ? "random-hidden":""}"
+              class="role-select ${
+                game.randomisedRoles &&
+                game.randomRoles[i]
+                  ? "random-hidden"
+                  : ""
+              }"
               data-index="${i}"
             >
 
@@ -521,15 +746,27 @@ function renderSetup() {
               </option>
 
               ${
-                [...HOSTILES,...HUMANS,...NEUTRALS,...CONCEPTS]
-                  .filter(r => settings.enabled[r] || r === "engineer")
-                  .map(r => `
-                    <option value="${r}">
-                      ${ROLE_DATA[r].icon}
-                      ${ROLE_DATA[r].name}
-                    </option>
-                  `)
-                  .join("")
+                [
+                  ...HOSTILES,
+                  ...HUMANS,
+                  ...NEUTRALS,
+                  ...CONCEPTS
+                ]
+
+                .filter(
+                  r =>
+                    settings.enabled[r] ||
+                    r === "engineer"
+                )
+
+                .map(r => `
+                  <option value="${r}">
+                    ${ROLE_DATA[r].icon}
+                    ${ROLE_DATA[r].name}
+                  </option>
+                `)
+
+                .join("")
               }
 
             </select>
@@ -539,74 +776,205 @@ function renderSetup() {
         </div>
 
       `).join("")
+
       : "";
 
   updatePlayerValidity();
 
+  bindSetupNames();
+
   bindSetupSelects();
+
 }
 
 
-function bindSetupSelects() {
+/* =========================================================
+   PLAYER NAME INPUTS
+   ========================================================= */
+
+function bindSetupNames(){
 
   document
-    .querySelectorAll(".role-select")
+    .querySelectorAll(
+      ".player-name-input"
+    )
+    .forEach(input => {
+
+      input.oninput = () => {
+
+        const i =
+          Number(
+            input.dataset.nameIndex
+          );
+
+        if(!game.players[i])
+          return;
+
+        game.players[i].name =
+          input.value
+            .slice(0,20);
+
+      };
+
+
+      input.onblur = () => {
+
+        const i =
+          Number(
+            input.dataset.nameIndex
+          );
+
+        if(!game.players[i])
+          return;
+
+        const trimmed =
+          input.value.trim();
+
+        game.players[i].name =
+          trimmed ||
+          `Player ${i + 1}`;
+
+        input.value =
+          game.players[i].name;
+
+      };
+
+    });
+
+}
+
+
+/* =========================================================
+   ROLE SELECTS
+   ========================================================= */
+
+function bindSetupSelects(){
+
+  document
+    .querySelectorAll(
+      ".role-select"
+    )
     .forEach(select => {
 
       select.onchange = () => {
 
-        const i = Number(select.dataset.index);
+        const i =
+          Number(
+            select.dataset.index
+          );
 
-        const value = select.value;
+        const value =
+          select.value;
 
-        if(value !== "random") {
+        if(value === "random")
+          return;
 
-          game.randomisedRoles = true;
+        /*
+           Prevent duplicate starting roles.
+        */
 
-          game.randomRoles[i] = value;
+        const alreadyUsed =
+          Object.entries(
+            game.randomRoles
+          ).some(
+            ([index,role]) =>
+              Number(index) !== i &&
+              role === value
+          );
 
-          select.value = "random";
+        if(alreadyUsed){
 
-          select.classList.add("random-hidden");
+          alert(
+            `${ROLE_DATA[value].name} is already assigned to another player.`
+          );
+
+          select.value =
+            "random";
+
+          return;
+
         }
+
+        game.randomisedRoles =
+          true;
+
+        game.randomRoles[i] =
+          value;
+
+        select.value =
+          "random";
+
+        select.classList.add(
+          "random-hidden"
+        );
+
       };
+
     });
+
 }
 
 
-function resetSetupPlayers() {
+/* =========================================================
+   RESET PLAYERS WHEN PLAYER COUNT CHANGES
+   ========================================================= */
 
-  const n = Number($("playerCount").value);
+function resetSetupPlayers(){
+
+  const n =
+    Number(
+      $("playerCount").value
+    );
 
   game.players =
     Array.from(
       {length:n},
       (_,i) => ({
-        id:`p${i+1}`,
-        name:`Player ${i+1}`,
+
+        id:`p${i + 1}`,
+
+        name:`Player ${i + 1}`,
+
         role:"survivor",
+
         alive:true,
+
         originalRole:"survivor",
+
         infectionRound:null,
+
         hasInfected:false
+
       })
     );
 
-  game.randomisedRoles = false;
+  game.randomisedRoles =
+    false;
 
-  game.randomRoles = {};
+  game.randomRoles =
+    {};
 
   renderSetup();
+
 }
 
 
-function updatePlayerValidity() {
+/* =========================================================
+   SETUP VALIDITY
+   ========================================================= */
 
-  const n = game.players.length;
+function updatePlayerValidity(){
+
+  const n =
+    game.players.length;
 
   const total =
-    Object.values(settings.counts)
-      .reduce((a,b) => a+b,0);
+    Object.values(
+      settings.counts
+    ).reduce(
+      (a,b) => a + b,
+      0
+    );
 
   $("playerValidity").textContent =
     `PLAYERS: ${n} / ${n}  •  ${
@@ -614,92 +982,160 @@ function updatePlayerValidity() {
         ? `CUSTOM ROLES: ${total} / ${n}`
         : "RANDOM ROLES"
     }`;
+
 }
 
 
 /* =========================================================
-   RANDOM ROLES
+   WEIGHTED RANDOM
    ========================================================= */
 
-function weightedPick(items,weights) {
+function weightedPick(
+  items,
+  weights
+){
 
   const total =
     items.reduce(
-      (s,k) => s + (weights[k] || 0),
+      (s,k) =>
+        s + (weights[k] || 0),
       0
     );
 
-  let r = Math.random() * total;
+  let r =
+    Math.random() *
+    total;
 
-  for(const k of items) {
+  for(
+    const k of items
+  ){
 
-    r -= weights[k] || 0;
+    r -=
+      weights[k] || 0;
 
-    if(r < 0) {
+    if(r < 0)
       return k;
-    }
+
   }
 
-  return items[items.length-1];
+  return items[
+    items.length - 1
+  ];
+
 }
 
 
-function randomiseRoles() {
+/* =========================================================
+   RANDOM ROLE GENERATION
+   ========================================================= */
 
-  const n = game.players.length;
+function randomiseRoles(){
 
-  const h = HOSTILE_COUNTS[n];
+  const n =
+    game.players.length;
 
-  if(!h) {
+  const h =
+    HOSTILE_COUNTS[n];
+
+  if(!h)
     return;
-  }
 
   const enabledHostiles =
-    HOSTILES.filter(r => settings.enabled[r]);
+    HOSTILES.filter(
+      r => settings.enabled[r]
+    );
 
-  if(enabledHostiles.length < h) {
+  if(
+    enabledHostiles.length < h
+  ){
 
-    return alert(
+    alert(
       "Enable enough Hostile roles to fill the random setup."
     );
+
+    return;
+
   }
+
 
   const enabledHumans =
     HUMANS.filter(
-      r => settings.enabled[r] || r === "engineer"
+      r =>
+        settings.enabled[r] ||
+        r === "engineer"
     );
 
-  if(enabledHumans.length < n-h) {
+  if(
+    enabledHumans.length <
+    n - h
+  ){
 
-    return alert(
+    alert(
       "Enable enough Human roles to fill the random setup."
     );
+
+    return;
+
   }
+
 
   let roles = [];
 
+
+  /*
+     HOSTILES
+  */
+
   const hostile =
-    shuffle(enabledHostiles).slice(0,h);
+    shuffle(
+      enabledHostiles
+    ).slice(0,h);
 
-  roles.push(...hostile);
+  roles.push(
+    ...hostile
+  );
 
-  roles.push("engineer");
 
-  const humanNeeded = n-h-1;
+  /*
+     ENGINEER ALWAYS PRESENT
+  */
+
+  roles.push(
+    "engineer"
+  );
+
+
+  /*
+     HUMAN ROLES
+  */
+
+  const humanNeeded =
+    n - h - 1;
 
   let pool =
     enabledHumans.filter(
       r => r !== "engineer"
     );
 
-  if(pool.length < humanNeeded) {
+  if(
+    pool.length <
+    humanNeeded
+  ){
 
-    return alert(
+    alert(
       "Not enough enabled Human roles for this player count."
     );
+
+    return;
+
   }
 
-  for(let i=0;i<humanNeeded;i++) {
+
+  for(
+    let i = 0;
+    i < humanNeeded;
+    i++
+  ){
 
     const pick =
       weightedPick(
@@ -707,46 +1143,80 @@ function randomiseRoles() {
         HUMAN_WEIGHTS
       );
 
-    roles.push(pick);
+    roles.push(
+      pick
+    );
 
     pool =
       pool.filter(
         r => r !== pick
       );
+
   }
+
+
+  /*
+     NEUTRAL SLOTS
+  */
 
   const neutralSlots =
     n - roles.length;
 
-  if(neutralSlots > 0) {
+  if(neutralSlots > 0){
 
     const enabledNeutral =
-      [...NEUTRALS,...CONCEPTS]
-        .filter(r => settings.enabled[r]);
+      [
+        ...NEUTRALS,
+        ...CONCEPTS
+      ].filter(
+        r => settings.enabled[r]
+      );
 
-    if(enabledNeutral.length < neutralSlots) {
+    if(
+      enabledNeutral.length <
+      neutralSlots
+    ){
 
-      return alert(
+      alert(
         "Enable enough Neutral roles, or use manual role counts."
       );
+
+      return;
+
     }
 
     roles.push(
-      ...shuffle(enabledNeutral)
-        .slice(0,neutralSlots)
+      ...shuffle(
+        enabledNeutral
+      ).slice(
+        0,
+        neutralSlots
+      )
     );
+
   }
 
-  roles = shuffle(roles);
+
+  /*
+     SHUFFLE PLAYER ASSIGNMENTS
+  */
+
+  roles =
+    shuffle(roles);
+
 
   game.randomRoles =
     Object.fromEntries(
-      roles.map((r,i) => [i,r])
+      roles.map(
+        (r,i) => [i,r]
+      )
     );
 
-  game.randomisedRoles = true;
+  game.randomisedRoles =
+    true;
 
   renderSetup();
+
 }
 
 
@@ -754,94 +1224,170 @@ function randomiseRoles() {
    START GAME
    ========================================================= */
 
-function startGame() {
+function startGame(){
 
-  const n = game.players.length;
+  const n =
+    game.players.length;
 
-  const h = HOSTILE_COUNTS[n];
+  const h =
+    HOSTILE_COUNTS[n];
 
-  let roles =
-    game.randomisedRoles
-      ? Array.from(
-          {length:n},
-          (_,i) => game.randomRoles[i]
-        )
-      : Array.from(
-          {length:n},
-          (_,i) => game.players[i].role
-        );
+
+  let roles;
+
+
+  if(game.randomisedRoles){
+
+    roles =
+      Array.from(
+        {length:n},
+        (_,i) =>
+          game.randomRoles[i]
+      );
+
+  } else {
+
+    roles =
+      Array.from(
+        {length:n},
+        (_,i) =>
+          game.players[i].role
+      );
+
+  }
+
 
   if(
     roles.includes("random") ||
     roles.some(r => !r)
-  ) {
+  ){
 
-    return alert(
+    alert(
       "Choose roles or press RANDOMISE ROLES first."
     );
+
+    return;
+
   }
 
-  if(!roles.includes("engineer")) {
-    roles[n-1] = "engineer";
-  }
 
-  const counts =
-    Object.fromEntries(
-      ROLE_KEYS.map(
-        r => [r,0]
-      )
+  /*
+     No duplicate starting roles.
+  */
+
+  const duplicates =
+    roles.filter(
+      (r,i) =>
+        roles.indexOf(r) !== i
     );
 
-  roles.forEach(
-    r => counts[r] = (counts[r] || 0) + 1
-  );
+  if(duplicates.length){
 
-  if(counts.engineer !== 1) {
-
-    return alert(
-      "There must be exactly 1 Engineer."
+    alert(
+      "Starting roles cannot be duplicated."
     );
+
+    return;
+
   }
+
+
+  /*
+     Engineer is mandatory.
+  */
 
   if(
-    counts.alien +
-    counts.saboteur +
-    counts.silencer +
-    counts.parasite !== h
-  ) {
+    roles.filter(
+      r => r === "engineer"
+    ).length !== 1
+  ){
 
-    return alert(
+    alert(
+      "There must be exactly 1 Engineer."
+    );
+
+    return;
+
+  }
+
+
+  /*
+     Exact hostile count.
+  */
+
+  const hostileCount =
+    roles.filter(
+      r => HOSTILES.includes(r)
+    ).length;
+
+  if(
+    hostileCount !== h
+  ){
+
+    alert(
       `This setup needs exactly ${h} Hostile role(s).`
     );
+
+    return;
+
   }
+
+
+  /*
+     Validate all roles.
+  */
 
   const valid =
     roles.every(
       r =>
         ROLE_DATA[r] &&
         !ROLE_DATA[r].sub &&
-        (settings.enabled[r] || r === "engineer")
+        (
+          settings.enabled[r] ||
+          r === "engineer"
+        )
     );
 
-  if(!valid) {
+  if(!valid){
 
-    return alert(
+    alert(
       "A disabled role is selected."
     );
+
+    return;
+
   }
 
-  game.players.forEach((p,i) => {
 
-    p.role = roles[i];
+  /*
+     Apply roles.
+  */
 
-    p.originalRole = roles[i];
+  game.players.forEach(
+    (p,i) => {
 
-    p.alive = true;
+      p.role =
+        roles[i];
 
-    p.infectionRound = null;
+      p.originalRole =
+        roles[i];
 
-    p.hasInfected = false;
-  });
+      p.alive =
+        true;
+
+      p.infectionRound =
+        null;
+
+      p.hasInfected =
+        false;
+
+    }
+  );
+
+
+  /*
+     Reset game.
+  */
 
   game.round = 1;
 
@@ -857,63 +1403,115 @@ function startGame() {
 
   game.displaySwap = null;
 
+  game.pendingEjection = null;
+
+  game.lastRoundResults = [];
+
+
+  game.systems = {
+
+    engines:true,
+
+    o2:true,
+
+    communications:true,
+
+    power:true
+
+  };
+
+
   resetTransient();
 
   startRound();
+
 }
 
 
 /* =========================================================
-   ROUND START
+   START ROUND
    ========================================================= */
 
-function startRound() {
+function startRound(){
 
-  if(checkVictory()) {
+  if(
+    checkVictory()
+  ){
+
     return;
+
   }
 
+
+  /*
+     IMPORTANT:
+     Save previous round actions BEFORE
+     resetting the current round.
+  */
+
+  game.previousActions =
+    {
+      ...game.actions
+    };
+
+
   resetTransient();
+
+
+  /*
+     Snapshot everyone alive at the START
+     of the round.
+
+     This means someone killed during the
+     round still gets their Reaction result.
+  */
 
   game.roundStartAliveIds =
     living().map(
       p => p.id
     );
 
+
   game.abilityQueue =
-    [...game.roundStartAliveIds];
+    [
+      ...game.roundStartAliveIds
+    ];
 
-  game.abilityIndex = 0;
+  game.abilityIndex =
+    0;
 
-  game.previousActions =
-    game.actions
-      ? {...game.actions}
-      : {};
-
-  game.actions = {};
 
   passToAbility();
+
 }
 
 
 /* =========================================================
-   ABILITY PASS
+   ABILITY PASS SCREEN
    ========================================================= */
 
-function passToAbility() {
+function passToAbility(){
 
   if(
     game.abilityIndex >=
     game.abilityQueue.length
-  ) {
+  ){
 
     return resolveAbilities();
+
   }
+
 
   const p =
     getPlayer(
-      game.abilityQueue[game.abilityIndex]
+      game.abilityQueue[
+        game.abilityIndex
+      ]
     );
+
+  if(!p)
+    return advanceAbility();
+
 
   $("passPlayerName").textContent =
     p.name;
@@ -927,7 +1525,10 @@ function passToAbility() {
   game.currentPlayerIndex =
     game.abilityIndex;
 
-  setScreen("passScreen");
+  setScreen(
+    "passScreen"
+  );
+
 }
 
 
@@ -935,52 +1536,117 @@ function passToAbility() {
    SHOW ROLE
    ========================================================= */
 
-function showRole() {
+function showRole(){
 
   const p =
     getPlayer(
-      game.abilityQueue[game.abilityIndex]
+      game.abilityQueue[
+        game.abilityIndex
+      ]
     );
+
+  if(!p)
+    return;
+
 
   $("rolePlayerName").textContent =
     p.name;
 
-  $("roleIcon").textContent =
-    ROLE_DATA[p.role]?.icon || "❓";
-
-  $("roleName").textContent =
-    ROLE_DATA[p.role]?.name || p.role;
-
-  const team =
-    roleTeam(p.role);
-
-  const colourClass =
-    teamClass(team);
 
   /*
-     The role name and class/team badge both receive
-     the matching team class:
+     SECRET INFECTION:
 
-     Human   -> human
-     Neutral -> neutral
-     Hostile -> hostile
+     An Infected player sees their
+     ORIGINAL role, not "Infected".
   */
 
+  const visibleRole =
+    p.role === "infected"
+      ? p.originalRole
+      : p.role;
+
+
+  const roleData =
+    ROLE_DATA[
+      visibleRole
+    ];
+
+
+  const team =
+    roleTeam(p);
+
+
+  $("roleIcon").textContent =
+    roleData?.icon ||
+    "❓";
+
+
+  $("roleName").textContent =
+    roleData?.name ||
+    visibleRole;
+
+
   $("roleName").className =
-    `role-title ${colourClass}`;
+    `role-title ${teamClass(team)}`;
+
 
   $("roleTeam").textContent =
     `${team.toUpperCase()} TEAM`;
 
+
   $("roleTeam").className =
-    `team-badge ${colourClass}`;
+    `team-badge ${teamClass(team)}`;
+
+
+  /*
+     FORCE the requested colours.
+  */
+
+  if(team === "Human"){
+
+    $("roleName").style.color =
+      "#00ff66";
+
+    $("roleTeam").style.color =
+      "#00ff66";
+
+  }
+
+  else if(team === "Neutral"){
+
+    $("roleName").style.color =
+      "#ffffff";
+
+    $("roleTeam").style.color =
+      "#ffffff";
+
+  }
+
+  else if(team === "Hostile"){
+
+    $("roleName").style.color =
+      "#ff3b30";
+
+    $("roleTeam").style.color =
+      "#ff3b30";
+
+  }
+
 
   $("roleDescription").textContent =
-    ROLE_DATA[p.role]?.desc || "";
+    roleData?.desc ||
+    "";
 
-  $("hostileList").innerHTML = "";
 
-  if(team === "Hostile") {
+  $("hostileList").innerHTML =
+    "";
+
+
+  /*
+     Hostiles see their Hostile allies.
+  */
+
+  if(team === "Hostile"){
 
     const allies =
       living().filter(
@@ -989,32 +1655,54 @@ function showRole() {
           isHostile(x)
       );
 
+
     $("hostileList").innerHTML =
       allies.length
+
         ? `
           <div class="ally-box">
-            <strong>HOSTILE ALLIES</strong>
+
+            <strong>
+              HOSTILE ALLIES
+            </strong>
+
             <br>
-            ${
-              allies
-                .map(
-                  x =>
-                    `${ROLE_DATA[x.role].icon} ${esc(x.name)}`
-                )
-                .join("<br>")
+
+            ${allies
+              .map(
+                x =>
+                  `${
+                    ROLE_DATA[x.role]?.icon ||
+                    "❓"
+                  } ${esc(x.name)}`
+              )
+              .join("<br>")
             }
+
           </div>
         `
+
         : `
           <div class="ally-box">
-            <strong>HOSTILE ALLIES</strong>
+
+            <strong>
+              HOSTILE ALLIES
+            </strong>
+
             <br>
+
             None
+
           </div>
         `;
+
   }
 
-  setScreen("roleScreen");
+
+  setScreen(
+    "roleScreen"
+  );
+
 }
 
 
@@ -1022,127 +1710,121 @@ function showRole() {
    SHOW ACTION
    ========================================================= */
 
-function showAction() {
+function showAction(){
 
   const p =
     getPlayer(
-      game.abilityQueue[game.abilityIndex]
+      game.abilityQueue[
+        game.abilityIndex
+      ]
     );
 
+  if(!p)
+    return;
+
+
   $("actionTitle").textContent =
-    `${ROLE_DATA[p.role]?.icon || ""} ${ROLE_DATA[p.role]?.name || ""}`;
+    `${
+      ROLE_DATA[p.role]?.icon ||
+      ""
+    } ${
+      ROLE_DATA[p.role]?.name ||
+      ""
+    }`;
 
-  $("actionDescription").textContent = "";
 
-  $("actionOptions").innerHTML = "";
+  $("actionDescription").textContent =
+    "";
 
-  game.selectedAction = null;
 
-  if(!canAct(p)) {
+  $("actionOptions").innerHTML =
+    "";
+
+
+  game.selectedAction =
+    null;
+
+
+  /*
+     No ability available.
+  */
+
+  if(!canAct(p)){
 
     $("actionDescription").textContent =
+
       p.role === "diseased"
+
         ? "You are Diseased. You cannot use an ability."
+
         : p.role === "infected"
-          ? "You are Infected and do not have an ability."
-          : "Your ability cannot be used this round.";
+
+        ? "You are Infected and do not have an ability."
+
+        : "Your ability cannot be used this round.";
+
 
     $("confirmActionButton").textContent =
       "CONTINUE";
 
+
     $("confirmActionButton").onclick =
       () => completeAbility();
 
-    setScreen("actionScreen");
+
+    setScreen(
+      "actionScreen"
+    );
 
     return;
+
   }
 
-  const choose =
-    (title,desc,items) => {
 
-      $("actionDescription").textContent =
-        desc;
+  /*
+     ALIEN
+  */
 
-      $("actionOptions").innerHTML =
-        items
-          .map(
-            o => button(o.label,o.id)
-          )
-          .join("");
+  if(p.role === "alien"){
 
-      $("actionOptions")
-        .querySelectorAll("button")
-        .forEach(b => {
-
-          b.onclick = () => {
-
-            game.selectedAction =
-              b.dataset.value;
-
-            $("actionOptions")
-              .querySelectorAll("button")
-              .forEach(
-                x => x.classList.remove("selected")
-              );
-
-            b.classList.add("selected");
-          };
-        });
-    };
-
-
-  /* ALIEN */
-
-  if(p.role === "alien") {
-
-    if(
-      !living().some(
+    const saboteurAlive =
+      living().some(
         x => x.role === "saboteur"
-      )
-    ) {
-
-      choose(
-        "",
-        "Choose Kill or Sabotage.",
-        [
-          {
-            id:"kill",
-            label:"☠️ KILL"
-          },
-          {
-            id:"sabotage",
-            label:"💥 SABOTAGE"
-          }
-        ]
       );
 
-    } else {
 
-      game.selectedAction = "kill";
+    $("actionDescription").textContent =
+      saboteurAlive
+        ? "A living Saboteur exists, so you can only kill."
+        : "Choose Kill or Sabotage.";
 
-      $("actionDescription").textContent =
-        "A living Saboteur exists, so you can only kill.";
-    }
 
-    $("actionOptions").innerHTML =
-      `
-        <button
-          type="button"
-          class="choice-button"
-          data-value="kill"
-        >
-          ☠️ KILL
-        </button>
+    $("actionOptions").innerHTML = `
 
-        <button
-          type="button"
-          class="choice-button"
-          data-value="sabotage"
-        >
-          💥 SABOTAGE
-        </button>
-      `;
+      <button
+        type="button"
+        class="choice-button"
+        data-value="kill"
+      >
+        ☠️ KILL
+      </button>
+
+      ${
+        saboteurAlive
+          ? ""
+          : `
+            <button
+              type="button"
+              class="choice-button"
+              data-value="sabotage"
+            >
+              💥 SABOTAGE
+            </button>
+          `
+      }
+
+    `;
+
 
     $("actionOptions")
       .querySelectorAll("button")
@@ -1150,19 +1832,30 @@ function showAction() {
 
         b.onclick = () => {
 
-          if(
-            b.dataset.value === "sabotage" &&
-            living().some(
-              x => x.role === "saboteur"
-            )
-          ) {
-            return;
-          }
-
-          game.selectedAction =
+          const mode =
             b.dataset.value;
 
-          if(b.dataset.value === "kill") {
+
+          game.selectedAction =
+            mode;
+
+
+          $("actionOptions")
+            .querySelectorAll("button")
+            .forEach(
+              x =>
+                x.classList.remove(
+                  "selected"
+                )
+            );
+
+
+          b.classList.add(
+            "selected"
+          );
+
+
+          if(mode === "kill"){
 
             renderTargetChoices(
               p,
@@ -1170,46 +1863,58 @@ function showAction() {
               "kill"
             );
 
-          } else {
+          }
+
+          else if(
+            mode === "sabotage"
+          ){
 
             renderSystemChoices();
+
           }
+
         };
+
       });
 
-    if(
-      living().some(
-        x => x.role === "saboteur"
-      )
-    ) {
 
-      const sabotageButton =
-        $("actionOptions")
-          .querySelector('[data-value="sabotage"]');
+    /*
+       Saboteur alive means kill only.
+    */
 
-      if(sabotageButton) {
-        sabotageButton.style.display =
-          "none";
-      }
+    if(saboteurAlive){
 
       renderTargetChoices(
         p,
         null,
         "kill"
       );
+
     }
 
+  }
 
-  /* SABOTEUR */
 
-  } else if(p.role === "saboteur") {
+  /*
+     SABOTEUR
+  */
+
+  else if(
+    p.role === "saboteur"
+  ){
 
     renderSystemChoices();
 
+  }
 
-  /* SILENCER */
 
-  } else if(p.role === "silencer") {
+  /*
+     SILENCER
+  */
+
+  else if(
+    p.role === "silencer"
+  ){
 
     renderTargetChoices(
       p,
@@ -1217,12 +1922,18 @@ function showAction() {
       "silence"
     );
 
+  }
 
-  /* PARASITE */
 
-  } else if(p.role === "parasite") {
+  /*
+     PARASITE
+  */
 
-    if(p.hasInfected) {
+  else if(
+    p.role === "parasite"
+  ){
+
+    if(p.hasInfected){
 
       $("actionDescription").textContent =
         "You already used your infection.";
@@ -1233,10 +1944,14 @@ function showAction() {
       $("confirmActionButton").onclick =
         completeAbility;
 
-      setScreen("actionScreen");
+      setScreen(
+        "actionScreen"
+      );
 
       return;
+
     }
+
 
     renderTargetChoices(
       p,
@@ -1244,24 +1959,44 @@ function showAction() {
       "infect"
     );
 
-
-  /* ENGINEER */
-
-  } else if(p.role === "engineer") {
-
-    renderSystemChoices(true);
+  }
 
 
-  /* SCIENTIST */
+  /*
+     ENGINEER
+  */
 
-  } else if(p.role === "scientist") {
+  else if(
+    p.role === "engineer"
+  ){
+
+    renderSystemChoices(
+      true
+    );
+
+  }
+
+
+  /*
+     SCIENTIST
+  */
+
+  else if(
+    p.role === "scientist"
+  ){
 
     renderScientistChoices(p);
 
+  }
 
-  /* DETECTIVE */
 
-  } else if(p.role === "detective") {
+  /*
+     DETECTIVE
+  */
+
+  else if(
+    p.role === "detective"
+  ){
 
     renderTargetChoices(
       p,
@@ -1269,10 +2004,16 @@ function showAction() {
       "detect"
     );
 
+  }
 
-  /* MEDIC */
 
-  } else if(p.role === "medic") {
+  /*
+     MEDIC
+  */
+
+  else if(
+    p.role === "medic"
+  ){
 
     renderTargetChoices(
       p,
@@ -1280,10 +2021,16 @@ function showAction() {
       "protect"
     );
 
+  }
 
-  /* GUARD */
 
-  } else if(p.role === "guard") {
+  /*
+     GUARD
+  */
+
+  else if(
+    p.role === "guard"
+  ){
 
     renderTargetChoices(
       p,
@@ -1291,95 +2038,150 @@ function showAction() {
       "block"
     );
 
+  }
 
-  /* RADIO */
 
-  } else if(p.role === "radio") {
+  /*
+     RADIO
+  */
 
-    if(!game.systems.communications) {
+  else if(
+    p.role === "radio"
+  ){
+
+    if(
+      !game.systems.communications
+    ){
 
       $("actionDescription").textContent =
         "Communications is OFFLINE.";
 
-    } else {
+      game.selectedAction =
+        "none";
 
-      $("actionDescription").textContent =
-        "Receive a private message from Earth.";
-
-      game.selectedAction = "radio";
     }
 
+    else {
 
-  /* CAPTAIN */
+      $("actionDescription").textContent =
+        "Press CONFIRM to receive a private message from Earth.";
 
-  } else if(p.role === "captain") {
+      game.selectedAction =
+        "radio";
+
+    }
+
+  }
+
+
+  /*
+     CAPTAIN
+  */
+
+  else if(
+    p.role === "captain"
+  ){
 
     $("actionDescription").textContent =
-      "Your ability is automatic only if a vote ties.";
+      "Your ability is automatic if a vote ties.";
 
-    game.selectedAction = "none";
+    game.selectedAction =
+      "none";
+
+  }
 
 
-  /* JUDGE */
+  /*
+     JUDGE
+  */
 
-  } else if(p.role === "judge") {
+  else if(
+    p.role === "judge"
+  ){
 
     $("actionDescription").textContent =
-      "Your ability only appears after a Captain chooses a tied ejection.";
+      "Your ability activates privately if a vote would eject someone.";
 
-    game.selectedAction = "none";
+    game.selectedAction =
+      "none";
+
+  }
 
 
-  /* TRICKSTER */
+  /*
+     TRICKSTER
+  */
 
-  } else if(p.role === "trickster") {
+  else if(
+    p.role === "trickster"
+  ){
 
-    if(game.tricksterUsed) {
+    if(game.tricksterUsed){
 
       $("actionDescription").textContent =
         "You already used your Trickster swap.";
 
-      game.selectedAction = "none";
+      game.selectedAction =
+        "none";
 
-    } else {
-
-      renderSwapChoices(p);
     }
 
+    else {
 
-  } else {
+      renderSwapChoices(p);
+
+    }
+
+  }
+
+
+  else {
 
     $("actionDescription").textContent =
       "No ability.";
 
-    game.selectedAction = "none";
+    game.selectedAction =
+      "none";
+
   }
+
 
   $("confirmActionButton").textContent =
     "CONFIRM";
 
+
   $("confirmActionButton").onclick =
     completeAbility;
 
-  setScreen("actionScreen");
+
+  setScreen(
+    "actionScreen"
+  );
+
 }
 
 
 /* =========================================================
-   SCIENTIST
+   SCIENTIST CHOICES
    ========================================================= */
 
-function renderScientistChoices(p) {
+function renderScientistChoices(p){
 
   $("actionDescription").textContent =
     "Choose a living player to check. If they are Infected or Diseased, you may then choose whether to cure them.";
 
+
   $("actionOptions").innerHTML =
     targetOptions(p)
       .map(
-        o => button(o.label,o.id)
+        o =>
+          button(
+            o.label,
+            o.id
+          )
       )
       .join("");
+
 
   $("actionOptions")
     .querySelectorAll("button")
@@ -1392,22 +2194,33 @@ function renderScientistChoices(p) {
             b.dataset.value
           );
 
-        game.selectedAction =
-          JSON.stringify({
-            type:"science",
-            target:t.id
-          });
+        if(!t)
+          return;
 
-        $("actionOptions").innerHTML =
-          `
-            ${button("🔬 CHECK","check")}
 
-            ${
-              ["infected","diseased"].includes(t.role)
-                ? button("💉 CURE","cure")
-                : ""
-            }
-          `;
+        $("actionOptions").innerHTML = `
+
+          ${button(
+            "🔬 CHECK",
+            "check"
+          )}
+
+          ${
+            [
+              "infected",
+              "diseased"
+            ].includes(t.role)
+
+              ? button(
+                  "💉 CURE",
+                  "cure"
+                )
+
+              : ""
+          }
+
+        `;
+
 
         $("actionOptions")
           .querySelectorAll("button")
@@ -1418,37 +2231,41 @@ function renderScientistChoices(p) {
               const mode =
                 x.dataset.value;
 
-              if(mode === "check") {
 
-                game.selectedAction =
-                  JSON.stringify({
-                    type:"science",
-                    target:t.id,
-                    mode:"check"
-                  });
-              }
+              game.selectedAction =
+                JSON.stringify({
 
-              if(mode === "cure") {
+                  type:"science",
 
-                game.selectedAction =
-                  JSON.stringify({
-                    type:"science",
-                    target:t.id,
-                    mode:"cure"
-                  });
-              }
+                  target:t.id,
+
+                  mode
+
+                });
+
 
               $("actionOptions")
                 .querySelectorAll("button")
                 .forEach(
-                  y => y.classList.remove("selected")
+                  y =>
+                    y.classList.remove(
+                      "selected"
+                    )
                 );
 
-              x.classList.add("selected");
+
+              x.classList.add(
+                "selected"
+              );
+
             };
+
           });
+
       };
+
     });
+
 }
 
 
@@ -1460,25 +2277,46 @@ function renderTargetChoices(
   p,
   unused,
   action
-) {
+){
 
-  $("actionDescription").textContent =
-    {
-      kill:"Choose a player to kill.",
-      silence:"Choose a player to silence for 2 rounds.",
-      infect:"Choose a player to infect.",
-      science:"Choose a player to investigate.",
-      detect:"Choose a player to investigate.",
-      protect:"Choose a player to protect.",
-      block:"Choose a player whose ability to block."
-    }[action] || "Choose a player.";
+  $("actionDescription").textContent = {
+
+    kill:
+      "Choose a player to kill.",
+
+    silence:
+      "Choose a player to silence for 2 rounds.",
+
+    infect:
+      "Choose a player to infect.",
+
+    science:
+      "Choose a player to investigate.",
+
+    detect:
+      "Choose a player to investigate.",
+
+    protect:
+      "Choose a player to protect.",
+
+    block:
+      "Choose a player whose ability to block."
+
+  }[action] ||
+    "Choose a player.";
+
 
   $("actionOptions").innerHTML =
     targetOptions(p)
       .map(
-        o => button(o.label,o.id)
+        o =>
+          button(
+            o.label,
+            o.id
+          )
       )
       .join("");
+
 
   $("actionOptions")
     .querySelectorAll("button")
@@ -1488,19 +2326,32 @@ function renderTargetChoices(
 
         game.selectedAction =
           JSON.stringify({
+
             type:action,
+
             target:b.dataset.value
+
           });
+
 
         $("actionOptions")
           .querySelectorAll("button")
           .forEach(
-            x => x.classList.remove("selected")
+            x =>
+              x.classList.remove(
+                "selected"
+              )
           );
 
-        b.classList.add("selected");
+
+        b.classList.add(
+          "selected"
+        );
+
       };
+
     });
+
 }
 
 
@@ -1508,42 +2359,61 @@ function renderTargetChoices(
    SYSTEM CHOICES
    ========================================================= */
 
-function renderSystemChoices(engineer=false) {
+function renderSystemChoices(
+  engineer = false
+){
 
   const systems =
     engineer
-      ? Object.keys(game.systems)
-          .filter(
-            k => !game.systems[k]
-          )
-      : Object.keys(game.systems);
 
-  if(!systems.length) {
+      ? Object.keys(
+          game.systems
+        ).filter(
+          k =>
+            !game.systems[k]
+        )
+
+      : Object.keys(
+          game.systems
+        );
+
+
+  if(!systems.length){
 
     $("actionDescription").textContent =
-      "No systems are offline.";
+      engineer
+        ? "There are no offline systems to repair."
+        : "No systems are available.";
 
     game.selectedAction =
       "none";
 
     return;
+
   }
+
 
   $("actionDescription").textContent =
     engineer
       ? "Choose an offline system to repair."
       : "Choose a ship system to sabotage.";
 
+
   $("actionOptions").innerHTML =
     systems
       .map(
         k =>
           button(
-            `${game.systems[k] ? "🟢" : "🔴"} ${k.toUpperCase()}`,
+            `${
+              game.systems[k]
+                ? "🟢"
+                : "🔴"
+            } ${k.toUpperCase()}`,
             k
           )
       )
       .join("");
+
 
   $("actionOptions")
     .querySelectorAll("button")
@@ -1553,21 +2423,36 @@ function renderSystemChoices(engineer=false) {
 
         game.selectedAction =
           JSON.stringify({
-            type:engineer
-              ? "repair"
-              : "sabotage",
-            system:b.dataset.value
+
+            type:
+              engineer
+                ? "repair"
+                : "sabotage",
+
+            system:
+              b.dataset.value
+
           });
+
 
         $("actionOptions")
           .querySelectorAll("button")
           .forEach(
-            x => x.classList.remove("selected")
+            x =>
+              x.classList.remove(
+                "selected"
+              )
           );
 
-        b.classList.add("selected");
+
+        b.classList.add(
+          "selected"
+        );
+
       };
+
     });
+
 }
 
 
@@ -1575,15 +2460,17 @@ function renderSystemChoices(engineer=false) {
    TRICKSTER
    ========================================================= */
 
-function renderSwapChoices(p) {
+function renderSwapChoices(p){
 
   const ids =
     living().map(
       x => x.id
     );
 
+
   $("actionDescription").textContent =
     "Choose TWO living players whose displayed identities will be swapped through voting.";
+
 
   $("actionOptions").innerHTML =
     ids
@@ -1596,7 +2483,9 @@ function renderSwapChoices(p) {
       )
       .join("");
 
+
   let chosen = [];
+
 
   $("actionOptions")
     .querySelectorAll("button")
@@ -1607,37 +2496,63 @@ function renderSwapChoices(p) {
         const id =
           b.dataset.value;
 
-        if(chosen.includes(id)) {
+
+        if(
+          chosen.includes(id)
+        ){
 
           chosen =
             chosen.filter(
               x => x !== id
             );
 
-          b.classList.remove("selected");
+          b.classList.remove(
+            "selected"
+          );
 
-        } else if(chosen.length < 2) {
+        }
+
+        else if(
+          chosen.length < 2
+        ){
 
           chosen.push(id);
 
-          b.classList.add("selected");
+          b.classList.add(
+            "selected"
+          );
+
         }
 
-        if(chosen.length === 2) {
+
+        if(
+          chosen.length === 2
+        ){
 
           game.selectedAction =
             JSON.stringify({
+
               type:"swap",
+
               a:chosen[0],
+
               b:chosen[1]
+
             });
 
-        } else {
-
-          game.selectedAction = null;
         }
+
+        else {
+
+          game.selectedAction =
+            null;
+
+        }
+
       };
+
     });
+
 }
 
 
@@ -1645,322 +2560,850 @@ function renderSwapChoices(p) {
    COMPLETE ABILITY
    ========================================================= */
 
-function completeAbility() {
+function completeAbility(){
 
   const p =
     getPlayer(
-      game.abilityQueue[game.abilityIndex]
+      game.abilityQueue[
+        game.abilityIndex
+      ]
     );
 
-  if(!alive(p)) {
+  if(!p)
     return advanceAbility();
-  }
+
+
+  if(!alive(p))
+    return advanceAbility();
+
 
   let action =
     game.selectedAction;
+
+
+  /*
+     Parse JSON actions.
+  */
 
   if(
     action &&
     typeof action === "string" &&
     action.startsWith("{")
-  ) {
+  ){
 
-    action =
-      JSON.parse(action);
+    try {
+
+      action =
+        JSON.parse(action);
+
+    }
+
+    catch{
+
+      action = null;
+
+    }
+
   }
+
 
   if(
     action &&
     typeof action === "object"
-  ) {
+  ){
 
     game.actions[p.id] =
       action;
 
-    applyImmediateAction(
-      p,
-      action
-    );
-
-  } else if(
-    action === "radio" &&
-    game.systems.communications
-  ) {
-
-    game.actions[p.id] = {
-      type:"radio",
-      message:randomRadioMessage()
-    };
-
-  } else {
-
-    game.actions[p.id] = {
-      type:"none"
-    };
   }
 
+  else if(
+    action === "radio" &&
+    game.systems.communications
+  ){
+
+    game.actions[p.id] = {
+
+      type:"radio",
+
+      message:
+        randomRadioMessage()
+
+    };
+
+  }
+
+  else {
+
+    game.actions[p.id] = {
+
+      type:"none"
+
+    };
+
+  }
+
+
   advanceAbility();
+
 }
 
 
-function advanceAbility() {
+/* =========================================================
+   ADVANCE ABILITY
+   ========================================================= */
+
+function advanceAbility(){
 
   game.abilityIndex++;
 
   if(
     game.abilityIndex <
     game.abilityQueue.length
-  ) {
+  ){
 
     passToAbility();
 
-  } else {
+  }
+
+  else {
 
     resolveAbilities();
+
   }
+
 }
 
 
 /* =========================================================
-   IMMEDIATE ACTIONS
+   RESOLVE ALL ABILITIES
    ========================================================= */
 
-function applyImmediateAction(p,a) {
+function resolveAbilities(){
 
-  if(a.type === "repair") {
+  /*
+     STEP 1:
+     Resolve Guard blocks FIRST.
 
-    game.systems[a.system] =
-      true;
-  }
-
-  if(a.type === "sabotage") {
-
-    game.systems[a.system] =
-      false;
-  }
-
-  if(a.type === "protect") {
-
-    game.protectedPlayers.add(
-      a.target
-    );
-  }
-
-  if(a.type === "block") {
-
-    game.blockedPlayers.add(
-      a.target
-    );
-  }
-
-  if(a.type === "silence") {
-
-    game.silencedUntil[a.target] =
-      Math.max(
-        game.silencedUntil[a.target] || 0,
-        game.round + 2
-      );
-  }
-
-  if(a.type === "swap") {
-
-    game.displaySwap =
-      [a.a,a.b];
-
-    game.tricksterUsed =
-      true;
-  }
-
-  if(a.type === "infect") {
-
-    p.hasInfected =
-      true;
-
-    const target =
-      getPlayer(a.target);
-
-    if(
-      target &&
-      alive(target) &&
-      !target.infectionRound &&
-      !game.blockedPlayers.has(target.id)
-    ) {
-
-      target.infectionRound =
-        game.round;
-
-      target.originalRole =
-        target.role;
-
-      target.role =
-        "infected";
-
-      target.hasInfected =
-        false;
-
-      game.reactionInfo[target.id] =
-        `You were infected this round.`;
-    }
-  }
-
-  if(a.type === "science") {
-
-    const t =
-      getPlayer(a.target);
-
-    if(t) {
-
-      const status =
-        ROLE_DATA[t.role]?.name ||
-        t.role;
-
-      game.reactionInfo[p.id] =
-        `SCIENCE: ${t.name} is ${status}.`;
-
-      if(
-        a.mode === "cure" &&
-        (
-          t.role === "infected" ||
-          t.role === "diseased"
-        )
-      ) {
-
-        t.role =
-          "survivor";
-
-        t.infectionRound =
-          null;
-
-        t.hasInfected =
-          false;
-
-        game.reactionInfo[p.id] =
-          `SCIENCE: ${t.name} was cured and is now a Survivor.`;
-
-        if(
-          game.reactionInfo[t.id] &&
-          t.id !== p.id
-        ) {
-
-          game.reactionInfo[t.id] =
-            "You were cured by the Scientist and are now a Survivor.";
-        }
-      }
-    }
-  }
-
-  if(a.type === "detect") {
-
-    const t =
-      getPlayer(a.target);
-
-    const prev =
-      game.previousActions[t.id];
-
-    game.reactionInfo[p.id] =
-      detectiveMessage(
-        t,
-        prev
-      );
-  }
-
-  if(a.type === "radio") {
-
-    game.reactionInfo[p.id] =
-      a.message;
-  }
-}
-
-
-/* =========================================================
-   RESOLVE ABILITIES
-   ========================================================= */
-
-function resolveAbilities() {
-
-  const killActions =
-    Object.entries(game.actions)
-      .filter(
-        ([,a]) => a.type === "kill"
-      );
+     This guarantees Guard can block a player
+     regardless of ability order.
+  */
 
   for(
-    const [id,a]
-    of killActions
-  ) {
+    const [actorId,action]
+    of Object.entries(
+      game.actions
+    )
+  ){
+
+    if(
+      action.type !== "block"
+    )
+      continue;
+
 
     const actor =
-      getPlayer(id);
+      getPlayer(actorId);
 
     const target =
-      getPlayer(a.target);
+      getPlayer(action.target);
+
 
     if(
       actor &&
       target &&
       alive(actor) &&
       alive(target) &&
-      !game.blockedPlayers.has(actor.id)
-    ) {
+      canGuardAct(actor)
+    ){
 
-      if(
-        !game.protectedPlayers.has(
-          target.id
-        )
-      ) {
+      game.blockedPlayers.add(
+        target.id
+      );
 
-        target.alive =
-          false;
-
-        game.lastRoundResults.push(
-          `${target.name} was killed.`
-        );
-
-        game.reactionInfo[target.id] =
-          "You were killed this round.";
-
-      } else {
-
-        game.reactionInfo[target.id] =
-          "You were attacked, but you were protected.";
-      }
     }
+
   }
 
 
-  /* Infection progression */
+  /*
+     STEP 2:
+     Resolve protection.
+  */
+
+  for(
+    const [actorId,action]
+    of Object.entries(
+      game.actions
+    )
+  ){
+
+    if(
+      action.type !== "protect"
+    )
+      continue;
+
+
+    const actor =
+      getPlayer(actorId);
+
+    const target =
+      getPlayer(action.target);
+
+
+    if(
+      actor &&
+      target &&
+      alive(actor) &&
+      alive(target) &&
+      !game.blockedPlayers.has(
+        actor.id
+      )
+    ){
+
+      game.protectedPlayers.add(
+        target.id
+      );
+
+    }
+
+  }
+
+
+  /*
+     STEP 3:
+     Resolve repairs and sabotage.
+  */
+
+  for(
+    const [actorId,action]
+    of Object.entries(
+      game.actions
+    )
+  ){
+
+    const actor =
+      getPlayer(actorId);
+
+
+    if(
+      !actor ||
+      !alive(actor) ||
+      game.blockedPlayers.has(
+        actor.id
+      )
+    )
+      continue;
+
+
+    if(
+      action.type === "repair"
+    ){
+
+      if(
+        actor.role === "engineer"
+      ){
+
+        game.systems[
+          action.system
+        ] = true;
+
+      }
+
+    }
+
+
+    if(
+      action.type === "sabotage"
+    ){
+
+      if(
+        [
+          "alien",
+          "saboteur"
+        ].includes(
+          actor.role
+        )
+      ){
+
+        game.systems[
+          action.system
+        ] = false;
+
+      }
+
+    }
+
+  }
+
+
+  /*
+     STEP 4:
+     Resolve silence.
+  */
+
+  for(
+    const [actorId,action]
+    of Object.entries(
+      game.actions
+    )
+  ){
+
+    if(
+      action.type !== "silence"
+    )
+      continue;
+
+
+    const actor =
+      getPlayer(actorId);
+
+    const target =
+      getPlayer(action.target);
+
+
+    if(
+      actor &&
+      target &&
+      alive(actor) &&
+      alive(target) &&
+      !game.blockedPlayers.has(
+        actor.id
+      )
+    ){
+
+      game.silencedUntil[
+        target.id
+      ] =
+        Math.max(
+          game.silencedUntil[
+            target.id
+          ] || 0,
+
+          game.round + 2
+        );
+
+    }
+
+  }
+
+
+  /*
+     STEP 5:
+     Resolve Trickster.
+  */
+
+  for(
+    const [actorId,action]
+    of Object.entries(
+      game.actions
+    )
+  ){
+
+    if(
+      action.type !== "swap"
+    )
+      continue;
+
+
+    const actor =
+      getPlayer(actorId);
+
+
+    if(
+      !actor ||
+      !alive(actor) ||
+      actor.role !== "trickster" ||
+      game.blockedPlayers.has(
+        actor.id
+      ) ||
+      game.tricksterUsed
+    )
+      continue;
+
+
+    const a =
+      getPlayer(action.a);
+
+    const b =
+      getPlayer(action.b);
+
+
+    if(
+      a &&
+      b &&
+      alive(a) &&
+      alive(b) &&
+      a.id !== b.id
+    ){
+
+      game.displaySwap =
+        [
+          a.id,
+          b.id
+        ];
+
+      game.tricksterUsed =
+        true;
+
+    }
+
+  }
+
+
+  /*
+     STEP 6:
+     Resolve infection.
+  */
+
+  for(
+    const [actorId,action]
+    of Object.entries(
+      game.actions
+    )
+  ){
+
+    if(
+      action.type !== "infect"
+    )
+      continue;
+
+
+    const actor =
+      getPlayer(actorId);
+
+    const target =
+      getPlayer(action.target);
+
+
+    if(
+      !actor ||
+      !target ||
+      !alive(actor) ||
+      !alive(target)
+    )
+      continue;
+
+
+    if(
+      actor.role !== "parasite"
+    )
+      continue;
+
+
+    if(
+      actor.hasInfected
+    )
+      continue;
+
+
+    if(
+      game.blockedPlayers.has(
+        actor.id
+      )
+    )
+      continue;
+
+
+    /*
+       Cannot infect an already infected/
+       diseased/parasite player.
+    */
+
+    if(
+      target.infectionRound !== null ||
+      [
+        "infected",
+        "diseased",
+        "parasite"
+      ].includes(
+        target.role
+      )
+    )
+      continue;
+
+
+    actor.hasInfected =
+      true;
+
+    target.infectionRound =
+      game.round;
+
+    target.originalRole =
+      target.role;
+
+    /*
+       IMPORTANT:
+       Target's role is secretly changed.
+       Their role screen still shows their
+       original role.
+    */
+
+    target.role =
+      "infected";
+
+  }
+
+
+  /*
+     STEP 7:
+     Resolve Scientist.
+  */
+
+  for(
+    const [actorId,action]
+    of Object.entries(
+      game.actions
+    )
+  ){
+
+    if(
+      action.type !== "science"
+    )
+      continue;
+
+
+    const actor =
+      getPlayer(actorId);
+
+    const target =
+      getPlayer(action.target);
+
+
+    if(
+      !actor ||
+      !target ||
+      !alive(actor) ||
+      !alive(target)
+    )
+      continue;
+
+
+    if(
+      game.blockedPlayers.has(
+        actor.id
+      )
+    )
+      continue;
+
+
+    let status;
+
+
+    if(
+      target.role === "infected"
+    ){
+
+      status =
+        "Infected";
+
+    }
+
+    else if(
+      target.role === "diseased"
+    ){
+
+      status =
+        "Diseased";
+
+    }
+
+    else if(
+      target.role === "parasite"
+    ){
+
+      status =
+        "Parasite";
+
+    }
+
+    else {
+
+      status =
+        "Healthy";
+
+    }
+
+
+    game.reactionInfo[
+      actor.id
+    ] =
+      `SCIENCE: ${target.name} is ${status}.`;
+
+
+    /*
+       Cure.
+    */
+
+    if(
+      action.mode === "cure" &&
+      [
+        "infected",
+        "diseased"
+      ].includes(
+        target.role
+      )
+    ){
+
+      target.role =
+        "survivor";
+
+      target.infectionRound =
+        null;
+
+      target.hasInfected =
+        false;
+
+
+      game.reactionInfo[
+        actor.id
+      ] =
+        `SCIENCE: ${target.name} was cured and is now a Survivor.`;
+
+    }
+
+  }
+
+
+  /*
+     STEP 8:
+     Resolve Detective.
+  */
+
+  for(
+    const [actorId,action]
+    of Object.entries(
+      game.actions
+    )
+  ){
+
+    if(
+      action.type !== "detect"
+    )
+      continue;
+
+
+    const actor =
+      getPlayer(actorId);
+
+    const target =
+      getPlayer(action.target);
+
+
+    if(
+      !actor ||
+      !target ||
+      !alive(actor) ||
+      !alive(target)
+    )
+      continue;
+
+
+    if(
+      game.blockedPlayers.has(
+        actor.id
+      )
+    )
+      continue;
+
+
+    const previous =
+      game.previousActions[
+        target.id
+      ];
+
+
+    game.reactionInfo[
+      actor.id
+    ] =
+      detectiveMessage(
+        target,
+        previous
+      );
+
+  }
+
+
+  /*
+     STEP 9:
+     Resolve Radio.
+  */
+
+  for(
+    const [actorId,action]
+    of Object.entries(
+      game.actions
+    )
+  ){
+
+    if(
+      action.type !== "radio"
+    )
+      continue;
+
+
+    const actor =
+      getPlayer(actorId);
+
+
+    if(
+      !actor ||
+      !alive(actor) ||
+      game.blockedPlayers.has(
+        actor.id
+      )
+    )
+      continue;
+
+
+    if(
+      game.systems.communications
+    ){
+
+      game.reactionInfo[
+        actor.id
+      ] =
+        action.message;
+
+    }
+
+  }
+
+
+  /*
+     STEP 10:
+     Resolve kills LAST.
+
+     This lets Medic protection work correctly.
+  */
+
+  const killActions =
+    Object.entries(
+      game.actions
+    ).filter(
+      ([,a]) =>
+        a.type === "kill"
+    );
+
+
+  for(
+    const [actorId,action]
+    of killActions
+  ){
+
+    const actor =
+      getPlayer(actorId);
+
+    const target =
+      getPlayer(action.target);
+
+
+    if(
+      !actor ||
+      !target ||
+      !alive(actor) ||
+      !alive(target)
+    )
+      continue;
+
+
+    if(
+      game.blockedPlayers.has(
+        actor.id
+      )
+    )
+      continue;
+
+
+    /*
+       Kills can only be performed by Alien.
+    */
+
+    if(
+      actor.role !== "alien"
+    )
+      continue;
+
+
+    if(
+      game.protectedPlayers.has(
+        target.id
+      )
+    ){
+
+      game.reactionInfo[
+        target.id
+      ] =
+        "You were attacked, but you were protected.";
+
+      continue;
+
+    }
+
+
+    target.alive =
+      false;
+
+
+    game.lastRoundResults.push(
+      `${target.name} was killed.`
+    );
+
+
+    game.reactionInfo[
+      target.id
+    ] =
+      "You were killed this round.";
+
+  }
+
+
+  /*
+     STEP 11:
+     Infection progression.
+
+     Round infected = hidden
+     Next round = Diseased
+     Following round = Parasite
+  */
 
   for(
     const p of game.players
-  ) {
+  ){
 
     if(
       !p.alive ||
       !p.infectionRound
-    ) {
+    )
       continue;
-    }
+
 
     const age =
       game.round -
       p.infectionRound +
       1;
 
+
     if(
       age === 2 &&
       p.role === "infected"
-    ) {
+    ){
 
       p.role =
         "diseased";
 
-      game.reactionInfo[p.id] =
+
+      game.reactionInfo[
+        p.id
+      ] =
         "You became DISEASED. You are on the HOSTILE TEAM.";
 
-    } else if(
+    }
+
+    else if(
       age >= 3 &&
       p.role === "diseased"
-    ) {
+    ){
 
       p.role =
         "parasite";
@@ -1968,76 +3411,263 @@ function resolveAbilities() {
       p.hasInfected =
         false;
 
-      game.reactionInfo[p.id] =
+
+      game.reactionInfo[
+        p.id
+      ] =
         "You became a PARASITE. You are on the HOSTILE TEAM.";
+
     }
+
   }
 
+
   showReactions();
+
 }
 
 
 /* =========================================================
-   DETECTIVE
+   GUARD CHECK
+   ========================================================= */
+
+function canGuardAct(p){
+
+  if(!p || !alive(p))
+    return false;
+
+  if(
+    p.role !== "guard"
+  )
+    return false;
+
+  if(
+    game.systems.power === false
+  )
+    return false;
+
+  return true;
+
+}
+
+
+/* =========================================================
+   DETECTIVE MESSAGE
    ========================================================= */
 
 function detectiveMessage(
   target,
   action
-) {
+){
 
   if(
     !action ||
     action.type === "none"
-  ) {
+  ){
 
     return `${target.name} had no interaction last round.`;
+
   }
 
-  if(action.type === "radio") {
+
+  if(
+    action.type === "radio"
+  ){
 
     return `${target.name} interacted with Communications.`;
+
   }
 
-  if(action.target) {
+
+  if(
+    action.target
+  ){
 
     return `${target.name} interacted with ${displayName(action.target)}.`;
+
   }
 
-  if(action.system) {
+
+  if(
+    action.system
+  ){
 
     return `${target.name} interacted with ${action.system.toUpperCase()}.`;
+
   }
 
-  if(action.type === "swap") {
+
+  if(
+    action.type === "swap"
+  ){
 
     return `${target.name} interacted with ${displayName(action.a)} and ${displayName(action.b)}.`;
+
   }
 
+
   return `${target.name} had an interaction last round.`;
+
 }
 
 
 /* =========================================================
-   RADIO
+   RADIO MESSAGES
    ========================================================= */
 
-function randomRadioMessage() {
+function randomRadioMessage(){
 
-  const messages = [
+  const hostiles =
+    living().filter(
+      isHostile
+    );
 
-    "Earth: We detected hostile activity somewhere on the ship.",
 
-    "Earth: One of the living players is hostile.",
+  const systemsOffline =
+    Object.entries(
+      game.systems
+    )
+    .filter(
+      ([,online]) =>
+        !online
+    )
+    .map(
+      ([name]) =>
+        name.toUpperCase()
+    );
 
-    "Earth: A ship system was recently tampered with.",
 
-    "Earth: Communications is stable. Stay alert.",
+  const messages = [];
 
-    "Earth: We cannot identify a hostile player from this transmission."
-  ];
 
-  return rand(messages);
+  /*
+     Exact hostile count.
+  */
+
+  messages.push(
+    `EARTH: There are exactly ${hostiles.length} hostiles remaining.`
+  );
+
+
+  /*
+     If something is offline, identify
+     players who interacted with that system
+     last round.
+  */
+
+  if(
+    systemsOffline.length
+  ){
+
+    const system =
+      rand(
+        systemsOffline
+      );
+
+
+    const systemKey =
+      system.toLowerCase();
+
+
+    const actors =
+      game.previousActions
+        ? Object.entries(
+            game.previousActions
+          )
+          .filter(
+            ([,a]) =>
+              a?.system === systemKey
+          )
+          .map(
+            ([id]) =>
+              getPlayer(id)
+          )
+          .filter(Boolean)
+        : [];
+
+
+    if(actors.length >= 2){
+
+      messages.push(
+        `EARTH: ${actors.slice(0,3).map(p => p.name).join(", ")} — one of them made ${system} OFFLINE.`
+      );
+
+    }
+
+  }
+
+
+  /*
+     Give a concrete hostile clue.
+  */
+
+  if(hostiles.length){
+
+    const sample =
+      shuffle(
+        living()
+      ).slice(
+        0,
+        Math.min(
+          3,
+          living().length
+        )
+      );
+
+
+    if(
+      sample.length >= 2
+    ){
+
+      /*
+         Ensure exactly one listed player
+         is hostile where possible.
+      */
+
+      const hostile =
+        rand(hostiles);
+
+
+      const humans =
+        living().filter(
+          p =>
+            p.id !== hostile.id &&
+            !isHostile(p)
+        );
+
+
+      const others =
+        shuffle(humans).slice(
+          0,
+          2
+        );
+
+
+      const clue =
+        shuffle([
+          hostile,
+          ...others
+        ]);
+
+
+      messages.push(
+        `EARTH: ${clue.map(p => p.name).join(", ")} — one of them is hostile.`
+      );
+
+    }
+
+  }
+
+
+  messages.push(
+    "EARTH: Communications is stable. Stay alert."
+  );
+
+
+  return rand(
+    messages
+  );
+
 }
 
 
@@ -2045,30 +3675,43 @@ function randomRadioMessage() {
    REACTION ROUND
    ========================================================= */
 
-function showReactions() {
+function showReactions(){
+
+  /*
+     Everyone alive at START of the round
+     gets a reaction result, even if they
+     died during the round.
+  */
 
   game.reactionQueue =
-    [...game.roundStartAliveIds]
-      .filter(
-        id => getPlayer(id)
-      );
+    [
+      ...game.roundStartAliveIds
+    ].filter(
+      id =>
+        getPlayer(id)
+    );
+
 
   game.reactionIndex =
     0;
 
+
   nextReaction();
+
 }
 
 
-function nextReaction() {
+function nextReaction(){
 
   if(
     game.reactionIndex >=
     game.reactionQueue.length
-  ) {
+  ){
 
     return showDiscussion();
+
   }
+
 
   const p =
     getPlayer(
@@ -2076,6 +3719,7 @@ function nextReaction() {
         game.reactionIndex
       ]
     );
+
 
   $("reactionRound").textContent =
     `ROUND ${game.round}`;
@@ -2089,11 +3733,19 @@ function nextReaction() {
   $("reactionReadyButton").textContent =
     "SHOW MY RESULT";
 
-  setScreen("reactionScreen");
+
+  setScreen(
+    "reactionScreen"
+  );
+
 }
 
 
-function showReactionResult() {
+/* =========================================================
+   REACTION RESULT
+   ========================================================= */
+
+function showReactionResult(){
 
   const p =
     getPlayer(
@@ -2102,21 +3754,30 @@ function showReactionResult() {
       ]
     );
 
+
+  if(!p)
+    return advanceReaction();
+
+
   $("reactionResultTitle").textContent =
     p.alive
       ? "ROUND RESULT"
       : "YOU DIED THIS ROUND";
 
-  let msg =
-    game.reactionInfo[p.id];
 
-  if(!msg) {
+  let msg =
+    game.reactionInfo[
+      p.id
+    ];
+
+
+  if(!msg){
 
     if(
       game.silencedUntil[p.id] &&
       game.silencedUntil[p.id] >
-      game.round
-    ) {
+        game.round
+    ){
 
       msg =
         `You have been silenced for ${
@@ -2124,25 +3785,39 @@ function showReactionResult() {
           game.round
         } more round(s). You cannot vote.`;
 
-    } else {
+    }
+
+    else {
 
       msg =
         "Nothing happened to you this round.";
+
     }
+
   }
+
 
   $("reactionResultMessage").textContent =
     msg;
 
-  setScreen("reactionResultScreen");
+
+  setScreen(
+    "reactionResultScreen"
+  );
+
 }
 
 
-function advanceReaction() {
+/* =========================================================
+   ADVANCE REACTION
+   ========================================================= */
+
+function advanceReaction(){
 
   game.reactionIndex++;
 
   nextReaction();
+
 }
 
 
@@ -2150,15 +3825,18 @@ function advanceReaction() {
    DISCUSSION
    ========================================================= */
 
-function showDiscussion() {
+function showDiscussion(){
 
   const systems =
-    Object.entries(game.systems)
-      .map(
-        ([k,v]) =>
-          `${v ? "🟢" : "🔴"} ${k.toUpperCase()}`
-      )
-      .join("  ");
+    Object.entries(
+      game.systems
+    )
+    .map(
+      ([k,v]) =>
+        `${v ? "🟢" : "🔴"} ${k.toUpperCase()}`
+    )
+    .join("  ");
+
 
   $("discussionRound").textContent =
     `ROUND ${game.round}`;
@@ -2166,41 +3844,49 @@ function showDiscussion() {
   $("discussionStage").textContent =
     `STAGE ${game.stage} / 10`;
 
-  $("roundResults").innerHTML =
-    `
-      <p>
-        ${
-          game.lastRoundResults.join("<br>") ||
-          "No deaths this round."
-        }
-      </p>
 
-      <p>
-        ${systems}
-      </p>
+  $("roundResults").innerHTML = `
 
+    <p>
       ${
-        game.displaySwap
-          ? `
-            <p class="warning">
-              🎭 Identities are currently swapped until voting is fully resolved.
-            </p>
-          `
-          : ""
+        game.lastRoundResults.length
+          ? game.lastRoundResults.join("<br>")
+          : "No deaths this round."
       }
-    `;
+    </p>
 
-  setScreen("discussionScreen");
+    <p>
+      ${systems}
+    </p>
+
+    ${
+      game.displaySwap
+        ? `
+          <p class="warning">
+            🎭 Identities are currently swapped until voting is fully resolved.
+          </p>
+        `
+        : ""
+    }
+
+  `;
+
+
+  setScreen(
+    "discussionScreen"
+  );
+
 }
 
 
 /* =========================================================
-   VOTING
+   START VOTING
    ========================================================= */
 
-function startVoting() {
+function startVoting(){
 
-  game.votes = {};
+  game.votes =
+    {};
 
   game.currentVoteIndex =
     0;
@@ -2209,26 +3895,35 @@ function startVoting() {
     false;
 
   showVote();
+
 }
 
 
-function showVote() {
+/* =========================================================
+   SHOW VOTE
+   ========================================================= */
+
+function showVote(){
 
   const alivePlayers =
     living();
 
+
   if(
     game.currentVoteIndex >=
     alivePlayers.length
-  ) {
+  ){
 
     return resolveVoting();
+
   }
+
 
   const p =
     alivePlayers[
       game.currentVoteIndex
     ];
+
 
   $("votingRound").textContent =
     `ROUND ${game.round}`;
@@ -2239,42 +3934,63 @@ function showVote() {
   $("voterName").textContent =
     p.name;
 
+
   const silenced =
-    (game.silencedUntil[p.id] || 0) >
-    game.round;
+    (
+      game.silencedUntil[p.id] ||
+      0
+    ) > game.round;
+
 
   $("votingSilenced").textContent =
     silenced
       ? "🔇 YOU ARE SILENCED — YOU CANNOT VOTE"
       : "";
 
-  $("voteOptions").innerHTML =
-    silenced
-      ? button(
-          "SKIP (SILENCED)",
+
+  if(silenced){
+
+    $("voteOptions").innerHTML =
+      button(
+        "SKIP (SILENCED)",
+        "skip"
+      );
+
+  }
+
+  else {
+
+    $("voteOptions").innerHTML =
+
+      [
+        ...living()
+
+          .filter(
+            x =>
+              x.id !== p.id
+          )
+
+          .map(
+            x =>
+              button(
+                displayName(x.id),
+                x.id
+              )
+          ),
+
+        button(
+          "⏭️ SKIP",
           "skip"
         )
-      : [
-          ...living()
-            .filter(
-              x => x.id !== p.id
-            )
-            .map(
-              x =>
-                button(
-                  displayName(x.id),
-                  x.id
-                )
-            ),
 
-          button(
-            "⏭️ SKIP",
-            "skip"
-          )
-        ].join("");
+      ].join("");
+
+  }
+
 
   game.selectedVote =
     null;
+
 
   $("voteOptions")
     .querySelectorAll("button")
@@ -2285,40 +4001,68 @@ function showVote() {
         game.selectedVote =
           b.dataset.value;
 
+
         $("voteOptions")
           .querySelectorAll("button")
           .forEach(
-            x => x.classList.remove("selected")
+            x =>
+              x.classList.remove(
+                "selected"
+              )
           );
 
-        b.classList.add("selected");
+
+        b.classList.add(
+          "selected"
+        );
+
       };
+
     });
+
 
   $("confirmVoteButton").onclick =
     confirmVote;
 
-  setScreen("votingScreen");
+
+  setScreen(
+    "votingScreen"
+  );
+
 }
 
 
-function confirmVote() {
+/* =========================================================
+   CONFIRM VOTE
+   ========================================================= */
+
+function confirmVote(){
 
   const p =
     living()[
       game.currentVoteIndex
     ];
 
-  if(!game.selectedVote) {
+
+  if(!p)
     return;
-  }
+
+
+  if(
+    !game.selectedVote
+  )
+    return;
+
 
   game.votes[p.id] =
     game.selectedVote;
 
+
   game.currentVoteIndex++;
 
+
   showVote();
+
 }
 
 
@@ -2326,25 +4070,32 @@ function confirmVote() {
    RESOLVE VOTING
    ========================================================= */
 
-function resolveVoting() {
+function resolveVoting(){
 
-  const tally = {};
+  const tally =
+    {};
 
-  Object.values(game.votes)
-    .forEach(v => {
 
-      if(v !== "skip") {
+  Object.values(
+    game.votes
+  ).forEach(v => {
 
-        tally[v] =
-          (tally[v] || 0) + 1;
-      }
-    });
+    if(v !== "skip"){
+
+      tally[v] =
+        (tally[v] || 0) + 1;
+
+    }
+
+  });
+
 
   const max =
     Math.max(
       0,
       ...Object.values(tally)
     );
+
 
   const tied =
     Object.keys(tally)
@@ -2354,25 +4105,43 @@ function resolveVoting() {
           max > 0
       );
 
-  if(tied.length === 1) {
 
-    return finishEjection(
+  /*
+     One clear winner.
+  */
+
+  if(
+    tied.length === 1
+  ){
+
+    return requestJudgeForEjection(
       tied[0],
       false
     );
+
   }
 
-  if(tied.length > 1) {
+
+  /*
+     Tie.
+  */
+
+  if(
+    tied.length > 1
+  ){
 
     const captain =
       living().find(
         p =>
           p.role === "captain" &&
           game.systems.power &&
-          !game.blockedPlayers.has(p.id)
+          !game.blockedPlayers.has(
+            p.id
+          )
       );
 
-    if(captain) {
+
+    if(captain){
 
       showCaptainTie(
         tied,
@@ -2380,13 +4149,21 @@ function resolveVoting() {
       );
 
       return;
+
     }
+
   }
+
+
+  /*
+     No ejection.
+  */
 
   finishEjection(
     null,
     false
   );
+
 }
 
 
@@ -2397,26 +4174,31 @@ function resolveVoting() {
 function showCaptainTie(
   tied,
   captain
-) {
+){
 
-  $("captainTieOptions").innerHTML =
-    `
-      <p>
-        Choose one tied player to eject.
-      </p>
+  $("captainTieOptions").innerHTML = `
 
+    <p>
       ${
-        tied
-          .map(
-            id =>
-              button(
-                displayName(id),
-                id
-              )
-          )
-          .join("")
-      }
-    `;
+        esc(captain.name)
+      },
+      choose one tied player to eject.
+    </p>
+
+    ${
+      tied
+        .map(
+          id =>
+            button(
+              displayName(id),
+              id
+            )
+        )
+        .join("")
+    }
+
+  `;
+
 
   $("captainTieOptions")
     .querySelectorAll("button")
@@ -2424,14 +4206,136 @@ function showCaptainTie(
 
       b.onclick = () => {
 
-        finishEjection(
+        requestJudgeForEjection(
           b.dataset.value,
           true
         );
+
       };
+
     });
 
-  setScreen("captainTieScreen");
+
+  setScreen(
+    "captainTieScreen"
+  );
+
+}
+
+
+/* =========================================================
+   JUDGE CHECK
+   ========================================================= */
+
+/*
+   Judge now works for:
+
+   - Normal majority ejection
+   - Captain tie-breaker ejection
+
+   Judge can cancel ANY ejection.
+*/
+
+function requestJudgeForEjection(
+  id,
+  byCaptain
+){
+
+  const judge =
+    living().find(
+      p =>
+        p.role === "judge" &&
+        !game.judgeUsed &&
+        game.systems.power &&
+        !game.blockedPlayers.has(
+          p.id
+        )
+    );
+
+
+  if(!judge){
+
+    return finishEjection(
+      id,
+      byCaptain
+    );
+
+  }
+
+
+  game.pendingEjection = {
+
+    id,
+
+    byCaptain
+
+  };
+
+
+  $("judgeDescription").textContent =
+
+    byCaptain
+
+      ? `The Captain chose ${displayName(id)} for ejection. Do you want to cancel the ejection?`
+
+      : `${displayName(id)} received enough votes for ejection. Do you want to cancel the ejection?`;
+
+
+  $("judgeAllowButton").onclick =
+    () => {
+
+      game.judgeUsed =
+        true;
+
+      const pending =
+        game.pendingEjection;
+
+      game.pendingEjection =
+        null;
+
+      finishEjection(
+        pending.id,
+        pending.byCaptain,
+        false
+      );
+
+    };
+
+
+  $("judgeCancelButton").onclick =
+    () => {
+
+      game.judgeUsed =
+        true;
+
+      game.pendingEjection =
+        null;
+
+
+      $("voteResultTitle").textContent =
+        "EJECTION CANCELLED";
+
+
+      $("voteResultMessage").textContent =
+        "The Judge cancelled the ejection. Nobody was voted out.";
+
+
+      $("afterVoteButton").onclick =
+        () =>
+          afterVoting();
+
+
+      setScreen(
+        "voteResultScreen"
+      );
+
+    };
+
+
+  setScreen(
+    "judgeScreen"
+  );
+
 }
 
 
@@ -2441,84 +4345,80 @@ function showCaptainTie(
 
 function finishEjection(
   id,
-  byCaptain
-) {
+  byCaptain,
+  unusedJudgeCheck = true
+){
 
-  if(id) {
-
-    const judge =
-      living().find(
-        p =>
-          p.role === "judge" &&
-          !game.judgeUsed &&
-          game.systems.power &&
-          !game.blockedPlayers.has(p.id)
-      );
-
-    if(
-      byCaptain &&
-      judge
-    ) {
-
-      $("voteResultTitle").textContent =
-        "EJECTION CANCELLED";
-
-      $("voteResultMessage").textContent =
-        "The Judge cancelled the Captain's ejection. Nobody was voted out.";
-
-      $("afterVoteButton").onclick =
-        () => afterVoting();
-
-      game.judgeUsed =
-        true;
-
-      setScreen("voteResultScreen");
-
-      return;
-    }
+  if(id){
 
     const p =
       getPlayer(id);
 
-    if(p) {
+
+    if(p){
 
       p.alive =
         false;
 
-      if(p.role === "jester") {
+
+      /*
+         Jester only wins if they are
+         normally voted out.
+      */
+
+      if(
+        p.role === "jester"
+      ){
 
         $("voteResultTitle").textContent =
           "JESTER WINS";
 
+
         $("voteResultMessage").textContent =
           `${p.name} was voted out and wins as the Jester!`;
+
 
         game.gameOver =
           true;
 
-      } else {
+      }
+
+      else {
 
         $("voteResultTitle").textContent =
           "PLAYER VOTED OUT";
 
+
         $("voteResultMessage").textContent =
           `${p.name} was voted out.`;
+
       }
+
     }
 
-  } else {
+  }
+
+  else {
 
     $("voteResultTitle").textContent =
       "NO EJECTION";
 
+
     $("voteResultMessage").textContent =
       "Nobody was voted out.";
+
   }
 
-  $("afterVoteButton").onclick =
-    () => afterVoting();
 
-  setScreen("voteResultScreen");
+  $("afterVoteButton").onclick =
+    () =>
+      afterVoting();
+
+
+  setScreen(
+    "voteResultScreen"
+  );
+
 }
 
 
@@ -2526,33 +4426,70 @@ function finishEjection(
    AFTER VOTING
    ========================================================= */
 
-function afterVoting() {
+function afterVoting(){
+
+  /*
+     Trickster ends ONLY after the entire
+     vote/ejection/Judge sequence is finished.
+  */
 
   game.displaySwap =
     null;
 
-  if(game.gameOver) {
+
+  if(game.gameOver){
 
     return showGameOver();
+
   }
 
-  if(game.round % 3 === 0) {
 
-    if(game.systems.communications) {
+  /*
+     Check victory immediately after
+     someone has been ejected.
+  */
+
+  if(
+    checkVictory()
+  ){
+
+    return;
+
+  }
+
+
+  /*
+     Earth lifeline every 3 rounds.
+  */
+
+  if(
+    game.round % 3 === 0
+  ){
+
+    if(
+      game.systems.communications
+    ){
 
       game.lifelineNumber++;
 
       showLifeline();
 
-    } else {
-
-      proceedToSystems();
     }
 
-  } else {
+    else {
+
+      proceedToSystems();
+
+    }
+
+  }
+
+  else {
 
     proceedToSystems();
+
   }
+
 }
 
 
@@ -2560,107 +4497,189 @@ function afterVoting() {
    EARTH LIFELINE
    ========================================================= */
 
-function showLifeline() {
+function showLifeline(){
 
   const livingHostile =
     living().filter(
       isHostile
     );
 
+
   const others =
     living().filter(
-      p => !isHostile(p)
+      p =>
+        !isHostile(p)
     );
 
-  let msg;
 
-  const pool = [];
+  /*
+     Exactly ONE listed player is hostile.
+  */
 
-  if(livingHostile.length) {
+  let clue = [];
 
-    pool.push(
-      ...shuffle(livingHostile)
-        .slice(0,1)
-    );
+
+  if(
+    livingHostile.length
+  ){
+
+    const hostile =
+      rand(
+        livingHostile
+      );
+
+
+    const safe =
+      shuffle(
+        others
+      ).slice(
+        0,
+        2
+      );
+
+
+    clue =
+      shuffle([
+        hostile,
+        ...safe
+      ]);
+
   }
 
-  pool.push(
-    ...shuffle(others)
-      .slice(0,2)
-  );
+  else {
 
-  msg =
-    pool.length
-      ? `⚠️ ONE OF THESE PLAYERS IS HOSTILE: ${
-          pool
-            .map(
-              p => p.name
-            )
-            .join(", ")
-        }`
+    clue =
+      shuffle(
+        living()
+      ).slice(
+        0,
+        Math.min(
+          3,
+          living().length
+        )
+      );
+
+  }
+
+
+  const msg =
+    clue.length
+
+      ? `⚠️ ONE OF THESE PLAYERS IS HOSTILE: ${clue.map(p => p.name).join(", ")}`
+
       : "Earth sent no useful clue.";
+
 
   $("lifelineTitle").textContent =
     `EARTH LIFELINE #${game.lifelineNumber}`;
 
+
   $("lifelineMessage").textContent =
     msg;
+
 
   $("lifelineContinue").onclick =
     proceedToSystems;
 
-  setScreen("lifelineScreen");
+
+  setScreen(
+    "lifelineScreen"
+  );
+
 }
 
 
 /* =========================================================
-   SYSTEMS / STAGE
+   SYSTEMS / NEXT ROUND
    ========================================================= */
 
-function proceedToSystems() {
+function proceedToSystems(){
 
-  if(game.systems.engines) {
+  /*
+     Engines advance only if they are online.
+  */
+
+  if(
+    game.systems.engines
+  ){
 
     game.stage++;
+
   }
 
-  if(game.stage > 10) {
+
+  /*
+     Stage 10 means Earth is reached.
+  */
+
+  if(
+    game.stage > 10
+  ){
 
     return earthCheck();
+
   }
+
 
   $("systemsRound").textContent =
     `ROUND ${game.round}`;
 
+
   $("systemsStage").textContent =
     `STAGE ${game.stage} / 10`;
 
+
   $("systemsList").innerHTML =
-    Object.entries(game.systems)
-      .map(
-        ([k,v]) =>
-          `
-            <div>
-              ${v ? "🟢" : "🔴"}
-              <strong>${k.toUpperCase()}</strong>
-              —
-              ${v ? "ONLINE" : "OFFLINE"}
-            </div>
-          `
-      )
-      .join("");
+    Object.entries(
+      game.systems
+    )
+    .map(
+      ([k,v]) => `
+
+        <div>
+
+          ${
+            v
+              ? "🟢"
+              : "🔴"
+          }
+
+          <strong>
+            ${k.toUpperCase()}
+          </strong>
+
+          —
+
+          ${
+            v
+              ? "ONLINE"
+              : "OFFLINE"
+          }
+
+        </div>
+
+      `
+    )
+    .join("");
+
 
   $("nextRoundButton").onclick =
     () => {
 
       game.round++;
 
-      game.lastRoundResults = [];
+      game.lastRoundResults =
+        [];
 
       startRound();
+
     };
 
-  setScreen("systemsScreen");
+
+  setScreen(
+    "systemsScreen"
+  );
+
 }
 
 
@@ -2668,27 +4687,32 @@ function proceedToSystems() {
    EARTH CHECK
    ========================================================= */
 
-function earthCheck() {
+function earthCheck(){
 
   const neutrals =
     living().filter(
       isNeutral
     );
 
-  if(neutrals.length) {
+
+  if(neutrals.length){
 
     endGame(
       "NEUTRAL VICTORY",
       "The ship reached Earth with a Neutral player still alive."
     );
 
-  } else {
+  }
+
+  else {
 
     endGame(
       "HUMAN VICTORY",
       "The crew completed all 10 stages and reached Earth."
     );
+
   }
+
 }
 
 
@@ -2696,26 +4720,34 @@ function earthCheck() {
    VICTORY CHECK
    ========================================================= */
 
-function checkVictory() {
+function checkVictory(){
 
-  if(game.gameOver) {
+  if(game.gameOver)
     return true;
-  }
+
 
   const host =
     living().filter(
       isHostile
     ).length;
 
+
   const nonHost =
     living().filter(
-      p => !isHostile(p)
+      p =>
+        !isHostile(p)
     ).length;
+
+
+  /*
+     Hostiles win when they equal or
+     outnumber everyone else.
+  */
 
   if(
     host >= nonHost &&
     host > 0
-  ) {
+  ){
 
     endGame(
       "HOSTILE VICTORY",
@@ -2723,24 +4755,27 @@ function checkVictory() {
     );
 
     return true;
+
   }
 
-  const neutrals =
-    living().filter(
-      isNeutral
-    );
+
+  /*
+     Survivor King wins independently
+     as one of the final two.
+  */
 
   if(
-    living().length === 2 &&
-    neutrals.length
-  ) {
+    living().length === 2
+  ){
 
     const kings =
-      neutrals.filter(
-        p => p.role === "king"
+      living().filter(
+        p =>
+          p.role === "king"
       );
 
-    if(kings.length) {
+
+    if(kings.length){
 
       endGame(
         "SURVIVOR KING WINS",
@@ -2748,10 +4783,14 @@ function checkVictory() {
       );
 
       return true;
+
     }
+
   }
 
+
   return false;
+
 }
 
 
@@ -2762,55 +4801,94 @@ function checkVictory() {
 function endGame(
   title,
   msg
-) {
+){
 
   game.gameOver =
     true;
 
+
   $("gameOverTitle").textContent =
     title;
+
 
   $("gameOverMessage").textContent =
     msg;
 
+
   $("finalPlayers").innerHTML =
     game.players
+
       .map(
-        p =>
-          `
-            <div class="${p.alive ? "" : "dead"}">
+        p => `
 
-              <strong>
-                ${esc(p.name)}
-              </strong>
+          <div
+            class="${
+              p.alive
+                ? ""
+                : "dead"
+            }"
+          >
 
-              —
-              ${ROLE_DATA[p.role]?.icon || ""}
-              ${ROLE_DATA[p.role]?.name || p.role}
+            <strong>
+              ${esc(p.name)}
+            </strong>
 
-              <span
-                class="team-${teamClass(roleTeam(p))}"
-              >
-                [${roleTeam(p)}]
-              </span>
+            —
 
-              ${p.alive ? "ALIVE" : "DEAD"}
+            ${
+              ROLE_DATA[p.role]?.icon ||
+              ""
+            }
 
-            </div>
-          `
+            ${
+              ROLE_DATA[p.role]?.name ||
+              p.role
+            }
+
+            <span
+              class="team-${
+                teamClass(
+                  roleTeam(p)
+                )
+              }"
+            >
+              [
+              ${
+                roleTeam(p)
+              }
+              ]
+            </span>
+
+            ${
+              p.alive
+                ? "ALIVE"
+                : "DEAD"
+            }
+
+          </div>
+
+        `
       )
       .join("");
 
-  setScreen("gameOverScreen");
+
+  setScreen(
+    "gameOverScreen"
+  );
+
 }
 
 
-function showGameOver() {
+function showGameOver(){
 
   endGame(
+
     $("voteResultTitle").textContent,
+
     $("voteResultMessage").textContent
+
   );
+
 }
 
 
@@ -2818,15 +4896,21 @@ function showGameOver() {
    MODALS
    ========================================================= */
 
-function openModal(id) {
+function openModal(id){
 
-  $(id).classList.add("open");
+  $(id)?.classList.add(
+    "open"
+  );
+
 }
 
 
-function closeModal(id) {
+function closeModal(id){
 
-  $(id).classList.remove("open");
+  $(id)?.classList.remove(
+    "open"
+  );
+
 }
 
 
@@ -2834,13 +4918,15 @@ function closeModal(id) {
    ROLE GUIDE
    ========================================================= */
 
-function renderRoleGuide() {
+function renderRoleGuide(){
 
   const sections = [
 
     [
       "HOSTILE",
-      HOSTILES.concat(["diseased"])
+      HOSTILES.concat([
+        "diseased"
+      ])
     ],
 
     [
@@ -2850,70 +4936,102 @@ function renderRoleGuide() {
 
     [
       "NEUTRAL",
-      ["jester","king"]
+      [
+        "jester",
+        "king"
+      ]
     ],
 
     [
       "INFECTION / SUB-ROLES",
-      ["infected","diseased","parasite"]
+      [
+        "infected",
+        "diseased",
+        "parasite"
+      ]
     ],
 
     [
       "ROLE CONCEPT",
-      ["trickster"]
+      [
+        "trickster"
+      ]
     ]
+
   ];
 
+
   $("roleGuideContent").innerHTML =
+
     sections
+
       .map(
-        ([title,roles]) =>
-          `
-            <section>
+        ([title,roles]) => `
 
-              <h3>
-                ${title}
-              </h3>
+          <section>
 
-              ${
-                roles
-                  .map(
-                    r =>
-                      `
-                        <article
-                          class="guide-card ${teamClass(ROLE_DATA[r].team)}"
+            <h3>
+              ${title}
+            </h3>
+
+            ${
+              roles
+                .map(
+                  r => `
+
+                    <article
+                      class="guide-card ${
+                        teamClass(
+                          ROLE_DATA[r].team
+                        )
+                      }"
+                    >
+
+                      <div
+                        class="guide-icon"
+                      >
+                        ${
+                          ROLE_DATA[r].icon
+                        }
+                      </div>
+
+                      <div>
+
+                        <strong>
+                          ${
+                            ROLE_DATA[r].name
+                          }
+                        </strong>
+
+                        <div
+                          class="guide-team"
                         >
+                          ${
+                            ROLE_DATA[r].team
+                          }
+                        </div>
 
-                          <div class="guide-icon">
-                            ${ROLE_DATA[r].icon}
-                          </div>
+                        <p>
+                          ${
+                            ROLE_DATA[r].desc
+                          }
+                        </p>
 
-                          <div>
+                      </div>
 
-                            <strong>
-                              ${ROLE_DATA[r].name}
-                            </strong>
+                    </article>
 
-                            <div class="guide-team">
-                              ${ROLE_DATA[r].team}
-                            </div>
+                  `
+                )
+                .join("")
+            }
 
-                            <p>
-                              ${ROLE_DATA[r].desc}
-                            </p>
+          </section>
 
-                          </div>
-
-                        </article>
-                      `
-                  )
-                  .join("")
-              }
-
-            </section>
-          `
+        `
       )
       .join("");
+
 }
 
 
@@ -2921,7 +5039,7 @@ function renderRoleGuide() {
    CUSTOM ROLES
    ========================================================= */
 
-function renderCustomRoles() {
+function renderCustomRoles(){
 
   const groups = [
 
@@ -2944,50 +5062,81 @@ function renderCustomRoles() {
       "ROLE CONCEPT",
       CONCEPTS
     ]
+
   ];
 
+
   $("customRoleContent").innerHTML =
+
     groups
+
       .map(
-        ([title,roles]) =>
-          `
-            <section>
+        ([title,roles]) => `
 
-              <h3>
-                ${title}
-              </h3>
+          <section>
 
-              ${
-                roles
-                  .map(r => {
+            <h3>
+              ${title}
+            </h3>
+
+            ${
+              roles
+                .map(
+                  r => {
 
                     const locked =
                       r === "engineer";
 
+
                     return `
+
                       <div
-                        class="custom-row ${locked ? "locked" : ""}"
+                        class="custom-row ${
+                          locked
+                            ? "locked"
+                            : ""
+                        }"
                       >
 
                         <span>
-                          ${ROLE_DATA[r].icon}
-                          ${ROLE_DATA[r].name}
+
+                          ${
+                            ROLE_DATA[r].icon
+                          }
+
+                          ${
+                            ROLE_DATA[r].name
+                          }
+
                         </span>
 
+
                         <label>
+
                           Count
 
                           <input
                             type="number"
                             min="0"
                             max="1"
-                            value="${settings.counts[r] || 0}"
+                            value="${
+                              settings.counts[r] ||
+                              0
+                            }"
                             data-role-count="${r}"
-                            ${locked ? "readonly" : ""}
+                            ${
+                              locked
+                                ? "readonly"
+                                : ""
+                            }
                           >
+
                         </label>
 
-                        <label class="switch">
+
+                        <label
+                          class="switch"
+                        >
 
                           <input
                             type="checkbox"
@@ -3000,7 +5149,11 @@ function renderCustomRoles() {
                                 ? "checked"
                                 : ""
                             }
-                            ${locked ? "disabled" : ""}
+                            ${
+                              locked
+                                ? "disabled"
+                                : ""
+                            }
                           >
 
                           <span>
@@ -3010,16 +5163,24 @@ function renderCustomRoles() {
                         </label>
 
                       </div>
-                    `;
-                  })
-                  .join("")
-              }
 
-            </section>
-          `
+                    `;
+
+                  }
+                )
+                .join("")
+            }
+
+          </section>
+
+        `
       )
       .join("");
 
+
+  /*
+     Enabled switches.
+  */
 
   $("customRoleContent")
     .querySelectorAll(
@@ -3029,24 +5190,34 @@ function renderCustomRoles() {
 
       el.onchange = () => {
 
-        settings.enabled[
-          el.dataset.roleEnabled
-        ] =
+        const role =
+          el.dataset.roleEnabled;
+
+
+        settings.enabled[role] =
           el.checked;
 
-        if(!el.checked) {
 
-          settings.counts[
-            el.dataset.roleEnabled
-          ] = 0;
+        if(!el.checked){
+
+          settings.counts[role] =
+            0;
+
         }
+
 
         renderCustomRoles();
 
         renderSetup();
+
       };
+
     });
 
+
+  /*
+     Role counts.
+  */
 
   $("customRoleContent")
     .querySelectorAll(
@@ -3056,9 +5227,11 @@ function renderCustomRoles() {
 
       el.onchange = () => {
 
-        settings.counts[
-          el.dataset.roleCount
-        ] =
+        const role =
+          el.dataset.roleCount;
+
+
+        settings.counts[role] =
           Math.max(
             0,
             Math.min(
@@ -3067,20 +5240,23 @@ function renderCustomRoles() {
             )
           );
 
-        if(
-          settings.counts[
-            el.dataset.roleCount
-          ] > 0
-        ) {
 
-          settings.enabled[
-            el.dataset.roleCount
-          ] = true;
+        if(
+          settings.counts[role] > 0
+        ){
+
+          settings.enabled[role] =
+            true;
+
         }
 
+
         updatePlayerValidity();
+
       };
+
     });
+
 }
 
 
@@ -3088,121 +5264,256 @@ function renderCustomRoles() {
    APPLY CUSTOM ROLES
    ========================================================= */
 
-function applyCustomRoles() {
+function applyCustomRoles(){
 
   const n =
     game.players.length;
 
+
   const selected = [];
+
 
   Object.entries(
     settings.counts
-  )
-  .forEach(
+  ).forEach(
     ([r,c]) => {
 
       for(
-        let i=0;
-        i<c;
+        let i = 0;
+        i < c;
         i++
-      ) {
+      ){
 
         selected.push(r);
+
       }
+
     }
   );
 
-  if(selected.length !== n) {
-
-    return alert(
-      `Custom roles must total exactly ${n} players. Current total: ${selected.length}.`
-    );
-  }
-
-  if(!selected.includes("engineer")) {
-
-    return alert(
-      "Engineer is required."
-    );
-  }
 
   if(
-    selected.filter(
-      r => HOSTILES.includes(r)
-    ).length !==
-    HOSTILE_COUNTS[n]
-  ) {
+    selected.length !== n
+  ){
 
-    return alert(
+    alert(
+      `Custom roles must total exactly ${n} players. Current total: ${selected.length}.`
+    );
+
+    return;
+
+  }
+
+
+  if(
+    !selected.includes(
+      "engineer"
+    )
+  ){
+
+    alert(
+      "Engineer is required."
+    );
+
+    return;
+
+  }
+
+
+  const hostileCount =
+    selected.filter(
+      r =>
+        HOSTILES.includes(r)
+    ).length;
+
+
+  if(
+    hostileCount !==
+    HOSTILE_COUNTS[n]
+  ){
+
+    alert(
       `You need exactly ${HOSTILE_COUNTS[n]} Hostile role(s).`
     );
+
+    return;
+
   }
+
+
+  /*
+     No duplicate starting roles.
+  */
+
+  if(
+    new Set(selected).size !==
+    selected.length
+  ){
+
+    alert(
+      "Starting roles cannot be duplicated."
+    );
+
+    return;
+
+  }
+
 
   game.randomRoles =
     Object.fromEntries(
-      shuffle(selected)
-        .map(
-          (r,i) => [i,r]
-        )
+      shuffle(selected).map(
+        (r,i) =>
+          [i,r]
+      )
     );
+
 
   game.randomisedRoles =
     true;
+
 
   renderSetup();
 
   closeModal(
     "customRoleModal"
   );
+
 }
 
 
 /* =========================================================
-   INITIALISE GAME UI
+   MOBILE-SAFE RANDOM BUTTON
    ========================================================= */
 
-function initGameUI() {
+function bindRandomButton(){
 
-  const playerCount =
-    $("playerCount");
+  const btn =
+    $("randomRolesButton");
 
-  if(!playerCount) {
+
+  if(!btn)
     return;
-  }
-
-  playerCount.onchange =
-    resetSetupPlayers;
-
-  if(!game.players.length) {
-
-    resetSetupPlayers();
-
-  } else {
-
-    renderSetup();
-  }
 
 
-  $("randomRolesButton").type =
+  btn.type =
     "button";
 
-  $("randomRolesButton").onclick =
-    (e) => {
+
+  /*
+     Remove old handlers by replacing
+     the node with a clone.
+  */
+
+  const fresh =
+    btn.cloneNode(true);
+
+
+  btn.replaceWith(
+    fresh
+  );
+
+
+  fresh.type =
+    "button";
+
+
+  const randomHandler =
+    e => {
+
+      e.preventDefault();
+
+      e.stopPropagation();
+
+      randomiseRoles();
+
+    };
+
+
+  fresh.addEventListener(
+    "click",
+    randomHandler
+  );
+
+
+  /*
+     Mobile browsers sometimes behave
+     differently with touch events.
+  */
+
+  fresh.addEventListener(
+    "touchend",
+    e => {
 
       e.preventDefault();
 
       randomiseRoles();
-    };
 
+    },
+    {
+      passive:false
+    }
+  );
+
+}
+
+
+/* =========================================================
+   INITIALISE UI
+   ========================================================= */
+
+function initGameUI(){
+
+  const playerCount =
+    $("playerCount");
+
+
+  if(!playerCount)
+    return;
+
+
+  playerCount.onchange =
+    resetSetupPlayers;
+
+
+  if(
+    !game.players.length
+  ){
+
+    resetSetupPlayers();
+
+  }
+
+  else {
+
+    renderSetup();
+
+  }
+
+
+  /*
+     RANDOM
+  */
+
+  bindRandomButton();
+
+
+  /*
+     START
+  */
 
   $("startGameButton").onclick =
-    (e) => {
+    e => {
 
       e.preventDefault();
 
       startGame();
+
     };
 
+
+  /*
+     ROLE GUIDE
+  */
 
   $("roleGuideButton").onclick =
     () => {
@@ -3212,8 +5523,13 @@ function initGameUI() {
       openModal(
         "roleGuideModal"
       );
+
     };
 
+
+  /*
+     CUSTOM ROLES
+  */
 
   $("customRolesButton").onclick =
     () => {
@@ -3223,11 +5539,18 @@ function initGameUI() {
       openModal(
         "customRoleModal"
       );
+
     };
 
 
+  /*
+     CLOSE MODALS
+  */
+
   document
-    .querySelectorAll("[data-close]")
+    .querySelectorAll(
+      "[data-close]"
+    )
     .forEach(
       b =>
         b.onclick =
@@ -3238,44 +5561,81 @@ function initGameUI() {
     );
 
 
+  /*
+     PASS SCREEN
+  */
+
   $("readyButton").onclick =
     showRole;
+
+
+  /*
+     ROLE SCREEN
+  */
 
   $("showActionButton").onclick =
     showAction;
 
+
+  /*
+     REACTION
+  */
+
   $("reactionReadyButton").onclick =
     showReactionResult;
+
 
   $("reactionContinueButton").onclick =
     advanceReaction;
 
+
+  /*
+     DISCUSSION
+  */
+
   $("startVotingButton").onclick =
     startVoting;
 
+
+  /*
+     RESTART
+  */
+
   $("restartButton").onclick =
-    () => location.reload();
+    () =>
+      location.reload();
+
+
+  /*
+     CUSTOM ROLES
+  */
 
   $("applyCustomRolesButton").onclick =
     applyCustomRoles;
+
 }
 
 
 /* =========================================================
-   START
+   START UI
    ========================================================= */
 
 if(
   document.readyState === "loading"
-) {
+){
 
   document.addEventListener(
     "DOMContentLoaded",
     initGameUI,
-    {once:true}
+    {
+      once:true
+    }
   );
 
-} else {
+}
+
+else {
 
   initGameUI();
+
 }
