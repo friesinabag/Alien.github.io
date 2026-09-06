@@ -1,903 +1,410 @@
-/* =========================================================
-   ALIEN
-   STYLE.CSS
-   ========================================================= */
-
-:root {
-    --bg: #070b10;
-    --panel: #101720;
-    --panel2: #151e29;
-    --border: #293746;
-    --text: #f4f7fa;
-    --muted: #9ba9b8;
-
-    --green: #39d98a;
-    --red: #ff5268;
-    --yellow: #ffd166;
-    --blue: #55aaff;
-
-    --radius: 16px;
+:root{
+  --bg:#070b12;
+  --panel:#0d1420;
+  --panel2:#111b2a;
+  --line:#26364d;
+  --text:#eef4ff;
+  --muted:#9baac0;
+  --blue:#4da3ff;
+  --green:#52e09b;
+  --red:#ff5d6c;
+  --yellow:#ffd166;
 }
 
-* {
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
+*{
+  box-sizing:border-box;
 }
 
-html,
-body {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    min-height: 100%;
+html{
+  min-height:100%;
+  background:var(--bg);
 }
 
-body {
-    background:
-        radial-gradient(circle at top, #15202c 0%, var(--bg) 55%);
-    color: var(--text);
-    font-family:
-        Arial,
-        Helvetica,
-        sans-serif;
-    min-height: 100vh;
-    overflow-x: hidden;
+body{
+  margin:0;
+  min-height:100vh;
+  padding:20px;
+  background:
+    radial-gradient(circle at top,#152338 0,#070b12 48%);
+  color:var(--text);
+  font-family:Arial,Helvetica,sans-serif;
+  -webkit-text-size-adjust:100%;
 }
 
 button,
-select {
-    font: inherit;
+select,
+input{
+  font:inherit;
 }
 
-button {
-    border: 0;
-    cursor: pointer;
-    touch-action: manipulation;
+button{
+  cursor:pointer;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
 }
 
-button:active {
-    transform: scale(0.97);
+button:disabled{
+  cursor:not-allowed;
+  opacity:.55;
 }
 
-select {
-    width: 100%;
-    padding: 14px 16px;
-    margin-top: 8px;
-
-    border: 1px solid var(--border);
-    border-radius: 12px;
-
-    background: #0b1118;
-    color: var(--text);
-
-    outline: none;
-}
-
-#app {
-    width: 100%;
-    min-height: 100vh;
-}
-
-
-/* =========================================================
-   SCREENS
-   ========================================================= */
-
-.screen {
-    display: none;
-
-    width: 100%;
-    min-height: 100vh;
-
-    padding: 20px;
-
-    align-items: center;
-    justify-content: center;
-}
-
-.screen.active {
-    display: flex;
-}
-
-
-/* =========================================================
-   GENERAL PANELS
-   ========================================================= */
-
-.panel,
-.setup-card {
-    width: min(100%, 520px);
-
-    background:
-        linear-gradient(
-            145deg,
-            rgba(255,255,255,0.035),
-            rgba(255,255,255,0.01)
-        ),
-        var(--panel);
-
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-
-    padding: 24px;
-
-    box-shadow:
-        0 20px 60px rgba(0,0,0,0.4);
-}
-
-.large-panel {
-    width: min(100%, 720px);
-}
-
-.panel h1,
-.panel h2,
-.setup-card h2 {
-    margin-top: 0;
-    text-align: center;
-    letter-spacing: 1px;
-}
-
-.small-text {
-    color: var(--muted);
-    text-align: center;
-    line-height: 1.5;
-}
-
-
-/* =========================================================
-   LOGO
-   ========================================================= */
-
-.logo {
-    position: absolute;
-    top: 24px;
-
-    text-align: center;
-    pointer-events: none;
-}
-
-.logo-alien {
-    font-size: clamp(42px, 12vw, 72px);
-    font-weight: 900;
-    letter-spacing: 8px;
-
-    text-shadow:
-        0 0 10px rgba(255,255,255,0.15),
-        0 0 30px rgba(255,82,104,0.15);
-}
-
-.logo-subtitle {
-    margin-top: -4px;
-
-    font-size: 11px;
-    font-weight: bold;
-    letter-spacing: 4px;
-
-    color: var(--muted);
-}
-
-
-/* =========================================================
-   SETUP
-   ========================================================= */
-
-#setupScreen {
-    padding-top: 130px;
-}
-
-.setup-card label {
-    display: block;
-
-    margin-top: 18px;
-
-    font-size: 12px;
-    font-weight: bold;
-    letter-spacing: 1px;
-
-    color: var(--muted);
-}
-
-.setup-buttons {
-    display: grid;
-    gap: 10px;
-
-    margin-top: 18px;
-}
-
-.setup-buttons button,
-.custom-role-buttons button,
-#startGameButton,
-#randomRolesButton,
-#roleGuideButton,
-#customRolesButton {
-    width: 100%;
-}
-
-button {
-    padding: 14px 18px;
-
-    border-radius: 12px;
-
-    background: #202c39;
-    color: var(--text);
-
-    font-weight: 800;
-    letter-spacing: 0.4px;
-
-    transition:
-        transform 0.1s,
-        filter 0.15s,
-        background 0.15s;
-}
-
-button:hover {
-    filter: brightness(1.12);
-}
-
-.primary-button {
-    width: 100%;
-    margin-top: 20px;
-
-    background: var(--green);
-    color: #06130d;
-}
-
-.secondary {
-    background: #1b2632;
-}
-
-.player-count-status {
-    margin-top: 14px;
-
-    text-align: center;
-
-    font-size: 13px;
-    font-weight: bold;
-
-    color: var(--muted);
-}
-
-.players-setup {
-    display: grid;
-    gap: 9px;
-
-    margin-top: 16px;
-}
-
-.player-setup-row {
-    display: grid;
-    grid-template-columns: 1fr 1.25fr;
-    gap: 8px;
-
-    align-items: center;
-}
-
-.player-setup-name {
-    color: var(--text);
-    font-weight: bold;
-}
-
-.role-select {
-    width: 100%;
-    margin: 0;
-}
-
-.random-hidden {
-    color: var(--muted);
-}
-
-
-/* =========================================================
-   PASS SCREEN
-   ========================================================= */
-
-.pass-panel {
-    text-align: center;
-}
-
-.pass-icon {
-    font-size: 60px;
-    margin-bottom: 10px;
-}
-
-.big-player-name {
-    margin: 18px 0;
-
-    font-size: clamp(30px, 9vw, 48px);
-    font-weight: 900;
-
-    letter-spacing: 1px;
-}
-
-.round-label,
-.stage-label {
-    text-align: center;
-
-    font-size: 13px;
-    font-weight: 800;
-    letter-spacing: 1px;
-
-    color: var(--muted);
-}
-
-.stage-label {
-    margin-top: 6px;
-}
-
-.private-warning {
-    color: var(--yellow);
-    font-size: 13px;
-}
-
-
-/* =========================================================
-   ROLE SCREEN
-   ========================================================= */
-
-.role-panel {
-    text-align: center;
-}
-
-.player-name {
-    color: var(--muted);
-
-    font-size: 14px;
-    font-weight: bold;
-    letter-spacing: 2px;
-}
-
-.role-icon {
-    margin: 20px 0 8px;
-
-    font-size: clamp(65px, 18vw, 110px);
-}
-
-.role-title {
-    margin: 8px 0;
-
-    font-size: clamp(30px, 9vw, 48px);
-    font-weight: 900;
-}
-
-.role-title.human {
-    color: var(--green);
-}
-
-.role-title.hostile {
-    color: var(--red);
-}
-
-.role-title.neutral {
-    color: #ffffff;
-}
-
-.team-badge {
-    display: inline-block;
-
-    padding: 7px 12px;
-
-    border-radius: 999px;
-
-    font-size: 12px;
-    font-weight: 900;
-    letter-spacing: 1px;
-
-    background: #1b2632;
-}
-
-.team-badge.human {
-    color: var(--green);
-    border: 1px solid rgba(57,217,138,0.4);
-}
-
-.team-badge.hostile {
-    color: var(--red);
-    border: 1px solid rgba(255,82,104,0.4);
-}
-
-.team-badge.neutral {
-    color: #ffffff;
-    border: 1px solid rgba(255,255,255,0.35);
+button{
+  border:1px solid var(--line);
+  background:#172132;
+  color:var(--text);
+  padding:13px 15px;
+  border-radius:12px;
+  font-weight:800;
+  transition:.15s;
 }
 
-.role-description {
-    margin: 20px auto;
-
-    max-width: 580px;
-
-    color: #c5d0da;
-    line-height: 1.55;
-}
-
-.hostile-list {
-    margin-top: 18px;
-    padding: 14px;
-
-    border-radius: 12px;
-
-    background: rgba(255,82,104,0.08);
-    border: 1px solid rgba(255,82,104,0.25);
-
-    color: var(--red);
-    line-height: 1.6;
-}
-
-
-/* =========================================================
-   ACTIONS
-   ========================================================= */
-
-.action-title {
-    margin-bottom: 12px;
-
-    text-align: center;
-
-    font-size: 24px;
-    font-weight: 900;
-    letter-spacing: 1px;
+button:hover{
+  background:#1d2b40;
 }
 
-#actionDescription {
-    color: var(--muted);
-    text-align: center;
-    line-height: 1.5;
+button:active{
+  transform:scale(.98);
 }
 
-.action-options {
-    display: grid;
-    gap: 10px;
-
-    margin-top: 20px;
-}
-
-.action-options button,
-.vote-options button {
-    width: 100%;
-
-    background: #18232e;
-    border: 1px solid var(--border);
-
-    text-align: left;
-}
-
-.action-options button.selected,
-.vote-options button.selected {
-    background: rgba(57,217,138,0.15);
-    border-color: var(--green);
-    color: var(--green);
+button.primary{
+  background:#1d68b8;
+  border-color:#368ee9;
 }
 
-
-/* =========================================================
-   REACTION
-   ========================================================= */
-
-#reactionScreen .panel,
-#reactionResultScreen .panel {
-    text-align: center;
+button.secondary{
+  background:#111a28;
 }
-
-#reactionResultMessage {
-    margin: 25px 0;
 
-    color: #dce5ec;
-    line-height: 1.6;
+button.full{
+  width:100%;
 }
-
-
-/* =========================================================
-   DISCUSSION
-   ========================================================= */
-
-.results-box {
-    margin-top: 24px;
-    padding: 16px;
-
-    border-radius: 12px;
 
-    background: #0b1118;
-    border: 1px solid var(--border);
-
-    line-height: 1.65;
+button.selected{
+  outline:3px solid var(--blue);
+  background:#203c5e;
 }
 
-.result-row {
-    padding: 8px 0;
-
-    border-bottom: 1px solid rgba(255,255,255,0.06);
+.screen{
+  display:none;
 }
 
-.result-row:last-child {
-    border-bottom: 0;
+.screen.active{
+  display:block;
 }
-
 
-/* =========================================================
-   VOTING
-   ========================================================= */
-
-.vote-options {
-    display: grid;
-    gap: 10px;
-
-    margin-top: 20px;
+.panel{
+  width:min(760px,100%);
+  margin:0 auto;
+  padding:25px;
+  background:rgba(13,20,32,.96);
+  border:1px solid var(--line);
+  border-radius:20px;
+  box-shadow:0 20px 60px rgba(0,0,0,.35);
 }
 
-.vote-options button {
-    text-align: center;
+.hero{
+  text-align:center;
+  margin-bottom:22px;
 }
 
-.vote-skip {
-    color: var(--yellow);
+.hero h1{
+  margin:0;
+  font-size:60px;
+  letter-spacing:5px;
 }
-
-.warning {
-    margin-top: 16px;
-    padding: 13px;
 
-    border-radius: 12px;
-
-    background: rgba(255,209,102,0.1);
-    border: 1px solid rgba(255,209,102,0.3);
-
-    color: var(--yellow);
-
-    text-align: center;
-    font-weight: bold;
+.subtitle{
+  color:var(--muted);
+  margin-top:8px;
 }
 
-.warning span {
-    font-size: 12px;
-    font-weight: normal;
+.setup-player{
+  margin:10px 0;
 }
 
-
-/* =========================================================
-   LIFELINE
-   ========================================================= */
-
-.lifeline-panel {
-    text-align: center;
+.setup-player label{
+  display:block;
+  color:var(--muted);
+  font-weight:800;
 }
 
-.lifeline-icon {
-    font-size: 70px;
-    margin-bottom: 10px;
+select,
+input{
+  width:100%;
+  margin-top:6px;
+  padding:13px;
+  border-radius:11px;
+  border:1px solid var(--line);
+  background:#111b2a;
+  color:var(--text);
 }
-
-#lifelineMessage {
-    padding: 20px;
-
-    border-radius: 14px;
 
-    background: #0b1118;
-    border: 1px solid var(--border);
-
-    font-size: 18px;
-    font-weight: bold;
-    line-height: 1.55;
+.role-select{
+  min-height:48px;
 }
-
-
-/* =========================================================
-   SYSTEMS
-   ========================================================= */
 
-.systems-list {
-    display: grid;
-    gap: 12px;
-
-    margin-top: 24px;
+.random-hidden{
+  color:var(--muted);
 }
-
-.system-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    padding: 15px;
-
-    border-radius: 12px;
 
-    background: #0b1118;
-    border: 1px solid var(--border);
+.choice-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
 }
 
-.system-name {
-    font-weight: 900;
+.big-name{
+  font-size:38px;
+  font-weight:900;
+  text-align:center;
+  margin:15px 0;
 }
 
-.system-status {
-    font-size: 12px;
-    font-weight: 900;
-    letter-spacing: 1px;
+.role-icon{
+  text-align:center;
+  font-size:75px;
 }
 
-.system-online {
-    color: var(--green);
+.role-name{
+  text-align:center;
+  font-size:32px;
+  font-weight:900;
 }
 
-.system-offline {
-    color: var(--red);
+.role-title{
+  font-weight:900;
+  font-size:20px;
 }
 
-
-/* =========================================================
-   GAME OVER
-   ========================================================= */
-
-.game-over-panel {
-    text-align: center;
+.role-title.human{
+  color:var(--green);
 }
 
-.game-over-icon {
-    font-size: 75px;
+.role-title.neutral{
+  color:#fff;
 }
 
-#gameOverTitle {
-    font-size: clamp(32px, 10vw, 55px);
+.role-title.hostile{
+  color:var(--red);
 }
 
-#gameOverMessage {
-    color: #c8d3dd;
-    line-height: 1.6;
+.team-badge{
+  display:block;
+  width:max-content;
+  margin:10px auto;
+  padding:7px 12px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  font-weight:900;
 }
-
-.final-players {
-    display: grid;
-    gap: 8px;
 
-    margin-top: 25px;
-
-    text-align: left;
+.team-badge.human{
+  color:var(--green);
 }
-
-.final-player {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    padding: 12px 14px;
-
-    border-radius: 10px;
 
-    background: #0b1118;
-    border: 1px solid var(--border);
+.team-badge.hostile{
+  color:var(--red);
 }
 
-.final-player-name {
-    font-weight: bold;
+.team-badge.neutral{
+  color:#fff;
 }
 
-.final-player-role {
-    font-size: 13px;
-    color: var(--muted);
+.action-options,
+.vote-options{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin:18px 0;
 }
 
-
-/* =========================================================
-   ROLE GUIDE
-   ========================================================= */
-
-.role-guide-section {
-    margin-top: 24px;
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:20px;
 }
-
-.role-guide-section h2 {
-    text-align: left;
 
-    padding-bottom: 8px;
-
-    border-bottom: 1px solid var(--border);
+.status{
+  color:var(--muted);
 }
-
-.role-guide-card {
-    margin-top: 10px;
-    padding: 14px;
-
-    border-radius: 12px;
 
-    background: #0b1118;
-    border: 1px solid var(--border);
+.muted{
+  color:var(--muted);
 }
 
-.role-guide-name {
-    font-size: 17px;
-    font-weight: 900;
+.system{
+  padding:14px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  margin:8px 0;
 }
 
-.role-guide-team {
-    margin-top: 3px;
-
-    font-size: 11px;
-    font-weight: bold;
-    text-transform: uppercase;
-
-    color: var(--muted);
+.system.online{
+  border-color:var(--green);
 }
-
-.role-guide-description {
-    margin-top: 8px;
 
-    color: #c4ced7;
-    font-size: 14px;
-    line-height: 1.5;
+.system.offline{
+  border-color:var(--red);
 }
 
-
-/* =========================================================
-   CUSTOM ROLES
-   ========================================================= */
-
-.custom-role-section {
-    margin-top: 22px;
+.custom-row{
+  display:grid;
+  grid-template-columns:1fr 100px auto;
+  gap:10px;
+  align-items:center;
+  padding:10px 0;
+  border-bottom:1px solid var(--line);
 }
 
-.custom-role-section h2 {
-    text-align: left;
-
-    margin-bottom: 10px;
+.custom-row.locked{
+  opacity:.7;
 }
-
-.custom-role-row {
-    display: grid;
-    grid-template-columns: 1fr auto;
 
-    gap: 10px;
-
-    align-items: center;
-
-    padding: 11px 0;
-
-    border-bottom: 1px solid rgba(255,255,255,0.06);
+.switch{
+  display:flex;
+  align-items:center;
+  gap:7px;
 }
 
-.custom-role-info {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
+.switch input{
+  width:auto;
+  margin:0;
 }
 
-.custom-role-name {
-    font-weight: 800;
+.role-card{
+  padding:14px;
+  margin:9px 0;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:var(--panel2);
 }
 
-.custom-role-desc {
-    font-size: 12px;
-    color: var(--muted);
+.role-card p{
+  color:var(--muted);
+  line-height:1.45;
 }
 
-.custom-role-controls {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+.modal{
+  position:fixed;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:15px;
+  background:rgba(0,0,0,.75);
+  z-index:1000;
 }
-
-.custom-role-controls input {
-    width: 65px;
-
-    padding: 9px;
-
-    border-radius: 8px;
-
-    border: 1px solid var(--border);
 
-    background: #0b1118;
-    color: var(--text);
-
-    text-align: center;
+.modal.open{
+  display:flex;
 }
 
-.custom-role-controls input:disabled {
-    opacity: 0.4;
+.modal-content{
+  width:min(760px,100%);
+  max-height:90vh;
+  overflow:auto;
+  padding:20px;
+  border-radius:18px;
+  border:1px solid var(--line);
+  background:var(--panel);
 }
 
-.custom-role-controls label {
-    color: var(--muted);
-    font-size: 11px;
+.final-player{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  padding:12px;
+  margin:7px 0;
+  border:1px solid var(--line);
+  border-radius:10px;
+  flex-wrap:wrap;
 }
 
-.custom-role-buttons {
-    display: grid;
-    gap: 10px;
-
-    margin-top: 24px;
+.spacer{
+  height:12px;
 }
-
 
-/* =========================================================
-   HIDDEN
-   ========================================================= */
+@media(max-width:600px){
 
-.hidden {
-    display: none !important;
-}
-
+  body{
+    padding:10px;
+  }
 
-/* =========================================================
-   MOBILE
-   ========================================================= */
+  .panel{
+    padding:17px;
+    border-radius:16px;
+  }
 
-@media (max-width: 600px) {
+  .hero h1{
+    font-size:44px;
+  }
 
-    .screen {
-        padding: 14px;
-    }
+  .choice-grid{
+    grid-template-columns:1fr;
+  }
 
-    #setupScreen {
-        padding-top: 120px;
-    }
+  .action-options,
+  .vote-options{
+    grid-template-columns:1fr;
+  }
 
-    .panel,
-    .setup-card {
-        padding: 18px;
-        border-radius: 14px;
-    }
+  .big-name{
+    font-size:29px;
+  }
 
-    .logo {
-        top: 16px;
-    }
+  .custom-row{
+    grid-template-columns:1fr auto;
+  }
 
-    .logo-alien {
-        font-size: 42px;
-        letter-spacing: 5px;
-    }
+  .switch{
+    grid-column:1 / -1;
+  }
 
-    .player-setup-row {
-        grid-template-columns: 1fr;
-        gap: 5px;
-    }
+  .topbar{
+    align-items:flex-start;
+  }
 
-    .player-setup-name {
-        font-size: 14px;
-    }
+  .subtitle{
+    display:none;
+  }
 
-    .role-icon {
-        font-size: 75px;
-    }
+  button{
+    min-height:48px;
+  }
 
-    button {
-        min-height: 48px;
-    }
+  select,
+  input{
+    min-height:48px;
+  }
 
-    .big-player-name {
-        font-size: 34px;
-    }
+  .role-icon{
+    font-size:62px;
+  }
 
-    .custom-role-row {
-        grid-template-columns: 1fr;
-    }
+  .role-name{
+    font-size:27px;
+  }
 
-    .custom-role-controls {
-        justify-content: flex-start;
-    }
 }
-
-
-/* =========================================================
-   VERY SMALL PHONES
-   ========================================================= */
 
-@media (max-width: 360px) {
+@media(max-width:380px){
 
-    .screen {
-        padding: 10px;
-    }
+  body{
+    padding:7px;
+  }
 
-    .panel,
-    .setup-card {
-        padding: 14px;
-    }
+  .panel{
+    padding:13px;
+  }
 
-    .logo-alien {
-        font-size: 36px;
-    }
+  .hero h1{
+    font-size:38px;
+  }
 
-    .big-player-name {
-        font-size: 29px;
-    }
+  button{
+    padding:12px 10px;
+  }
 
-    button {
-        padding: 12px;
-    }
 }
