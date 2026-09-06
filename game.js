@@ -13850,6 +13850,74 @@ async function joinRoom(){
      START ONLINE PATCH
      ========================================================= */
 
+
+async function changeOnlineName(){
+
+  const input = $('newOnlineName');
+
+  if(!input) return;
+
+  const newName = (input.value || '')
+    .trim()
+    .slice(0,20);
+
+  if(!newName){
+    alert('Please enter a name.');
+    input.focus();
+    return;
+  }
+
+  const playerId = ONLINE.host
+    ? 'p1'
+    : ONLINE.myPlayerId;
+
+  const player = getPlayer(playerId);
+
+  if(!player){
+    alert('Could not find your player.');
+    return;
+  }
+
+  player.name = newName;
+
+  if(ONLINE.host){
+    if(ONLINE.peers[ONLINE.clientId]){
+      ONLINE.peers[ONLINE.clientId].name = newName;
+    }
+  }else{
+    ONLINE.joinName = newName;
+  }
+
+  renderLobby();
+
+  $('changeNameBox').style.display = 'none';
+
+  status(`Name changed to ${newName}.`);
+
+  if(!ONLINE.host){
+
+    await send({
+      type:'changeName',
+      clientId:ONLINE.clientId,
+      playerId:playerId,
+      name:newName
+    });
+
+  }else{
+
+    await send({
+      type:'nameChanged',
+      playerId:'p1',
+      name:newName
+    });
+
+    await send({
+      type:'public',
+      ...publicState()
+    });
+  }
+}
+   
   if (
     document.readyState ===
     "loading"
@@ -13870,6 +13938,219 @@ async function joinRoom(){
   }
 
 })();
+
+// ========================================
+// ONLINE MODE
+// ========================================
+
+function onlineUi(){
+  if(document.getElementById('onlineScreen')) return;
+
+  const wrap = document.createElement('section');
+  wrap.id = 'onlineScreen';
+  wrap.className = 'screen';
+
+  wrap.innerHTML = `
+    <div class="panel center">
+      <div class="eyebrow">MULTIPLAYER</div>
+      <h1>🌐 ONLINE MODE</h1>
+
+      <p id="onlineStatus" class="large-message">
+        Choose an option.
+      </p>
+
+      <div id="onlineHome" class="choice-grid">
+        <button id="createRoomBtn" class="primary" type="button">
+          🏠 CREATE ROOM
+        </button>
+
+        <button id="joinRoomBtn" type="button">
+          🔑 JOIN ROOM
+        </button>
+      </div>
+
+      <div id="joinBox" style="display:none;margin-top:14px">
+
+        <input
+          id="joinName"
+          maxlength="20"
+          placeholder="Enter your name"
+          autocomplete="off"
+          autocapitalize="words"
+          spellcheck="false"
+          style="width:100%"
+        >
+
+        <input
+          id="roomCodeInput"
+          maxlength="5"
+          autocomplete="off"
+          placeholder="5-character room code"
+          style="width:100%;margin-top:8px;text-transform:uppercase"
+        >
+
+        <button
+          id="joinConfirmBtn"
+          class="primary full"
+          type="button"
+        >
+          JOIN ROOM
+        </button>
+
+      </div>
+
+      <div id="createBox" style="display:none;margin-top:14px">
+
+        <input
+          id="hostName"
+          maxlength="20"
+          placeholder="Enter your name"
+          value="Player 1"
+          autocomplete="off"
+          autocapitalize="words"
+          spellcheck="false"
+          style="width:100%"
+        >
+
+        <button
+          id="createConfirmBtn"
+          class="primary full"
+          type="button"
+        >
+          CREATE ONLINE ROOM
+        </button>
+
+      </div>
+
+      <div
+        id="onlineLobby"
+        style="display:none;margin-top:18px;text-align:left"
+      >
+
+        <div class="result-box">
+
+          <strong>ROOM CODE</strong>
+
+          <div
+            id="onlineCode"
+            style="
+              font-size:32px;
+              font-weight:900;
+              letter-spacing:6px;
+              text-align:center;
+              margin:8px 0
+            "
+          ></div>
+
+          <div id="onlinePlayers"></div>
+
+        </div>
+
+        <!-- CHANGE NAME BUTTON -->
+        <button
+          id="changeOnlineNameBtn"
+          class="secondary full"
+          type="button"
+          style="margin-top:10px"
+        >
+          ✏️ CHANGE NAME
+        </button>
+
+        <!-- CHANGE NAME BOX -->
+        <div
+          id="changeNameBox"
+          style="display:none;margin-top:10px"
+        >
+
+          <input
+            id="newOnlineName"
+            maxlength="20"
+            placeholder="New name"
+            autocomplete="off"
+            autocapitalize="words"
+            spellcheck="false"
+            style="width:100%"
+          >
+
+          <button
+            id="saveOnlineNameBtn"
+            class="primary full"
+            type="button"
+            style="margin-top:8px"
+          >
+            SAVE NAME
+          </button>
+
+        </div>
+
+        <button
+          id="onlineSetupBtn"
+          class="primary full"
+          type="button"
+          style="margin-top:10px"
+        >
+          ⚙️ SET ROLES & START
+        </button>
+
+      </div>
+
+      <button
+        id="onlineBackBtn"
+        class="secondary full"
+        type="button"
+      >
+        ← BACK
+      </button>
+
+    </div>
+  `;
+
+  document.getElementById('app').appendChild(wrap);
+
+  $('createRoomBtn').onclick = () => {
+    $('onlineHome').style.display = 'none';
+    $('createBox').style.display = 'block';
+  };
+
+  $('joinRoomBtn').onclick = () => {
+    $('onlineHome').style.display = 'none';
+    $('joinBox').style.display = 'block';
+  };
+
+  $('createConfirmBtn').onclick = createRoom;
+  $('joinConfirmBtn').onclick = joinRoom;
+
+  $('onlineBackBtn').onclick = () => {
+    disconnectOnline();
+    showSetup();
+  };
+
+  $('onlineSetupBtn').onclick = hostOpenSetup;
+
+  // CHANGE NAME BUTTON
+  $('changeOnlineNameBtn').onclick = () => {
+
+    const player = getPlayer(ONLINE.myPlayerId);
+
+    if(player){
+      $('newOnlineName').value = player.name;
+    }
+
+    $('changeNameBox').style.display = 'block';
+    $('newOnlineName').focus();
+  };
+
+  // SAVE NAME BUTTON
+  $('saveOnlineNameBtn').onclick = changeOnlineName;
+
+  // Allow pressing ENTER to save
+  $('newOnlineName').addEventListener('keydown', e => {
+    if(e.key === 'Enter'){
+      e.preventDefault();
+      changeOnlineName();
+    }
+  });
+}
 
 /* =========================================================
    END GAME.JS
