@@ -1,5 +1,12 @@
 "use strict";
 
+const SUPABASE_URL = "https://sovwkrauwyoskxrnajjn.supabase.co";
+const SUPABASE_KEY = "sb_publishable_ck6DlHqxEFmoCex44rXbKw_HlAtPkaW";
+
+const supabaseClient = window.supabase
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+  : null;
+
 /* =========================================================
    ALIEN
    COMPLETE LOCAL + ONLINE GAME.JS
