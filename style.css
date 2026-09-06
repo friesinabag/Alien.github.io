@@ -1,620 +1,903 @@
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+/* =========================================================
+   ALIEN
+   STYLE.CSS
+   ========================================================= */
 
 :root {
-  --bg: #080b10;
-  --panel: #11161d;
-  --panel-light: #19212b;
-  --border: #303a46;
-  --text: #f1f4f7;
-  --muted: #9ba7b5;
-  --accent: #62d8ff;
-  --danger: #ff5d69;
-  --success: #63e6a5;
-  --warning: #ffd166;
+    --bg: #070b10;
+    --panel: #101720;
+    --panel2: #151e29;
+    --border: #293746;
+    --text: #f4f7fa;
+    --muted: #9ba9b8;
+
+    --green: #39d98a;
+    --red: #ff5268;
+    --yellow: #ffd166;
+    --blue: #55aaff;
+
+    --radius: 16px;
+}
+
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100%;
 }
 
 body {
-  background:
-    radial-gradient(
-      circle at top,
-      #182331 0%,
-      #080b10 55%
-    );
-
-  color: var(--text);
-
-  font-family:
-    Arial,
-    Helvetica,
-    sans-serif;
-
-  min-height: 100vh;
+    background:
+        radial-gradient(circle at top, #15202c 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
 }
 
 button,
-select,
-input {
-  font: inherit;
+select {
+    font: inherit;
 }
 
 button {
-  cursor: pointer;
-}
-
-.hidden {
-  display: none !important;
-}
-
-
-/* =========================
-   TOP BAR
-========================= */
-
-.top-bar {
-  min-height: 70px;
-
-  padding: 15px 20px;
-
-  border-bottom:
-    1px solid var(--border);
-
-  background:
-    rgba(8, 11, 16, 0.95);
-
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.top-bar h1 {
-  font-size: 25px;
-  letter-spacing: 2px;
-}
-
-.game-info {
-  display: flex;
-  gap: 8px;
-
-  font-size: 12px;
-  font-weight: bold;
-}
-
-.game-info span {
-  border: 1px solid var(--border);
-
-  padding: 7px 9px;
-
-  border-radius: 7px;
-
-  background: var(--panel);
-}
-
-
-/* =========================
-   SCREEN
-========================= */
-
-.screen {
-  width: 100%;
-
-  min-height:
-    calc(100vh - 70px);
-
-  padding: 25px 15px;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.panel {
-  width: 100%;
-  max-width: 650px;
-
-  background:
-    rgba(17, 22, 29, 0.97);
-
-  border:
-    1px solid var(--border);
-
-  border-radius: 18px;
-
-  padding: 25px;
-
-  box-shadow:
-    0 15px 50px
-    rgba(0, 0, 0, 0.35);
-}
-
-.center {
-  text-align: center;
-}
-
-.panel h2 {
-  margin-bottom: 15px;
-  font-size: 25px;
-}
-
-.subtitle {
-  color: var(--muted);
-  margin-bottom: 25px;
-}
-
-
-/* =========================
-   FORMS
-========================= */
-
-label {
-  display: block;
-
-  margin-bottom: 8px;
-
-  color: var(--muted);
-
-  font-size: 14px;
-}
-
-select,
-input {
-  width: 100%;
-
-  background: #0c1016;
-
-  color: var(--text);
-
-  border:
-    1px solid var(--border);
-
-  border-radius: 9px;
-
-  padding: 13px;
-
-  outline: none;
-}
-
-select:focus,
-input:focus {
-  border-color: var(--accent);
-}
-
-
-/* =========================
-   BUTTONS
-========================= */
-
-button {
-  border: none;
-
-  border-radius: 10px;
-
-  padding: 14px 18px;
-
-  font-weight: bold;
-
-  transition:
-    transform 0.12s,
-    opacity 0.12s;
+    border: 0;
+    cursor: pointer;
+    touch-action: manipulation;
 }
 
 button:active {
-  transform: scale(0.97);
+    transform: scale(0.97);
+}
+
+select {
+    width: 100%;
+    padding: 14px 16px;
+    margin-top: 8px;
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+
+    background: #0b1118;
+    color: var(--text);
+
+    outline: none;
+}
+
+#app {
+    width: 100%;
+    min-height: 100vh;
+}
+
+
+/* =========================================================
+   SCREENS
+   ========================================================= */
+
+.screen {
+    display: none;
+
+    width: 100%;
+    min-height: 100vh;
+
+    padding: 20px;
+
+    align-items: center;
+    justify-content: center;
+}
+
+.screen.active {
+    display: flex;
+}
+
+
+/* =========================================================
+   GENERAL PANELS
+   ========================================================= */
+
+.panel,
+.setup-card {
+    width: min(100%, 520px);
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,0.035),
+            rgba(255,255,255,0.01)
+        ),
+        var(--panel);
+
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+
+    padding: 24px;
+
+    box-shadow:
+        0 20px 60px rgba(0,0,0,0.4);
+}
+
+.large-panel {
+    width: min(100%, 720px);
+}
+
+.panel h1,
+.panel h2,
+.setup-card h2 {
+    margin-top: 0;
+    text-align: center;
+    letter-spacing: 1px;
+}
+
+.small-text {
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   LOGO
+   ========================================================= */
+
+.logo {
+    position: absolute;
+    top: 24px;
+
+    text-align: center;
+    pointer-events: none;
+}
+
+.logo-alien {
+    font-size: clamp(42px, 12vw, 72px);
+    font-weight: 900;
+    letter-spacing: 8px;
+
+    text-shadow:
+        0 0 10px rgba(255,255,255,0.15),
+        0 0 30px rgba(255,82,104,0.15);
+}
+
+.logo-subtitle {
+    margin-top: -4px;
+
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 4px;
+
+    color: var(--muted);
+}
+
+
+/* =========================================================
+   SETUP
+   ========================================================= */
+
+#setupScreen {
+    padding-top: 130px;
+}
+
+.setup-card label {
+    display: block;
+
+    margin-top: 18px;
+
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 1px;
+
+    color: var(--muted);
+}
+
+.setup-buttons {
+    display: grid;
+    gap: 10px;
+
+    margin-top: 18px;
+}
+
+.setup-buttons button,
+.custom-role-buttons button,
+#startGameButton,
+#randomRolesButton,
+#roleGuideButton,
+#customRolesButton {
+    width: 100%;
+}
+
+button {
+    padding: 14px 18px;
+
+    border-radius: 12px;
+
+    background: #202c39;
+    color: var(--text);
+
+    font-weight: 800;
+    letter-spacing: 0.4px;
+
+    transition:
+        transform 0.1s,
+        filter 0.15s,
+        background 0.15s;
 }
 
 button:hover {
-  opacity: 0.9;
+    filter: brightness(1.12);
 }
 
 .primary-button {
-  width: 100%;
+    width: 100%;
+    margin-top: 20px;
 
-  margin-top: 18px;
-
-  background: var(--accent);
-
-  color: #061016;
+    background: var(--green);
+    color: #06130d;
 }
 
-.secondary-button {
-  width: 100%;
-
-  margin-top: 12px;
-
-  background: var(--panel-light);
-
-  color: var(--text);
-
-  border:
-    1px solid var(--border);
+.secondary {
+    background: #1b2632;
 }
 
+.player-count-status {
+    margin-top: 14px;
 
-/* =========================
-   RANDOM ROLE STATUS
-========================= */
+    text-align: center;
 
-.random-status {
-  margin-top: 12px;
+    font-size: 13px;
+    font-weight: bold;
 
-  padding: 12px;
-
-  border-radius: 10px;
-
-  background:
-    rgba(98, 216, 255, 0.08);
-
-  border:
-    1px solid var(--accent);
-
-  color: var(--accent);
-
-  text-align: center;
-
-  font-size: 13px;
+    color: var(--muted);
 }
-
-
-/* =========================
-   PLAYER SETUP
-========================= */
 
 .players-setup {
-  display: flex;
+    display: grid;
+    gap: 9px;
 
-  flex-direction: column;
-
-  gap: 12px;
-
-  margin-top: 18px;
+    margin-top: 16px;
 }
 
-.player-setup {
-  background: #0c1016;
+.player-setup-row {
+    display: grid;
+    grid-template-columns: 1fr 1.25fr;
+    gap: 8px;
 
-  border:
-    1px solid var(--border);
-
-  border-radius: 12px;
-
-  padding: 14px;
+    align-items: center;
 }
 
-.player-header {
-  display: flex;
-
-  justify-content: space-between;
-
-  align-items: center;
-
-  margin-bottom: 10px;
-}
-
-.player-number {
-  font-weight: bold;
-}
-
-.player-role-status {
-  font-size: 12px;
-
-  color: var(--muted);
+.player-setup-name {
+    color: var(--text);
+    font-weight: bold;
 }
 
 .role-select {
-  margin-top: 8px;
+    width: 100%;
+    margin: 0;
+}
+
+.random-hidden {
+    color: var(--muted);
 }
 
 
-/*
-   IMPORTANT:
+/* =========================================================
+   PASS SCREEN
+   ========================================================= */
 
-   When roles are randomised, the visible
-   role control becomes a simple RANDOM
-   display. The actual role is NOT placed
-   inside this select.
-*/
+.pass-panel {
+    text-align: center;
+}
 
-.role-select.random-hidden {
-  pointer-events: none;
+.pass-icon {
+    font-size: 60px;
+    margin-bottom: 10px;
+}
 
-  color: var(--text);
+.big-player-name {
+    margin: 18px 0;
 
-  opacity: 1;
+    font-size: clamp(30px, 9vw, 48px);
+    font-weight: 900;
 
-  background: #0c1016;
+    letter-spacing: 1px;
+}
+
+.round-label,
+.stage-label {
+    text-align: center;
+
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 1px;
+
+    color: var(--muted);
+}
+
+.stage-label {
+    margin-top: 6px;
+}
+
+.private-warning {
+    color: var(--yellow);
+    font-size: 13px;
 }
 
 
-/* =========================
+/* =========================================================
    ROLE SCREEN
-========================= */
+   ========================================================= */
 
-.big-icon {
-  font-size: 55px;
+.role-panel {
+    text-align: center;
+}
 
-  margin-bottom: 15px;
+.player-name {
+    color: var(--muted);
+
+    font-size: 14px;
+    font-weight: bold;
+    letter-spacing: 2px;
 }
 
 .role-icon {
-  font-size: 65px;
+    margin: 20px 0 8px;
 
-  margin: 10px 0;
+    font-size: clamp(65px, 18vw, 110px);
 }
 
-.small-label {
-  color: var(--muted);
+.role-title {
+    margin: 8px 0;
 
-  font-size: 12px;
+    font-size: clamp(30px, 9vw, 48px);
+    font-weight: 900;
+}
 
-  letter-spacing: 2px;
+.role-title.human {
+    color: var(--green);
+}
 
-  font-weight: bold;
+.role-title.hostile {
+    color: var(--red);
+}
+
+.role-title.neutral {
+    color: #ffffff;
+}
+
+.team-badge {
+    display: inline-block;
+
+    padding: 7px 12px;
+
+    border-radius: 999px;
+
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 1px;
+
+    background: #1b2632;
+}
+
+.team-badge.human {
+    color: var(--green);
+    border: 1px solid rgba(57,217,138,0.4);
+}
+
+.team-badge.hostile {
+    color: var(--red);
+    border: 1px solid rgba(255,82,104,0.4);
+}
+
+.team-badge.neutral {
+    color: #ffffff;
+    border: 1px solid rgba(255,255,255,0.35);
 }
 
 .role-description {
-  color: var(--muted);
+    margin: 20px auto;
 
-  line-height: 1.6;
+    max-width: 580px;
 
-  margin: 15px 0;
+    color: #c5d0da;
+    line-height: 1.55;
 }
 
-.hostiles-box {
-  margin-top: 20px;
+.hostile-list {
+    margin-top: 18px;
+    padding: 14px;
 
-  padding: 15px;
+    border-radius: 12px;
 
-  border:
-    1px solid var(--danger);
+    background: rgba(255,82,104,0.08);
+    border: 1px solid rgba(255,82,104,0.25);
 
-  border-radius: 12px;
-
-  background:
-    rgba(255, 93, 105, 0.08);
-}
-
-.hostiles-box h3 {
-  color: var(--danger);
-
-  font-size: 14px;
-
-  margin-bottom: 10px;
-}
-
-#hostilesList {
-  display: flex;
-
-  flex-direction: column;
-
-  gap: 6px;
+    color: var(--red);
+    line-height: 1.6;
 }
 
 
-/* =========================
+/* =========================================================
    ACTIONS
-========================= */
+   ========================================================= */
+
+.action-title {
+    margin-bottom: 12px;
+
+    text-align: center;
+
+    font-size: 24px;
+    font-weight: 900;
+    letter-spacing: 1px;
+}
+
+#actionDescription {
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.5;
+}
 
 .action-options {
-  display: grid;
+    display: grid;
+    gap: 10px;
 
-  gap: 10px;
-
-  margin-top: 20px;
+    margin-top: 20px;
 }
 
-.action-option {
-  width: 100%;
+.action-options button,
+.vote-options button {
+    width: 100%;
 
-  text-align: left;
+    background: #18232e;
+    border: 1px solid var(--border);
 
-  background: #0c1016;
-
-  border:
-    1px solid var(--border);
-
-  color: var(--text);
+    text-align: left;
 }
 
-.action-option.selected {
-  border-color: var(--accent);
-
-  background:
-    rgba(98, 216, 255, 0.1);
+.action-options button.selected,
+.vote-options button.selected {
+    background: rgba(57,217,138,0.15);
+    border-color: var(--green);
+    color: var(--green);
 }
 
 
-/* =========================
-   DISCUSSION / VOTING
-========================= */
+/* =========================================================
+   REACTION
+   ========================================================= */
 
-.round-stage {
-  display: flex;
-
-  gap: 8px;
-
-  flex-wrap: wrap;
-
-  margin-bottom: 20px;
+#reactionScreen .panel,
+#reactionResultScreen .panel {
+    text-align: center;
 }
 
-.round-stage span {
-  border:
-    1px solid var(--border);
+#reactionResultMessage {
+    margin: 25px 0;
 
-  padding: 7px 9px;
-
-  border-radius: 7px;
-
-  background: var(--panel);
-
-  font-size: 12px;
-
-  font-weight: bold;
+    color: #dce5ec;
+    line-height: 1.6;
 }
+
+
+/* =========================================================
+   DISCUSSION
+   ========================================================= */
 
 .results-box {
-  background: #0c1016;
+    margin-top: 24px;
+    padding: 16px;
 
-  border:
-    1px solid var(--border);
+    border-radius: 12px;
 
-  border-radius: 12px;
+    background: #0b1118;
+    border: 1px solid var(--border);
 
-  padding: 16px;
-
-  margin: 15px 0;
-
-  line-height: 1.6;
+    line-height: 1.65;
 }
+
+.result-row {
+    padding: 8px 0;
+
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.result-row:last-child {
+    border-bottom: 0;
+}
+
+
+/* =========================================================
+   VOTING
+   ========================================================= */
 
 .vote-options {
-  display: grid;
+    display: grid;
+    gap: 10px;
 
-  gap: 10px;
-
-  margin-top: 18px;
+    margin-top: 20px;
 }
 
-.vote-option {
-  background: #0c1016;
-
-  color: var(--text);
-
-  border:
-    1px solid var(--border);
-
-  text-align: left;
-
-  width: 100%;
+.vote-options button {
+    text-align: center;
 }
 
-.vote-option.selected {
-  border-color: var(--accent);
-
-  background:
-    rgba(98, 216, 255, 0.1);
+.vote-skip {
+    color: var(--yellow);
 }
 
-.vote-option.skip {
-  border-color: var(--warning);
+.warning {
+    margin-top: 16px;
+    padding: 13px;
+
+    border-radius: 12px;
+
+    background: rgba(255,209,102,0.1);
+    border: 1px solid rgba(255,209,102,0.3);
+
+    color: var(--yellow);
+
+    text-align: center;
+    font-weight: bold;
+}
+
+.warning span {
+    font-size: 12px;
+    font-weight: normal;
 }
 
 
-/* =========================
+/* =========================================================
    LIFELINE
-========================= */
+   ========================================================= */
 
-.lifeline-message {
-  padding: 22px;
+.lifeline-panel {
+    text-align: center;
+}
 
-  margin-top: 20px;
+.lifeline-icon {
+    font-size: 70px;
+    margin-bottom: 10px;
+}
 
-  border:
-    1px solid var(--warning);
+#lifelineMessage {
+    padding: 20px;
 
-  border-radius: 12px;
+    border-radius: 14px;
 
-  background:
-    rgba(255, 209, 102, 0.08);
+    background: #0b1118;
+    border: 1px solid var(--border);
 
-  font-size: 19px;
-
-  font-weight: bold;
-
-  line-height: 1.5;
+    font-size: 18px;
+    font-weight: bold;
+    line-height: 1.55;
 }
 
 
-/* =========================
+/* =========================================================
    SYSTEMS
-========================= */
+   ========================================================= */
 
 .systems-list {
-  display: grid;
+    display: grid;
+    gap: 12px;
 
-  gap: 10px;
-
-  margin-top: 20px;
+    margin-top: 24px;
 }
 
-.system {
-  padding: 15px;
+.system-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 
-  border-radius: 11px;
+    padding: 15px;
 
-  border:
-    1px solid var(--border);
+    border-radius: 12px;
 
-  background: #0c1016;
-
-  display: flex;
-
-  justify-content: space-between;
-
-  align-items: center;
+    background: #0b1118;
+    border: 1px solid var(--border);
 }
 
 .system-name {
-  font-weight: bold;
+    font-weight: 900;
 }
 
 .system-status {
-  font-size: 12px;
-
-  font-weight: bold;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 1px;
 }
 
-.online {
-  color: var(--success);
+.system-online {
+    color: var(--green);
 }
 
-.offline {
-  color: var(--danger);
+.system-offline {
+    color: var(--red);
 }
 
 
-/* =========================
-   MOBILE
-========================= */
+/* =========================================================
+   GAME OVER
+   ========================================================= */
 
-@media (max-width: 500px) {
+.game-over-panel {
+    text-align: center;
+}
 
-  .top-bar {
+.game-over-icon {
+    font-size: 75px;
+}
+
+#gameOverTitle {
+    font-size: clamp(32px, 10vw, 55px);
+}
+
+#gameOverMessage {
+    color: #c8d3dd;
+    line-height: 1.6;
+}
+
+.final-players {
+    display: grid;
+    gap: 8px;
+
+    margin-top: 25px;
+
+    text-align: left;
+}
+
+.final-player {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
     padding: 12px 14px;
-  }
 
-  .top-bar h1 {
-    font-size: 21px;
-  }
+    border-radius: 10px;
 
-  .game-info {
-    gap: 4px;
+    background: #0b1118;
+    border: 1px solid var(--border);
+}
 
-    font-size: 9px;
-  }
+.final-player-name {
+    font-weight: bold;
+}
 
-  .game-info span {
-    padding: 6px;
-  }
+.final-player-role {
+    font-size: 13px;
+    color: var(--muted);
+}
 
-  .panel {
-    padding: 20px 16px;
 
-    border-radius: 14px;
-  }
+/* =========================================================
+   ROLE GUIDE
+   ========================================================= */
 
-  .panel h2 {
-    font-size: 22px;
-  }
+.role-guide-section {
+    margin-top: 24px;
+}
 
-  .screen {
-    padding: 15px 10px;
-  }
+.role-guide-section h2 {
+    text-align: left;
+
+    padding-bottom: 8px;
+
+    border-bottom: 1px solid var(--border);
+}
+
+.role-guide-card {
+    margin-top: 10px;
+    padding: 14px;
+
+    border-radius: 12px;
+
+    background: #0b1118;
+    border: 1px solid var(--border);
+}
+
+.role-guide-name {
+    font-size: 17px;
+    font-weight: 900;
+}
+
+.role-guide-team {
+    margin-top: 3px;
+
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+
+    color: var(--muted);
+}
+
+.role-guide-description {
+    margin-top: 8px;
+
+    color: #c4ced7;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   CUSTOM ROLES
+   ========================================================= */
+
+.custom-role-section {
+    margin-top: 22px;
+}
+
+.custom-role-section h2 {
+    text-align: left;
+
+    margin-bottom: 10px;
+}
+
+.custom-role-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+
+    gap: 10px;
+
+    align-items: center;
+
+    padding: 11px 0;
+
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.custom-role-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.custom-role-name {
+    font-weight: 800;
+}
+
+.custom-role-desc {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.custom-role-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.custom-role-controls input {
+    width: 65px;
+
+    padding: 9px;
+
+    border-radius: 8px;
+
+    border: 1px solid var(--border);
+
+    background: #0b1118;
+    color: var(--text);
+
+    text-align: center;
+}
+
+.custom-role-controls input:disabled {
+    opacity: 0.4;
+}
+
+.custom-role-controls label {
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.custom-role-buttons {
+    display: grid;
+    gap: 10px;
+
+    margin-top: 24px;
+}
+
+
+/* =========================================================
+   HIDDEN
+   ========================================================= */
+
+.hidden {
+    display: none !important;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+    .screen {
+        padding: 14px;
+    }
+
+    #setupScreen {
+        padding-top: 120px;
+    }
+
+    .panel,
+    .setup-card {
+        padding: 18px;
+        border-radius: 14px;
+    }
+
+    .logo {
+        top: 16px;
+    }
+
+    .logo-alien {
+        font-size: 42px;
+        letter-spacing: 5px;
+    }
+
+    .player-setup-row {
+        grid-template-columns: 1fr;
+        gap: 5px;
+    }
+
+    .player-setup-name {
+        font-size: 14px;
+    }
+
+    .role-icon {
+        font-size: 75px;
+    }
+
+    button {
+        min-height: 48px;
+    }
+
+    .big-player-name {
+        font-size: 34px;
+    }
+
+    .custom-role-row {
+        grid-template-columns: 1fr;
+    }
+
+    .custom-role-controls {
+        justify-content: flex-start;
+    }
+}
+
+
+/* =========================================================
+   VERY SMALL PHONES
+   ========================================================= */
+
+@media (max-width: 360px) {
+
+    .screen {
+        padding: 10px;
+    }
+
+    .panel,
+    .setup-card {
+        padding: 14px;
+    }
+
+    .logo-alien {
+        font-size: 36px;
+    }
+
+    .big-player-name {
+        font-size: 29px;
+    }
+
+    button {
+        padding: 12px;
+    }
 }
