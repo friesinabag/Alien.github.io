@@ -8744,6 +8744,135 @@ if (
     pendingEjection: null
   };
 
+   async function createRoom(){
+  try{
+    const name = ($('hostName').value || 'Player 1')
+      .trim()
+      .slice(0,20) || 'Player 1';
+
+    ONLINE.mode = true;
+    ONLINE.host = true;
+    ONLINE.code = code();
+
+    game.players = [{
+      id:'p1',
+      name:name,
+      role:'survivor',
+      alive:true,
+      originalRole:'survivor',
+      infectionRound:null,
+      hasInfected:false
+    }];
+
+    await connect(ONLINE.code);
+
+    ONLINE.peers[ONLINE.clientId] = {
+      clientId:ONLINE.clientId,
+      name:name,
+      playerId:'p1'
+    };
+
+    ONLINE.playerToPeer.p1 = ONLINE.clientId;
+    ONLINE.peerToPlayer[ONLINE.clientId] = 'p1';
+
+    $('createBox').style.display = 'none';
+    $('onlineLobby').style.display = 'block';
+    $('onlineCode').textContent = ONLINE.code;
+    $('onlineSetupBtn').disabled = true;
+
+    renderLobby();
+    status('Room created. Share the code with the other players.');
+
+    await send({
+      type:'hello',
+      clientId:ONLINE.clientId,
+      name:name,
+      host:true
+    });
+
+  }catch(e){
+    status('Could not connect to the online service: ' + e.message);
+  }
+}
+
+
+async function joinRoom(){
+  const name = ($('joinName').value || '')
+    .trim()
+    .slice(0,20);
+
+  const c = ($('roomCodeInput').value || '')
+    .trim()
+    .toUpperCase();
+
+  if(!name){
+    alert('Please enter your name first.');
+    $('joinName').focus();
+    return;
+  }
+
+  if(c.length !== 5){
+    alert('Enter the 5-character room code.');
+    $('roomCodeInput').focus();
+    return;
+  }
+
+  try{
+    ONLINE.mode = true;
+    ONLINE.host = false;
+    ONLINE.code = c;
+    ONLINE.joinName = name;
+
+    await connect(c);
+
+    $('joinBox').style.display = 'none';
+    $('onlineLobby').style.display = 'block';
+    $('onlineCode').textContent = c;
+    $('onlineSetupBtn').style.display = 'none';
+
+    status('Connected. Waiting for the host...');
+
+    await send({
+      type:'hello',
+      clientId:ONLINE.clientId,
+      name:name,
+      host:false
+    });
+
+  }catch(e){
+    status('Could not connect to this room: ' + e.message);
+  }
+}
+
+
+   <div id="joinBox" style="display:none;margin-top:14px">
+  <input
+    id="joinName"
+    maxlength="20"
+    placeholder="Enter your name"
+    autocomplete="off"
+    autocapitalize="words"
+    spellcheck="false"
+    style="width:100%"
+  >
+
+  <input
+    id="roomCodeInput"
+    maxlength="5"
+    autocomplete="off"
+    placeholder="5-character room code"
+    style="width:100%;margin-top:8px;text-transform:uppercase"
+  >
+
+  <button
+    id="joinConfirmBtn"
+    class="primary full"
+    type="button"
+  >
+    JOIN ROOM
+  </button>
+</div>
+
 
   /* =========================================================
      SUPABASE
@@ -8779,6 +8908,7 @@ if (
 
   }
 
+   
 
   /* =========================================================
      ONLINE SCREEN
