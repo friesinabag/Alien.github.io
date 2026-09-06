@@ -1,1238 +1,873 @@
-/* =========================================================
-   ALIEN
-   COMPLETE STYLE.CSS
-   ========================================================= */
-
-:root {
-    --bg: #070b12;
-    --panel: #101722;
-    --panel2: #151e2c;
-    --line: #263449;
-
-    --text: #f3f6fb;
-    --muted: #8e9aae;
-
-    --accent: #62d8ff;
-    --accent2: #8b7cff;
-
-    --danger: #ff5d6c;
-    --success: #5ee39a;
-    --warning: #ffd166;
-
-    --shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
+:root{
+  --bg:#070a10;
+  --panel:#101722;
+  --panel2:#151e2b;
+  --line:#293547;
+  --text:#f4f7fb;
+  --muted:#a8b2c2;
+  --accent:#63a4ff;
+  --accent2:#8a6cff;
+  --green:#39d98a;
+  --red:#ff5268;
+  --white:#ffffff;
+  --shadow:0 14px 40px rgba(0,0,0,.35);
 }
 
-* {
-    box-sizing: border-box;
+*{
+  box-sizing:border-box;
 }
 
 html,
-body {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    min-height: 100%;
+body{
+  margin:0;
+  min-height:100%;
+  background:
+    radial-gradient(
+      circle at top,
+      #142033 0,
+      #070a10 45%
+    );
+  color:var(--text);
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
 }
 
-body {
-    background:
-        radial-gradient(circle at top, #111c2c 0%, var(--bg) 45%),
-        var(--bg);
-
-    color: var(--text);
-    font-family:
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        sans-serif;
-
-    min-height: 100vh;
-    overflow-x: hidden;
+body{
+  padding:18px;
 }
-
-/* =========================================================
-   GENERAL
-   ========================================================= */
 
 button,
-input,
-select {
-    font: inherit;
+select,
+input{
+  font:inherit;
 }
 
-button {
-    appearance: none;
-    -webkit-appearance: none;
-
-    border: 0;
-    outline: none;
-
-    cursor: pointer;
-
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-
-    user-select: none;
-    -webkit-user-select: none;
+button{
+  cursor:pointer;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
 }
 
-button:focus-visible,
-input:focus-visible,
-select:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
+button:disabled{
+  cursor:not-allowed;
+  opacity:.55;
+}
+
+.app{
+  width:min(760px,100%);
+  margin:0 auto;
+}
+
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin:4px 0 18px;
+  padding:4px 2px;
+}
+
+.logo{
+  font-weight:900;
+  letter-spacing:2px;
+  font-size:22px;
+}
+
+.logo span{
+  color:#fff;
+}
+
+.subtitle{
+  font-size:11px;
+  color:var(--muted);
+  letter-spacing:1.5px;
+}
+
+.screen{
+  display:none;
+}
+
+.screen.active{
+  display:block;
+}
+
+.panel{
+  background:
+    linear-gradient(
+      180deg,
+      var(--panel2),
+      var(--panel)
+    );
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:22px;
+  box-shadow:var(--shadow);
+  margin-bottom:16px;
+}
+
+.center{
+  text-align:center;
+}
+
+.hero{
+  text-align:center;
+  padding:34px 22px;
+}
+
+.hero h1{
+  font-size:56px;
+  margin:0;
+  letter-spacing:7px;
+}
+
+.hero p{
+  color:var(--muted);
+  margin:8px 0 0;
 }
 
 h1,
 h2,
-h3,
-p {
-    margin-top: 0;
+h3{
+  margin-top:0;
 }
 
-p {
-    line-height: 1.5;
+h1{
+  font-size:32px;
+  margin-bottom:8px;
 }
 
-.hidden {
-    display: none !important;
+h2{
+  font-size:22px;
 }
 
-/* =========================================================
-   APP
-   ========================================================= */
-
-#app {
-    width: 100%;
-    min-height: 100vh;
+.eyebrow{
+  font-size:11px;
+  letter-spacing:2px;
+  color:var(--muted);
+  font-weight:800;
+  margin-bottom:8px;
 }
 
-.screen {
-    display: none;
-    width: 100%;
-    min-height: 100vh;
-    padding: 24px 16px;
+.big-label{
+  display:block;
+  font-size:12px;
+  font-weight:800;
+  color:var(--muted);
+  letter-spacing:1px;
+  margin-bottom:14px;
 }
 
-.screen.active {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+select,
+input{
+  background:#0b111a;
+  color:var(--text);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:11px 12px;
 }
 
-/* =========================================================
-   MAIN CONTAINERS
-   ========================================================= */
-
-.screen > * {
-    width: 100%;
-    max-width: 720px;
+.big-label select{
+  width:100%;
+  margin-top:7px;
 }
 
-.screen > h1,
-.screen > h2 {
-    text-align: center;
+.button-row{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:9px;
+  margin:12px 0;
 }
 
-.screen > h1 {
-    margin: 20px auto 10px;
-    font-size: clamp(34px, 9vw, 64px);
-    letter-spacing: 4px;
-    text-shadow: 0 0 25px rgba(98, 216, 255, 0.35);
+button{
+  border:1px solid var(--line);
+  background:#172132;
+  color:var(--text);
+  padding:13px 15px;
+  border-radius:12px;
+  font-weight:800;
+  transition:.15s;
 }
 
-.screen > h2 {
-    margin: 20px auto 10px;
-    font-size: clamp(25px, 7vw, 40px);
+button:hover{
+  transform:translateY(-1px);
+  filter:brightness(1.08);
 }
 
-.screen > p {
-    color: var(--muted);
-    text-align: center;
+button:active{
+  transform:translateY(0);
 }
 
-/* =========================================================
-   PANELS
-   ========================================================= */
-
-.panel {
-    background: linear-gradient(
-        145deg,
-        rgba(21, 30, 44, 0.98),
-        rgba(10, 16, 25, 0.98)
+button.primary{
+  background:
+    linear-gradient(
+      135deg,
+      #347ff2,
+      #7358e8
     );
-
-    border: 1px solid var(--line);
-    border-radius: 18px;
-
-    padding: 20px;
-
-    box-shadow: var(--shadow);
+  border-color:#628df2;
 }
 
-.card {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    padding: 18px;
+button.secondary{
+  background:#0d141f;
 }
 
-/* =========================================================
-   BUTTONS
-   ========================================================= */
-
-button {
-    width: 100%;
-    min-height: 50px;
-
-    padding: 13px 18px;
-
-    border-radius: 12px;
-
-    background: linear-gradient(
-        135deg,
-        var(--accent),
-        #3ba9d2
-    );
-
-    color: #041018;
-
-    font-weight: 800;
-    font-size: 16px;
-
-    transition:
-        transform 0.12s ease,
-        filter 0.12s ease,
-        opacity 0.12s ease;
+button.full{
+  width:100%;
+  margin-top:16px;
 }
 
-button:hover {
-    filter: brightness(1.08);
+.validity{
+  font-size:12px;
+  color:var(--muted);
+  margin:8px 0 12px;
 }
 
-button:active {
-    transform: scale(0.97);
+.players-setup{
+  display:grid;
+  gap:10px;
+  margin-top:14px;
 }
 
-button:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
-    transform: none;
+.setup-player{
+  padding:12px;
+  background:#0b111a;
+  border:1px solid var(--line);
+  border-radius:12px;
 }
 
-/* Secondary buttons */
-
-button.secondary {
-    background: var(--panel2);
-    color: var(--text);
-    border: 1px solid var(--line);
+.setup-player label{
+  display:block;
+  font-size:12px;
+  font-weight:800;
+  color:var(--muted);
 }
 
-button.danger {
-    background: var(--danger);
-    color: white;
-}
-
-button.success {
-    background: var(--success);
-    color: #04130b;
-}
-
-button.warning {
-    background: var(--warning);
-    color: #171000;
-}
-
-/* =========================================================
-   SETUP
-   ========================================================= */
-
-#setupScreen {
-    gap: 16px;
-}
-
-#setupScreen h1 {
-    margin-bottom: 0;
-}
-
-#setupScreen > p {
-    margin-bottom: 10px;
-}
-
-#playerCount {
-    width: 100%;
-    max-width: 720px;
-
-    min-height: 50px;
-
-    padding: 12px 14px;
-
-    background: var(--panel);
-    color: var(--text);
-
-    border: 1px solid var(--line);
-    border-radius: 12px;
-}
-
-#playersSetup {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-/* =========================================================
-   PLAYER SETUP
-   ========================================================= */
-
-.setup-player {
-    width: 100%;
-
-    padding: 16px;
-
-    background: var(--panel);
-
-    border: 1px solid var(--line);
-    border-radius: 15px;
-
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
-}
-
-.setup-player label {
-    display: block;
-
-    margin-bottom: 12px;
-
-    color: var(--muted);
-    font-size: 14px;
-    font-weight: 700;
-}
-
-.setup-player label:last-child {
-    margin-bottom: 0;
+.setup-player .role-label{
+  margin-top:10px;
 }
 
 .player-name-input,
-.role-select {
-    display: block;
-
-    width: 100%;
-
-    margin-top: 7px;
-
-    min-height: 48px;
-
-    padding: 11px 13px;
-
-    border: 1px solid var(--line);
-    border-radius: 10px;
-
-    background: var(--panel2);
-    color: var(--text);
-
-    outline: none;
-}
-
-.player-name-input::placeholder {
-    color: #667287;
-}
-
-.player-name-input:focus,
-.role-select:focus {
-    border-color: var(--accent);
-}
-
-/* =========================================================
-   VALIDITY
-   ========================================================= */
-
-#playerValidity {
-    min-height: 22px;
-
-    text-align: center;
-
-    color: var(--danger);
-
-    font-weight: 700;
-}
-
-/* =========================================================
-   SETUP BUTTON GROUP
-   ========================================================= */
-
-#setupScreen > button {
-    max-width: 720px;
-}
-
-#randomRolesButton {
-    background:
-        linear-gradient(
-            135deg,
-            var(--accent2),
-            #6255d8
-        );
-
-    color: white;
-}
-
-#roleGuideButton,
-#customRolesButton {
-    background: var(--panel2);
-    color: var(--text);
-    border: 1px solid var(--line);
-}
-
-#startGameButton {
-    min-height: 58px;
-
-    font-size: 18px;
-
-    background:
-        linear-gradient(
-            135deg,
-            var(--success),
-            #36bb77
-        );
-}
-
-/* =========================================================
-   PASS PHONE SCREEN
-   ========================================================= */
-
-#passScreen {
-    justify-content: center;
-    text-align: center;
-}
-
-#passScreen h2 {
-    font-size: 30px;
-}
-
-#passPlayerName {
-    color: var(--accent);
-    font-size: clamp(32px, 9vw, 52px);
-    font-weight: 900;
-    margin: 20px 0;
-}
-
-#passRound {
-    color: var(--muted);
-    font-weight: 700;
-}
-
-#passSubtext {
-    color: var(--muted);
-    margin-bottom: 25px;
-}
-
-/* =========================================================
-   ROLE SCREEN
-   ========================================================= */
-
-#roleScreen {
-    justify-content: center;
-    text-align: center;
-}
-
-#rolePlayerName {
-    color: var(--accent);
-    font-size: 28px;
-    font-weight: 900;
-}
-
-#roleIcon {
-    font-size: 70px;
-    margin: 15px 0;
-}
-
-#roleName {
-    font-size: clamp(30px, 8vw, 46px);
-    margin-bottom: 8px;
-}
-
-#roleTeam {
-    display: inline-block;
-
-    padding: 7px 13px;
-
-    border-radius: 999px;
-
-    background: var(--panel2);
-    border: 1px solid var(--line);
-
-    color: var(--muted);
-
-    font-weight: 800;
-}
-
-#roleDescription {
-    max-width: 600px;
-    margin: 20px auto 25px;
-
-    color: var(--muted);
-
-    line-height: 1.65;
-}
-
-/* =========================================================
-   PRIVATE WARNING
-   ========================================================= */
-
-.private-warning {
-    margin: 15px auto;
-
-    padding: 12px 15px;
-
-    max-width: 600px;
-
-    border-radius: 12px;
-
-    background: rgba(255, 209, 102, 0.08);
-    border: 1px solid rgba(255, 209, 102, 0.25);
-
-    color: var(--warning);
-
-    font-size: 14px;
-    font-weight: 700;
-}
-
-/* =========================================================
-   ACTION SCREEN
-   ========================================================= */
-
-#actionScreen {
-    gap: 16px;
-}
-
-#actionTitle {
-    text-align: center;
-    font-size: clamp(27px, 7vw, 40px);
-}
-
-#actionDescription {
-    text-align: center;
-    color: var(--muted);
-    margin-bottom: 5px;
-}
-
-#actionOptions {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 12px;
-}
-
-#actionOptions button {
-    min-height: 58px;
-}
-
-/* =========================================================
-   TARGET LISTS
-   ========================================================= */
-
-.target-list {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 10px;
-}
-
-.target-button {
-    background: var(--panel2);
-    color: var(--text);
-
-    border: 1px solid var(--line);
-
-    min-height: 54px;
-}
-
-.target-button:hover {
-    border-color: var(--accent);
-}
-
-/* =========================================================
-   CHOICE GRID
-   ========================================================= */
-
-.choice-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-}
-
-.choice-grid button {
-    min-height: 60px;
-}
-
-/* =========================================================
-   CONFIRM ACTION
-   ========================================================= */
-
-#confirmActionButton {
-    margin-top: 5px;
-}
-
-/* =========================================================
-   REACTION SCREEN
-   ========================================================= */
-
-#reactionScreen {
-    justify-content: center;
-    text-align: center;
-}
-
-#reactionPlayerName {
-    color: var(--accent);
-
-    font-size: clamp(32px, 9vw, 50px);
-
-    font-weight: 900;
-
-    margin: 15px 0;
-}
-
-#reactionRound {
-    color: var(--muted);
-    font-weight: 700;
-}
-
-#reactionStage {
-    color: var(--muted);
-}
-
-/* =========================================================
-   REACTION RESULT
-   ========================================================= */
-
-#reactionResultScreen {
-    justify-content: center;
-    text-align: center;
-}
-
-#reactionResultTitle {
-    font-size: clamp(30px, 8vw, 46px);
-}
-
-#reactionResultMessage {
-    max-width: 600px;
-
-    margin: 20px auto 30px;
-
-    color: var(--muted);
-
-    line-height: 1.65;
-}
-
-/* =========================================================
-   DISCUSSION
-   ========================================================= */
-
-#discussionScreen {
-    justify-content: center;
-    text-align: center;
-}
-
-#discussionScreen h2 {
-    margin-bottom: 10px;
-}
-
-#discussionRound,
-#discussionStage {
-    color: var(--muted);
-    font-weight: 700;
-}
-
-#startVotingButton {
-    margin-top: 25px;
-}
-
-/* =========================================================
-   VOTING
-   ========================================================= */
-
-#votingScreen {
-    gap: 15px;
-}
-
-#votingScreen h2 {
-    text-align: center;
-}
-
-#votingRound,
-#votingStage {
-    text-align: center;
-    color: var(--muted);
-    font-weight: 700;
-}
-
-#voterName {
-    text-align: center;
-
-    margin: 10px 0;
-
-    color: var(--accent);
-
-    font-size: 30px;
-    font-weight: 900;
-}
-
-#votingSilenced {
-    text-align: center;
-
-    color: var(--danger);
-
-    font-weight: 800;
-}
-
-#voteOptions {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 10px;
-}
-
-.vote-button {
-    min-height: 54px;
-
-    background: var(--panel2);
-
-    color: var(--text);
-
-    border: 1px solid var(--line);
-}
-
-.vote-button.selected {
-    background: var(--accent);
-    color: #041018;
-
-    border-color: var(--accent);
-
-    transform: scale(1.01);
-}
-
-#confirmVoteButton {
-    margin-top: 5px;
-}
-
-/* =========================================================
-   CAPTAIN TIE
-   ========================================================= */
-
-#captainTieScreen {
-    justify-content: center;
-    text-align: center;
-}
-
-#captainTieScreen h2 {
-    color: var(--warning);
-}
-
-#captainTieOptions {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 10px;
-
-    margin-top: 20px;
-}
-
-#captainTieOptions button {
-    min-height: 56px;
-}
-
-/* =========================================================
-   JUDGE SCREEN
-   ========================================================= */
-
-#judgeScreen {
-    justify-content: center;
-    text-align: center;
-}
-
-#judgeScreen h2 {
-    color: var(--warning);
-}
-
-#judgeDescription {
-    max-width: 600px;
-
-    margin: 20px auto 25px;
-
-    color: var(--muted);
-
-    line-height: 1.6;
-}
-
-#judgeCancelButton {
-    background: var(--success);
-    color: #04130b;
-
-    margin-bottom: 10px;
+.role-select{
+  display:block;
+  width:100%;
+  margin-top:7px;
 }
 
-#judgeAllowButton {
-    background: var(--danger);
-    color: white;
+.player-name-input{
+  font-weight:700;
+  color:var(--text);
 }
 
-/* =========================================================
-   VOTE RESULT
-   ========================================================= */
-
-#voteResultScreen {
-    justify-content: center;
-    text-align: center;
+.random-hidden{
+  color:#f4f7fb;
 }
 
-#voteResultTitle {
-    font-size: clamp(30px, 8vw, 46px);
+.big-name{
+  font-size:34px;
+  font-weight:900;
+  margin:8px 0 14px;
 }
-
-#voteResultMessage {
-    max-width: 650px;
-
-    margin: 20px auto 30px;
 
-    color: var(--muted);
-
-    line-height: 1.7;
+.target-name{
+  font-size:28px;
+  font-weight:900;
+  margin:12px 0 20px;
 }
-
-#roundResults {
-    width: 100%;
-
-    margin: 10px auto 20px;
-
-    padding: 15px;
 
-    background: var(--panel);
-
-    border: 1px solid var(--line);
-    border-radius: 14px;
-
-    text-align: left;
+.round-label{
+  color:var(--accent);
+  font-weight:900;
+  letter-spacing:1px;
+  margin-bottom:16px;
 }
 
-/* =========================================================
-   LIFELINE
-   ========================================================= */
-
-#lifelineScreen {
-    justify-content: center;
-    text-align: center;
+.muted{
+  color:var(--muted);
 }
-
-#lifelineTitle {
-    color: var(--accent);
 
-    font-size: clamp(28px, 8vw, 44px);
+.large-message{
+  font-size:20px;
+  line-height:1.5;
 }
-
-#lifelineMessage {
-    max-width: 650px;
-
-    margin: 20px auto 30px;
-
-    padding: 20px;
-
-    background: var(--panel);
 
-    border: 1px solid var(--line);
-    border-radius: 16px;
-
-    font-size: 18px;
-    line-height: 1.6;
+.role-icon{
+  font-size:72px;
+  margin:8px 0;
 }
 
-/* =========================================================
-   SYSTEMS
-   ========================================================= */
-
-#systemsScreen {
-    gap: 15px;
+.role-title.human{
+  color:var(--green);
 }
 
-#systemsScreen h2 {
-    text-align: center;
+.role-title.neutral{
+  color:#fff;
 }
-
-#systemsRound,
-#systemsStage {
-    text-align: center;
 
-    color: var(--muted);
-
-    font-weight: 700;
+.role-title.hostile{
+  color:var(--red);
 }
-
-#systemsList {
-    display: grid;
 
-    grid-template-columns: 1fr 1fr;
-
-    gap: 12px;
+.role-description{
+  font-size:16px;
+  line-height:1.55;
+  color:#dbe3ef;
 }
-
-.system-card {
-    padding: 17px;
 
-    background: var(--panel);
-
-    border: 1px solid var(--line);
-
-    border-radius: 14px;
-
-    text-align: center;
+.team-badge{
+  display:inline-block;
+  border-radius:999px;
+  padding:8px 14px;
+  font-weight:950;
+  letter-spacing:1.5px;
+  border:1px solid;
 }
-
-/* =========================================================
-   GAME OVER
-   ========================================================= */
 
-#gameOverScreen {
-    justify-content: center;
-    text-align: center;
+.team-badge.human{
+  color:var(--green);
+  border-color:rgba(57,217,138,.55);
+  background:rgba(57,217,138,.09);
 }
 
-#gameOverTitle {
-    font-size: clamp(36px, 10vw, 58px);
-
-    margin-bottom: 15px;
+.team-badge.neutral{
+  color:var(--white);
+  border-color:rgba(255,255,255,.55);
+  background:rgba(255,255,255,.07);
 }
-
-#gameOverMessage {
-    max-width: 650px;
-
-    margin: 0 auto 30px;
-
-    color: var(--muted);
 
-    line-height: 1.7;
+.team-badge.hostile{
+  color:var(--red);
+  border-color:rgba(255,82,104,.55);
+  background:rgba(255,82,104,.09);
 }
 
-#finalPlayers {
-    width: 100%;
-
-    display: grid;
-
-    grid-template-columns: 1fr;
-
-    gap: 10px;
-
-    margin-bottom: 25px;
+.ally-box{
+  margin:18px 0;
+  padding:14px;
+  border:1px solid rgba(255,82,104,.4);
+  border-radius:12px;
+  background:rgba(255,82,104,.06);
+  text-align:left;
+  color:#ffd7dc;
 }
-
-.final-player {
-    padding: 15px;
-
-    background: var(--panel);
-
-    border: 1px solid var(--line);
 
-    border-radius: 14px;
-
-    text-align: left;
+.choice-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:16px;
 }
-
-/* =========================================================
-   ROLE GUIDE
-   ========================================================= */
 
-#roleGuideContent {
-    display: grid;
-    gap: 12px;
+/* Selected action / vote */
+.choice-button.selected,
+.vote-button.selected,
+.target-button.selected,
+.system-button.selected{
+  border:2px solid #ff3b30 !important;
+  box-shadow:
+    0 0 0 2px
+    rgba(255,59,48,.22);
 }
-
-.role-guide-card {
-    padding: 16px;
-
-    background: var(--panel2);
 
-    border: 1px solid var(--line);
-
-    border-radius: 14px;
+.choice-button{
+  min-height:54px;
 }
-
-.role-guide-card h3 {
-    margin-bottom: 7px;
 
-    font-size: 19px;
+.warning{
+  color:#ffca67;
+  font-weight:800;
+  margin:10px 0;
 }
-
-.role-guide-card p {
-    margin-bottom: 0;
-
-    color: var(--muted);
 
-    line-height: 1.55;
+.results-box,
+.systems-list,
+.final-players{
+  background:#0a1019;
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:15px;
+  line-height:1.8;
 }
 
-/* =========================================================
-   CUSTOM ROLES
-   ========================================================= */
-
-#customRoleContent {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+.systems-list{
+  display:grid;
+  gap:8px;
 }
 
-.custom-role-section {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+.dead{
+  opacity:.55;
+  text-decoration:line-through;
 }
-
-.custom-role-section h3 {
-    margin-bottom: 0;
 
-    font-size: 21px;
-
-    color: var(--accent);
+.team-human{
+  color:var(--green);
 }
-
-.custom-role {
-    display: flex;
-
-    align-items: center;
-    justify-content: space-between;
-
-    gap: 12px;
-
-    padding: 13px;
-
-    background: var(--panel2);
 
-    border: 1px solid var(--line);
-
-    border-radius: 12px;
+.team-neutral{
+  color:#fff;
 }
-
-.custom-role label {
-    flex: 1;
 
-    font-weight: 700;
+.team-hostile{
+  color:var(--red);
 }
-
-.custom-role select {
-    width: 75px;
-
-    min-height: 42px;
 
-    padding: 7px;
-
-    border-radius: 9px;
-
-    background: var(--panel);
-    color: var(--text);
-
-    border: 1px solid var(--line);
+.team-infection{
+  color:#c7a8ff;
 }
 
-.custom-role.disabled {
-    opacity: 0.45;
-}
 
 /* =========================================================
    MODALS
-   IMPORTANT: JS USES .open
    ========================================================= */
 
-.modal {
-    position: fixed;
-
-    inset: 0;
-
-    z-index: 1000;
-
-    display: none;
-
-    align-items: center;
-    justify-content: center;
-
-    padding: 16px;
-
-    background: rgba(0, 0, 0, 0.78);
-
-    /* Prevent background scrolling/touch interaction */
-    overscroll-behavior: contain;
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.78);
+  display:none;
+  padding:18px;
+  overflow:auto;
+  z-index:20;
 }
 
-.modal.open {
-    display: flex;
+.modal.open{
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
 }
 
-.modal-content {
-    width: 100%;
-
-    max-width: 700px;
-    max-height: 90vh;
-
-    overflow-y: auto;
-    overflow-x: hidden;
-
-    padding: 22px;
-
-    background: var(--panel);
-
-    border: 1px solid var(--line);
-
-    border-radius: 18px;
-
-    box-shadow:
-        0 25px 80px rgba(0, 0, 0, 0.55);
-
-    -webkit-overflow-scrolling: touch;
+.modal-card{
+  position:relative;
+  width:min(760px,100%);
+  margin:20px auto;
+  background:#101722;
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:22px;
+  box-shadow:var(--shadow);
 }
 
-.modal-content h2 {
-    margin-bottom: 18px;
-
-    font-size: 28px;
+.close{
+  position:absolute;
+  right:12px;
+  top:12px;
+  width:42px;
+  height:42px;
+  padding:0;
+  font-size:28px;
 }
 
-.modal-content > button {
-    margin-top: 18px;
+.modal-card h2{
+  padding-right:50px;
 }
+
+.modal-card section{
+  margin:22px 0;
+}
+
+.modal-card section h3{
+  color:var(--muted);
+  font-size:13px;
+  letter-spacing:1.5px;
+}
+
+.guide-card{
+  display:flex;
+  gap:14px;
+  padding:14px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  margin:9px 0;
+  background:#0b111a;
+}
+
+.guide-card.human{
+  border-left:4px solid var(--green);
+}
+
+.guide-card.neutral{
+  border-left:4px solid #fff;
+}
+
+.guide-card.hostile{
+  border-left:4px solid var(--red);
+}
+
+.guide-icon{
+  font-size:34px;
+}
+
+.guide-card strong{
+  font-size:17px;
+}
+
+.guide-team{
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:1px;
+  color:var(--muted);
+  margin:2px 0 5px;
+}
+
+.guide-card p{
+  margin:0;
+  color:#c5cfdd;
+  line-height:1.45;
+}
+
+.custom-row{
+  display:grid;
+  grid-template-columns:1fr auto auto;
+  align-items:center;
+  gap:10px;
+  padding:12px 0;
+  border-bottom:1px solid #202a38;
+}
+
+.custom-row:last-child{
+  border-bottom:0;
+}
+
+.custom-row input[type=number]{
+  width:70px;
+}
+
+.switch{
+  display:flex;
+  gap:6px;
+  align-items:center;
+  font-size:11px;
+  color:var(--muted);
+}
+
+.switch input{
+  accent-color:var(--accent);
+}
+
+.locked{
+  opacity:.7;
+}
+
 
 /* =========================================================
-   SCROLLBARS
+   DESKTOP
    ========================================================= */
 
-* {
-    scrollbar-width: thin;
-    scrollbar-color: var(--line) var(--bg);
+@media(min-width:560px){
+
+  .button-row{
+    grid-template-columns:
+      1fr 1fr 1fr;
+  }
+
+  .button-row button:first-child{
+    grid-column:span 3;
+  }
+
+  .players-setup{
+    grid-template-columns:
+      1fr 1fr;
+  }
 }
 
-::-webkit-scrollbar {
-    width: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: var(--bg);
-}
-
-::-webkit-scrollbar-thumb {
-    background: var(--line);
-    border-radius: 999px;
-}
 
 /* =========================================================
-   MOBILE
+   COMPACT MOBILE
    ========================================================= */
 
-@media (max-width: 600px) {
+@media(max-width:600px){
 
-    .screen {
-        padding: 18px 12px;
-    }
+  body{
+    padding:8px;
+  }
 
-    .screen > h1 {
-        margin-top: 12px;
-        font-size: 40px;
-    }
+  .app{
+    width:100%;
+  }
 
-    .screen > h2 {
-        font-size: 29px;
-    }
+  .topbar{
+    margin:2px 0 10px;
+    padding:2px 1px;
+  }
 
-    .panel,
-    .card {
-        padding: 15px;
-    }
+  .logo{
+    font-size:18px;
+    letter-spacing:1.5px;
+  }
 
-    button {
-        min-height: 52px;
+  .subtitle{
+    font-size:9px;
+  }
 
-        padding: 13px 14px;
+  .panel{
+    padding:13px;
+    border-radius:14px;
+    margin-bottom:10px;
+  }
 
-        font-size: 16px;
-    }
+  .hero{
+    padding:22px 13px;
+  }
 
-    .choice-grid {
-        grid-template-columns: 1fr;
-    }
+  .hero h1{
+    font-size:38px;
+    letter-spacing:5px;
+  }
 
-    #systemsList {
-        grid-template-columns: 1fr;
-    }
+  .hero p{
+    font-size:12px;
+    margin-top:5px;
+  }
 
-    .custom-role {
-        align-items: flex-start;
-    }
+  h1{
+    font-size:25px;
+    margin-bottom:6px;
+  }
 
-    .custom-role select {
-        flex-shrink: 0;
-    }
+  h2{
+    font-size:19px;
+  }
 
-    .modal {
-        padding: 10px;
-    }
+  h3{
+    font-size:16px;
+  }
 
-    .modal-content {
-        max-height: 94vh;
-        padding: 17px;
-        border-radius: 15px;
-    }
+  .eyebrow{
+    font-size:9px;
+    letter-spacing:1.5px;
+    margin-bottom:6px;
+  }
 
-    #roleIcon {
-        font-size: 58px;
-    }
+  .big-label{
+    font-size:11px;
+    margin-bottom:9px;
+  }
 
-    #roleName {
-        font-size: 34px;
-    }
+  select,
+  input{
+    padding:9px 10px;
+    border-radius:9px;
+    font-size:14px;
+  }
 
-    #passPlayerName,
-    #reactionPlayerName {
-        font-size: 38px;
-    }
+  .button-row{
+    gap:7px;
+    margin:9px 0;
+  }
 
-    #voterName {
-        font-size: 27px;
-    }
+  button{
+    padding:10px 11px;
+    border-radius:10px;
+    font-size:13px;
+  }
+
+  button.full{
+    margin-top:11px;
+  }
+
+  .validity{
+    font-size:10px;
+    margin:6px 0 8px;
+  }
+
+  .players-setup{
+    gap:7px;
+    margin-top:9px;
+  }
+
+  .setup-player{
+    padding:9px;
+    border-radius:10px;
+  }
+
+  .setup-player label{
+    font-size:10px;
+  }
+
+  .setup-player .role-label{
+    margin-top:7px;
+  }
+
+  .player-name-input,
+  .role-select{
+    margin-top:5px;
+  }
+
+  .big-name{
+    font-size:25px;
+    margin:5px 0 10px;
+  }
+
+  .target-name{
+    font-size:22px;
+    margin:9px 0 13px;
+  }
+
+  .round-label{
+    font-size:12px;
+    margin-bottom:10px;
+  }
+
+  .large-message{
+    font-size:16px;
+    line-height:1.4;
+  }
+
+  .role-icon{
+    font-size:56px;
+    margin:5px 0;
+  }
+
+  .role-title{
+    font-size:23px;
+  }
+
+  .role-description{
+    font-size:14px;
+    line-height:1.45;
+  }
+
+  .team-badge{
+    padding:6px 10px;
+    font-size:11px;
+    letter-spacing:1px;
+  }
+
+  .ally-box{
+    margin:11px 0;
+    padding:10px;
+    font-size:13px;
+  }
+
+  .choice-grid{
+    gap:7px;
+    margin-top:10px;
+  }
+
+  .choice-button{
+    min-height:46px;
+  }
+
+  .results-box,
+  .systems-list,
+  .final-players{
+    padding:10px;
+    border-radius:11px;
+    line-height:1.55;
+    font-size:13px;
+  }
+
+  .systems-list{
+    gap:5px;
+  }
+
+  .modal{
+    padding:8px;
+  }
+
+  .modal-card{
+    margin:7px auto;
+    padding:13px;
+    border-radius:14px;
+  }
+
+  .modal-card section{
+    margin:14px 0;
+  }
+
+  .modal-card section h3{
+    font-size:11px;
+  }
+
+  .close{
+    right:7px;
+    top:7px;
+    width:36px;
+    height:36px;
+    font-size:23px;
+  }
+
+  .modal-card h2{
+    padding-right:42px;
+  }
+
+  .guide-card{
+    gap:9px;
+    padding:9px;
+    border-radius:10px;
+    margin:6px 0;
+  }
+
+  .guide-icon{
+    font-size:27px;
+  }
+
+  .guide-card strong{
+    font-size:14px;
+  }
+
+  .guide-team{
+    font-size:8px;
+    margin:1px 0 3px;
+  }
+
+  .guide-card p{
+    font-size:12px;
+    line-height:1.35;
+  }
+
+  .custom-row{
+    grid-template-columns:
+      1fr auto;
+    gap:7px;
+    padding:9px 0;
+  }
+
+  .custom-row input[type=number]{
+    width:58px;
+  }
+
+  .switch{
+    grid-column:1 / -1;
+    font-size:10px;
+  }
 }
+
 
 /* =========================================================
    VERY SMALL PHONES
    ========================================================= */
 
-@media (max-width: 380px) {
+@media(max-width:380px){
 
-    .screen {
-        padding: 14px 9px;
-    }
+  .panel{
+    padding:11px;
+  }
 
-    button {
-        min-height: 50px;
-        font-size: 15px;
-    }
+  .hero h1{
+    font-size:34px;
+  }
 
-    .setup-player {
-        padding: 13px;
-    }
+  button{
+    font-size:12px;
+    padding:9px 10px;
+  }
 
-    .player-name-input,
-    .role-select {
-        min-height: 46px;
-    }
+  .role-icon{
+    font-size:50px;
+  }
 
-    #systemsList {
-        grid-template-columns: 1fr;
-    }
+  .role-title{
+    font-size:21px;
+  }
 
-    .modal-content {
-        padding: 14px;
-    }
-}
-
-/* =========================================================
-   REDUCE ANIMATION FOR USERS WHO REQUEST IT
-   ========================================================= */
-
-@media (prefers-reduced-motion: reduce) {
-
-    *,
-    *::before,
-    *::after {
-        scroll-behavior: auto !important;
-        transition: none !important;
-        animation: none !important;
-    }
+  .role-description{
+    font-size:13px;
+  }
 }
