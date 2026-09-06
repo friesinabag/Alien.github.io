@@ -8703,6 +8703,5305 @@ if (
     bootAlien();
 }
 
+/* =========================================================
+   ALIEN — ONLINE MODE
+   Added to the bottom of the existing game.js
+   ========================================================= */
+
+(function () {
+
+  const ORIGINAL_START_GAME = startGame;
+  const ORIGINAL_START_ROUND = startRound;
+  const ORIGINAL_PASS_TO_ABILITY = passToAbility;
+  const ORIGINAL_SHOW_REACTIONS = showReactions;
+  const ORIGINAL_START_VOTING = startVoting;
+  const ORIGINAL_SHOW_VOTE = showVote;
+  const ORIGINAL_CONFIRM_VOTE = confirmVote;
+  const ORIGINAL_SHOW_DISCUSSION = showDiscussion;
+  const ORIGINAL_SHOW_CAPTAIN_TIE = showCaptainTie;
+  const ORIGINAL_PROCEED_SYSTEMS = proceedToSystems;
+
+  const ONLINE = {
+    mode: false,
+    host: false,
+
+    code: "",
+    channel: null,
+
+    clientId:
+      "client_" +
+      Math.random().toString(36).slice(2) +
+      Date.now().toString(36),
+
+    myPlayerId: null,
+
+    connected: false,
+    started: false,
+
+    peers: {},
+    peerToPlayer: {},
+    playerToPeer: {},
+
+    pendingEjection: null
+  };
+
+
+  /* =========================================================
+     SUPABASE
+     ========================================================= */
+
+  const SUPABASE_URL =
+    "https://sovwkrauwyoskxrnajjn.supabase.co";
+
+  const SUPABASE_KEY =
+    "sb_publishable_ck6DlHqxEFmoCex44rXbKw_HlAtPkaW";
+
+  let onlineSupabase =
+    window.supabaseClient || null;
+
+  if (!onlineSupabase && window.supabase?.createClient) {
+
+    try {
+
+      onlineSupabase =
+        window.supabase.createClient(
+          SUPABASE_URL,
+          SUPABASE_KEY
+        );
+
+    } catch (error) {
+
+      console.error(
+        "Supabase client error:",
+        error
+      );
+
+    }
+
+  }
+
+
+  /* =========================================================
+     ONLINE SCREEN
+     ========================================================= */
+
+  function createOnlineScreen() {
+
+    if ($("onlineScreen")) {
+      return;
+    }
+
+    const screen =
+      document.createElement("section");
+
+    screen.id = "onlineScreen";
+    screen.className = "screen";
+
+    screen.innerHTML = `
+
+      <div class="panel center">
+
+        <div class="eyebrow">
+          MULTIPLAYER
+        </div>
+
+        <h1>🌐 ONLINE MODE</h1>
+
+        <p
+          id="onlineStatus"
+          class="large-message"
+        >
+          Create a room or join a room.
+        </p>
+
+
+        <div
+          id="onlineHomeButtons"
+          class="choice-grid"
+        >
+
+          <button
+            id="createRoomButton"
+            class="primary"
+            type="button"
+          >
+            🏠 CREATE ROOM
+          </button>
+
+          <button
+            id="joinRoomButton"
+            type="button"
+          >
+            🔑 JOIN ROOM
+          </button>
+
+        </div>
+
+
+        <!-- CREATE ROOM -->
+
+        <div
+          id="createRoomBox"
+          style="display:none;margin-top:16px;"
+        >
+
+          <input
+            id="onlineHostName"
+            maxlength="20"
+            autocomplete="off"
+            autocapitalize="words"
+            placeholder="Your name"
+            value="Player 1"
+            style="width:100%;"
+          >
+
+          <button
+            id="createRoomConfirm"
+            class="primary full"
+            type="button"
+          >
+            CREATE ONLINE ROOM
+          </button>
+
+        </div>
+
+
+        <!-- JOIN ROOM -->
+
+        <div
+          id="joinRoomBox"
+          style="display:none;margin-top:16px;"
+        >
+
+          <input
+            id="onlineJoinName"
+            maxlength="20"
+            autocomplete="off"
+            autocapitalize="words"
+            placeholder="Your name"
+            style="width:100%;"
+          >
+
+          <input
+            id="onlineRoomCode"
+            maxlength="5"
+            autocomplete="off"
+            placeholder="ROOM CODE"
+            style="
+              width:100%;
+              margin-top:8px;
+              text-transform:uppercase;
+              letter-spacing:4px;
+              text-align:center;
+              font-weight:900;
+            "
+          >
+
+          <button
+            id="joinRoomConfirm"
+            class="primary full"
+            type="button"
+          >
+            JOIN ROOM
+          </button>
+
+        </div>
+
+
+        <!-- LOBBY -->
+
+        <div
+          id="onlineLobby"
+          style="display:none;margin-top:18px;text-align:left;"
+        >
+
+          <div class="result-box">
+
+            <div
+              class="eyebrow"
+              style="text-align:center;"
+            >
+              ROOM CODE
+            </div>
+
+            <div
+              id="onlineLobbyCode"
+              style="
+                text-align:center;
+                font-size:34px;
+                font-weight:900;
+                letter-spacing:7px;
+                margin:8px 0 18px;
+              "
+            ></div>
+
+            <div
+              id="onlineLobbyPlayers"
+            ></div>
+
+          </div>
+
+
+          <button
+            id="onlineSetupButton"
+            class="primary full"
+            type="button"
+          >
+            ⚙️ SET ROLES & START
+          </button>
+
+        </div>
+
+
+        <button
+          id="onlineBackButton"
+          class="secondary full"
+          type="button"
+        >
+          ← BACK
+        </button>
+
+      </div>
+
+    `;
+
+    $("app").appendChild(screen);
+
+
+    $("createRoomButton").onclick =
+      function () {
+
+        $("onlineHomeButtons").style.display =
+          "none";
+
+        $("createRoomBox").style.display =
+          "block";
+
+      };
+
+
+    $("joinRoomButton").onclick =
+      function () {
+
+        $("onlineHomeButtons").style.display =
+          "none";
+
+        $("joinRoomBox").style.display =
+          "block";
+
+      };
+
+
+    $("createRoomConfirm").onclick =
+      createOnlineRoom;
+
+
+    $("joinRoomConfirm").onclick =
+      joinOnlineRoom;
+
+
+    $("onlineBackButton").onclick =
+      function () {
+
+        disconnectOnline();
+
+        showSetup();
+
+      };
+
+
+    $("onlineSetupButton").onclick =
+      function () {
+
+        openOnlineGameSetup();
+
+      };
+
+  }
+
+
+  function onlineStatus(message) {
+
+    const element =
+      $("onlineStatus");
+
+    if (element) {
+      element.textContent =
+        message;
+    }
+
+  }
+
+
+  function showOnlineMode() {
+
+    createOnlineScreen();
+
+    setScreen("onlineScreen");
+
+    onlineStatus(
+      "Create a room or join a room."
+    );
+
+  }
+
+
+  /* =========================================================
+     ROOM CODE
+     ========================================================= */
+
+  function generateRoomCode() {
+
+    const characters =
+      "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+    let result = "";
+
+    for (
+      let i = 0;
+      i < 5;
+      i++
+    ) {
+
+      result +=
+        characters[
+          Math.floor(
+            Math.random() *
+            characters.length
+          )
+        ];
+
+    }
+
+    return result;
+
+  }
+
+
+  /* =========================================================
+     PUBLIC STATE
+     ========================================================= */
+
+  function getOnlinePublicState() {
+
+    return {
+
+      type: "public",
+
+      started:
+        ONLINE.started,
+
+      players:
+        game.players.map(
+          p => ({
+
+            id: p.id,
+
+            name: p.name,
+
+            alive: p.alive
+
+          })
+        ),
+
+      round:
+        game.round,
+
+      stage:
+        game.stage,
+
+      systems:
+        {
+          ...game.systems
+        },
+
+      displaySwap:
+        game.displaySwap,
+
+      lifelineNumber:
+        game.lifelineNumber,
+
+      lastRoundResults:
+        [
+          ...(game.lastRoundResults || [])
+        ]
+
+    };
+
+  }
+
+
+  /* =========================================================
+     SUPABASE CONNECTION
+     ========================================================= */
+
+  async function connectToOnlineRoom(code) {
+
+    if (!onlineSupabase) {
+
+      throw new Error(
+        "Supabase could not be loaded."
+      );
+
+    }
+
+
+    ONLINE.code =
+      code.toUpperCase();
+
+
+    ONLINE.channel =
+      onlineSupabase.channel(
+        "alien-room-" +
+        ONLINE.code,
+        {
+          config: {
+            broadcast: {
+              self: true
+            }
+          }
+        }
+      );
+
+
+    ONLINE.channel.on(
+      "broadcast",
+      {
+        event: "alien"
+      },
+      function ({ payload }) {
+
+        handleOnlineMessage(
+          payload
+        );
+
+      }
+    );
+
+
+    const result =
+      await ONLINE.channel.subscribe();
+
+
+    if (
+      result !== "SUBSCRIBED"
+    ) {
+
+      throw new Error(
+        "Could not subscribe to room."
+      );
+
+    }
+
+
+    ONLINE.connected =
+      true;
+
+  }
+
+
+  async function onlineSend(message) {
+
+    if (
+      !ONLINE.channel ||
+      !ONLINE.connected
+    ) {
+
+      return;
+
+    }
+
+
+    try {
+
+      await ONLINE.channel.send({
+
+        type: "broadcast",
+
+        event: "alien",
+
+        payload: message
+
+      });
+
+    } catch (error) {
+
+      console.error(
+        "Online send error:",
+        error
+      );
+
+    }
+
+  }
+
+
+  /* =========================================================
+     CREATE ROOM
+     ========================================================= */
+
+  async function createOnlineRoom() {
+
+    try {
+
+      if (!onlineSupabase) {
+
+        throw new Error(
+          "Supabase is not available."
+        );
+
+      }
+
+
+      const name =
+        (
+          $("onlineHostName").value ||
+          "Player 1"
+        )
+          .trim()
+          .slice(0, 20) ||
+        "Player 1";
+
+
+      ONLINE.mode = true;
+      ONLINE.host = true;
+
+
+      const roomCode =
+        generateRoomCode();
+
+
+      game.players = [
+
+        {
+
+          id: "p1",
+
+          name: name,
+
+          role: "survivor",
+
+          alive: true,
+
+          originalRole: "survivor",
+
+          infectionRound: null,
+
+          hasInfected: false
+
+        }
+
+      ];
+
+
+      ONLINE.myPlayerId =
+        "p1";
+
+
+      await connectToOnlineRoom(
+        roomCode
+      );
+
+
+      ONLINE.peers[
+        ONLINE.clientId
+      ] = {
+
+        clientId:
+          ONLINE.clientId,
+
+        name: name,
+
+        playerId: "p1"
+
+      };
+
+
+      ONLINE.peerToPlayer[
+        ONLINE.clientId
+      ] = "p1";
+
+
+      ONLINE.playerToPeer[
+        "p1"
+      ] = ONLINE.clientId;
+
+
+      $("createRoomBox")
+        .style.display =
+        "none";
+
+
+      $("onlineLobby")
+        .style.display =
+        "block";
+
+
+      $("onlineLobbyCode")
+        .textContent =
+        ONLINE.code;
+
+
+      renderOnlineLobby();
+
+
+      onlineStatus(
+        "Room created! Give this code to the other players."
+      );
+
+
+      await onlineSend({
+
+        type: "roomCreated",
+
+        code:
+          ONLINE.code
+
+      });
+
+
+    } catch (error) {
+
+      console.error(error);
+
+      onlineStatus(
+        "❌ Could not connect to the online servers."
+      );
+
+      alert(
+        "Could not connect to the online servers.\n\n" +
+        error.message
+      );
+
+    }
+
+  }
+
+
+  /* =========================================================
+     JOIN ROOM
+     ========================================================= */
+
+  async function joinOnlineRoom() {
+
+    const name =
+      (
+        $("onlineJoinName").value ||
+        "Player"
+      )
+        .trim()
+        .slice(0, 20) ||
+      "Player";
+
+
+    const roomCode =
+      (
+        $("onlineRoomCode").value ||
+        ""
+      )
+        .trim()
+        .toUpperCase();
+
+
+    if (roomCode.length !== 5) {
+
+      alert(
+        "Enter the 5-character room code."
+      );
+
+      return;
+
+    }
+
+
+    try {
+
+      ONLINE.mode = true;
+      ONLINE.host = false;
+
+
+      await connectToOnlineRoom(
+        roomCode
+      );
+
+
+      $("joinRoomBox")
+        .style.display =
+        "none";
+
+
+      $("onlineLobby")
+        .style.display =
+        "block";
+
+
+      $("onlineLobbyCode")
+        .textContent =
+        roomCode;
+
+
+      $("onlineSetupButton")
+        .style.display =
+        "none";
+
+
+      onlineStatus(
+        "Connected! Waiting for the host..."
+      );
+
+
+      await onlineSend({
+
+        type: "hello",
+
+        clientId:
+          ONLINE.clientId,
+
+        name: name
+
+      });
+
+
+    } catch (error) {
+
+      console.error(error);
+
+      onlineStatus(
+        "❌ Could not connect to the room."
+      );
+
+      alert(
+        "Could not connect to this room.\n\n" +
+        error.message
+      );
+
+    }
+
+  }
+
+
+  /* =========================================================
+     LOBBY
+     ========================================================= */
+
+  function renderOnlineLobby() {
+
+    if (!$("onlineLobbyPlayers")) {
+      return;
+    }
+
+
+    $("onlineLobbyPlayers")
+      .innerHTML =
+      game.players
+        .map(
+          (player, index) => `
+
+            <div
+              style="
+                padding:9px 0;
+                border-bottom:1px solid #202a38;
+              "
+            >
+
+              ${
+                index === 0
+                  ? "👑 "
+                  : ""
+              }
+
+              <strong>
+                ${esc(player.name)}
+              </strong>
+
+              <span class="muted">
+                ${
+                  index === 0
+                    ? "HOST"
+                    : "CONNECTED"
+                }
+              </span>
+
+            </div>
+
+          `
+        )
+        .join("");
+
+
+    if (ONLINE.host) {
+
+      const button =
+        $("onlineSetupButton");
+
+
+      if (game.players.length < 4) {
+
+        button.disabled =
+          true;
+
+        const needed =
+          4 -
+          game.players.length;
+
+
+        button.textContent =
+          `⚙️ NEED ${needed} MORE PLAYER${
+            needed === 1
+              ? ""
+              : "S"
+          }`;
+
+      } else {
+
+        button.disabled =
+          false;
+
+        button.textContent =
+          "⚙️ SET ROLES & START";
+
+      }
+
+    }
+
+  }
+
+
+  /* =========================================================
+     ONLINE MESSAGE HANDLER
+     ========================================================= */
+
+  function handleOnlineMessage(message) {
+
+    if (
+      !message ||
+      typeof message !== "object"
+    ) {
+
+      return;
+
+    }
+
+
+    /* -----------------------------------------
+       PLAYER JOINED
+       ----------------------------------------- */
+
+    if (
+      message.type === "hello" &&
+      ONLINE.host
+    ) {
+
+      if (
+        game.players.length >= 12
+      ) {
+
+        onlineSend({
+
+          type: "roomFull",
+
+          to:
+            message.clientId
+
+        });
+
+        return;
+
+      }
+
+
+      if (
+        ONLINE.peerToPlayer[
+          message.clientId
+        ]
+      ) {
+
+        return;
+
+      }
+
+
+      const playerId =
+        "p" +
+        (
+          game.players.length +
+          1
+        );
+
+
+      const playerName =
+        (
+          message.name ||
+          `Player ${
+            game.players.length + 1
+          }`
+        )
+          .trim()
+          .slice(0, 20);
+
+
+      game.players.push({
+
+        id: playerId,
+
+        name: playerName,
+
+        role: "survivor",
+
+        alive: true,
+
+        originalRole: "survivor",
+
+        infectionRound: null,
+
+        hasInfected: false
+
+      });
+
+
+      ONLINE.peers[
+        message.clientId
+      ] = {
+
+        clientId:
+          message.clientId,
+
+        name:
+          playerName,
+
+        playerId:
+          playerId
+
+      };
+
+
+      ONLINE.peerToPlayer[
+        message.clientId
+      ] = playerId;
+
+
+      ONLINE.playerToPeer[
+        playerId
+      ] = message.clientId;
+
+
+      renderOnlineLobby();
+
+
+      onlineSend({
+
+        type: "welcome",
+
+        to:
+          message.clientId,
+
+        playerId:
+          playerId,
+
+        players:
+          game.players.map(
+            p => ({
+
+              id: p.id,
+
+              name: p.name,
+
+              alive: p.alive
+
+            })
+          )
+
+      });
+
+
+      onlineSend(
+        getOnlinePublicState()
+      );
+
+      return;
+
+    }
+
+
+    /* -----------------------------------------
+       WELCOME
+       ----------------------------------------- */
+
+    if (
+      message.type === "welcome" &&
+      !ONLINE.host
+    ) {
+
+      ONLINE.myPlayerId =
+        message.playerId;
+
+
+      game.players =
+        message.players.map(
+          p => ({
+
+            id: p.id,
+
+            name: p.name,
+
+            alive: p.alive,
+
+            role: "survivor",
+
+            originalRole: "survivor",
+
+            infectionRound: null,
+
+            hasInfected: false
+
+          })
+        );
+
+
+      renderOnlineLobby();
+
+      return;
+
+    }
+
+
+    /* -----------------------------------------
+       PUBLIC STATE
+       ----------------------------------------- */
+
+    if (
+      message.type === "public"
+    ) {
+
+      applyOnlinePublicState(
+        message
+      );
+
+      return;
+
+    }
+
+
+    /* -----------------------------------------
+       GAME START
+       ----------------------------------------- */
+
+    if (
+      message.type === "start" &&
+      !ONLINE.host
+    ) {
+
+      ONLINE.started =
+        true;
+
+
+      applyOnlinePublicState(
+        message.state
+      );
+
+
+      onlineStatus(
+        "The game has started."
+      );
+
+
+      return;
+
+    }
+
+
+    /* -----------------------------------------
+       PRIVATE MESSAGE
+       ----------------------------------------- */
+
+    if (
+      message.type === "private" &&
+      (
+        !message.to ||
+        message.to ===
+          ONLINE.clientId
+      )
+    ) {
+
+      receiveOnlinePrivate(
+        message.data
+      );
+
+      return;
+
+    }
+
+
+    /* -----------------------------------------
+       REMOTE ACTION
+       ----------------------------------------- */
+
+    if (
+      message.type === "action" &&
+      ONLINE.host
+    ) {
+
+      hostReceiveOnlineAction(
+        message
+      );
+
+      return;
+
+    }
+
+
+    /* -----------------------------------------
+       REMOTE VOTE
+       ----------------------------------------- */
+
+    if (
+      message.type === "vote" &&
+      ONLINE.host
+    ) {
+
+      hostReceiveOnlineVote(
+        message
+      );
+
+      return;
+
+    }
+
+
+    /* -----------------------------------------
+       REMOTE CAPTAIN
+       ----------------------------------------- */
+
+    if (
+      message.type === "captain" &&
+      ONLINE.host
+    ) {
+
+      hostReceiveOnlineCaptain(
+        message
+      );
+
+      return;
+
+    }
+
+
+    /* -----------------------------------------
+       REMOTE JUDGE
+       ----------------------------------------- */
+
+    if (
+      message.type === "judge" &&
+      ONLINE.host
+    ) {
+
+      hostReceiveOnlineJudge(
+        message
+      );
+
+      return;
+
+    }
+
+
+    /* -----------------------------------------
+       DISCUSSION -> VOTING
+       ----------------------------------------- */
+
+    if (
+      message.type ===
+        "startVoting" &&
+      ONLINE.host
+    ) {
+
+      hostStartOnlineVoting();
+
+      return;
+
+    }
+
+
+    /* -----------------------------------------
+       REACTION CONTINUE
+       ----------------------------------------- */
+
+    if (
+      message.type ===
+        "reactionContinue" &&
+      ONLINE.host
+    ) {
+
+      game.reactionIndex++;
+
+      broadcastOnlineReaction();
+
+      return;
+
+    }
+
+
+    /* -----------------------------------------
+       VOTE RESULT CONTINUE
+       ----------------------------------------- */
+
+    if (
+      message.type ===
+        "afterVote" &&
+      ONLINE.host
+    ) {
+
+      afterVoting();
+
+      return;
+
+    }
+
+
+    /* -----------------------------------------
+       LIFELINE CONTINUE
+       ----------------------------------------- */
+
+    if (
+      message.type ===
+        "lifelineContinue" &&
+      ONLINE.host
+    ) {
+
+      ORIGINAL_PROCEED_SYSTEMS();
+
+      return;
+
+    }
+
+
+    /* -----------------------------------------
+       SYSTEMS CONTINUE
+       ----------------------------------------- */
+
+    if (
+      message.type ===
+        "nextRound" &&
+      ONLINE.host
+    ) {
+
+      game.round++;
+
+      game.lastRoundResults =
+        [];
+
+      startRound();
+
+      return;
+
+    }
+
+
+  }
+
+
+  /* =========================================================
+     APPLY PUBLIC STATE
+     ========================================================= */
+
+  function applyOnlinePublicState(
+    state
+  ) {
+
+    if (!state) {
+      return;
+    }
+
+
+    if (state.players) {
+
+      game.players =
+        state.players.map(
+          p => {
+
+            const old =
+              getPlayer(p.id);
+
+
+            return {
+
+              id: p.id,
+
+              name: p.name,
+
+              alive: p.alive,
+
+              role:
+                old?.role ||
+                "survivor",
+
+              originalRole:
+                old?.originalRole ||
+                "survivor",
+
+              infectionRound:
+                old?.infectionRound ||
+                null,
+
+              hasInfected:
+                old?.hasInfected ||
+                false
+
+            };
+
+          }
+        );
+
+    }
+
+
+    if (
+      state.round !==
+      undefined
+    ) {
+
+      game.round =
+        state.round;
+
+    }
+
+
+    if (
+      state.stage !==
+      undefined
+    ) {
+
+      game.stage =
+        state.stage;
+
+    }
+
+
+    if (state.systems) {
+
+      game.systems =
+        {
+          ...state.systems
+        };
+
+    }
+
+
+    if (
+      "displaySwap" in
+      state
+    ) {
+
+      game.displaySwap =
+        state.displaySwap;
+
+    }
+
+
+    if (
+      state.lifelineNumber !==
+      undefined
+    ) {
+
+      game.lifelineNumber =
+        state.lifelineNumber;
+
+    }
+
+
+    if (state.lastRoundResults) {
+
+      game.lastRoundResults =
+        [
+          ...state.lastRoundResults
+        ];
+
+    }
+
+
+    if (
+      $("onlineLobby") &&
+      !ONLINE.started
+    ) {
+
+      renderOnlineLobby();
+
+    }
+
+  }
+
+
+  /* =========================================================
+     PRIVATE SEND
+     ========================================================= */
+
+  function sendPrivate(
+    playerId,
+    data
+  ) {
+
+    const peer =
+      ONLINE.playerToPeer[
+        playerId
+      ];
+
+
+    if (!peer) {
+      return;
+    }
+
+
+    onlineSend({
+
+      type: "private",
+
+      to: peer,
+
+      data: data
+
+    });
+
+  }
+
+
+  /* =========================================================
+     HOST SETUP
+     ========================================================= */
+
+  function openOnlineGameSetup() {
+
+    if (!ONLINE.host) {
+      return;
+    }
+
+
+    if (
+      game.players.length < 4
+    ) {
+
+      alert(
+        "You need at least 4 players."
+      );
+
+      return;
+
+    }
+
+
+    $("playerCount").value =
+      String(
+        game.players.length
+      );
+
+
+    game.randomisedRoles =
+      false;
+
+    game.randomRoles =
+      {};
+
+
+    renderSetup();
+
+
+    setScreen(
+      "setupScreen"
+    );
+
+
+    $("startGameButton")
+      .textContent =
+      "🌐 START ONLINE GAME";
+
+  }
+
+
+  /* =========================================================
+     ONLINE START GAME
+     ========================================================= */
+
+  function startOnlineGame() {
+
+    if (!ONLINE.host) {
+      return;
+    }
+
+
+    if (
+      game.players.length < 4
+    ) {
+
+      alert(
+        "At least 4 players are required."
+      );
+
+      return;
+
+    }
+
+
+    const playerCount =
+      game.players.length;
+
+
+    const hostileCount =
+      HOSTILE_COUNTS[
+        playerCount
+      ];
+
+
+    let roles;
+
+
+    if (
+      game.randomisedRoles
+    ) {
+
+      roles =
+        Array.from(
+          {
+            length:
+              playerCount
+          },
+          (_, index) =>
+            game.randomRoles[
+              index
+            ]
+        );
+
+    } else {
+
+      roles =
+        Array.from(
+          {
+            length:
+              playerCount
+          },
+          (_, index) =>
+            game.players[
+              index
+            ].role
+        );
+
+    }
+
+
+    if (
+      roles.includes("random") ||
+      roles.some(
+        role => !role
+      )
+    ) {
+
+      alert(
+        "Choose roles or press RANDOMISE ROLES first."
+      );
+
+      return;
+
+    }
+
+
+    if (
+      !roles.includes(
+        "engineer"
+      )
+    ) {
+
+      roles[
+        playerCount - 1
+      ] =
+        "engineer";
+
+    }
+
+
+    const counts =
+      Object.fromEntries(
+        ROLE_KEYS.map(
+          role => [
+            role,
+            0
+          ]
+        )
+      );
+
+
+    roles.forEach(
+      role => {
+
+        counts[role] =
+          (
+            counts[role] ||
+            0
+          ) + 1;
+
+      }
+    );
+
+
+    if (
+      counts.engineer !== 1
+    ) {
+
+      alert(
+        "There must be exactly 1 Engineer."
+      );
+
+      return;
+
+    }
+
+
+    const actualHostiles =
+      (
+        counts.alien ||
+        0
+      ) +
+      (
+        counts.saboteur ||
+        0
+      ) +
+      (
+        counts.silencer ||
+        0
+      ) +
+      (
+        counts.parasite ||
+        0
+      );
+
+
+    if (
+      actualHostiles !==
+      hostileCount
+    ) {
+
+      alert(
+        `This setup needs exactly ${hostileCount} Hostile role(s).`
+      );
+
+      return;
+
+    }
+
+
+    const valid =
+      roles.every(
+        role =>
+          ROLE_DATA[role] &&
+          !ROLE_DATA[role].sub &&
+          (
+            settings.enabled[
+              role
+            ] ||
+            role === "engineer"
+          )
+      );
+
+
+    if (!valid) {
+
+      alert(
+        "A disabled role is selected."
+      );
+
+      return;
+
+    }
+
+
+    game.players.forEach(
+      (player, index) => {
+
+        player.role =
+          roles[index];
+
+        player.originalRole =
+          roles[index];
+
+        player.alive =
+          true;
+
+        player.infectionRound =
+          null;
+
+        player.hasInfected =
+          false;
+
+      }
+    );
+
+
+    game.round = 1;
+    game.stage = 1;
+
+    game.gameOver =
+      false;
+
+    game.lifelineNumber =
+      0;
+
+    game.judgeUsed =
+      false;
+
+    game.tricksterUsed =
+      false;
+
+    game.displaySwap =
+      null;
+
+    game.systems = {
+
+      engines: true,
+
+      o2: true,
+
+      communications: true,
+
+      power: true
+
+    };
+
+
+    game.actions =
+      {};
+
+    game.previousActions =
+      {};
+
+    game.lastRoundResults =
+      [];
+
+
+    game.roundStartAliveIds =
+      living().map(
+        player =>
+          player.id
+      );
+
+
+    game.abilityQueue =
+      [
+        ...game.roundStartAliveIds
+      ];
+
+
+    game.abilityIndex =
+      0;
+
+
+    ONLINE.started =
+      true;
+
+
+    onlineSend({
+
+      type: "start",
+
+      state:
+        getOnlinePublicState()
+
+    });
+
+
+    onlineSend(
+      getOnlinePublicState()
+    );
+
+
+    onlineHostNextAbility();
+
+  }
+
+
+  /* =========================================================
+     PRIVATE ROLE DATA
+     ========================================================= */
+
+  function getPrivateRoleData(
+    player
+  ) {
+
+    return {
+
+      type: "role",
+
+      playerId:
+        player.id,
+
+      name:
+        player.name,
+
+      role:
+        player.role,
+
+      icon:
+        ROLE_DATA[
+          player.role
+        ]?.icon ||
+        "❓",
+
+      team:
+        roleTeam(
+          player
+        ),
+
+      description:
+        ROLE_DATA[
+          player.role
+        ]?.desc ||
+        "",
+
+      allies:
+        isHostile(player)
+          ? living()
+              .filter(
+                other =>
+                  other.id !==
+                    player.id &&
+                  isHostile(
+                    other
+                  )
+              )
+              .map(
+                other => ({
+
+                  name:
+                    other.name,
+
+                  role:
+                    other.role,
+
+                  icon:
+                    ROLE_DATA[
+                      other.role
+                    ]?.icon ||
+                    "❓"
+
+                })
+              )
+          : []
+
+    };
+
+  }
+
+
+  /* =========================================================
+     HOST ABILITY TURN
+     ========================================================= */
+
+  function onlineHostNextAbility() {
+
+    if (
+      game.abilityIndex >=
+      game.abilityQueue.length
+    ) {
+
+      resolveAbilities();
+
+      return;
+
+    }
+
+
+    const player =
+      getPlayer(
+        game.abilityQueue[
+          game.abilityIndex
+        ]
+      );
+
+
+    if (
+      !player ||
+      !player.alive
+    ) {
+
+      game.abilityIndex++;
+
+      onlineHostNextAbility();
+
+      return;
+
+    }
+
+
+    const peer =
+      ONLINE.playerToPeer[
+        player.id
+      ];
+
+
+    if (peer) {
+
+      sendPrivate(
+        player.id,
+        {
+
+          type: "abilityTurn",
+
+          state:
+            getOnlinePublicState(),
+
+          roleData:
+            getPrivateRoleData(
+              player
+            )
+
+        }
+      );
+
+
+      onlineStatus(
+        `Waiting for ${player.name}...`
+      );
+
+
+      setScreen(
+        "onlineScreen"
+      );
+
+    } else {
+
+      game.currentPlayerIndex =
+        game.abilityIndex;
+
+      ORIGINAL_PASS_TO_ABILITY();
+
+    }
+
+  }
+
+
+  /* =========================================================
+     HOST RECEIVES ABILITY
+     ========================================================= */
+
+  function hostReceiveOnlineAction(
+    message
+  ) {
+
+    if (!ONLINE.started) {
+      return;
+    }
+
+
+    const expected =
+      game.abilityQueue[
+        game.abilityIndex
+      ];
+
+
+    if (
+      expected !==
+      message.playerId
+    ) {
+
+      return;
+
+    }
+
+
+    const player =
+      getPlayer(
+        message.playerId
+      );
+
+
+    if (
+      !player ||
+      !player.alive
+    ) {
+
+      return;
+
+    }
+
+
+    game.selectedAction =
+      message.action;
+
+
+    completeAbility();
+
+  }
+
+
+  /* =========================================================
+     REMOTE ROLE SCREEN
+     ========================================================= */
+
+  function showRemoteRole(
+    roleData
+  ) {
+
+    $("rolePlayerName")
+      .textContent =
+      roleData.name ||
+      "YOU";
+
+
+    $("roleIcon")
+      .textContent =
+      roleData.icon;
+
+
+    $("roleName")
+      .textContent =
+      ROLE_DATA[
+        roleData.role
+      ]?.name ||
+      roleData.role;
+
+
+    $("roleName")
+      .className =
+      `role-title ${
+        teamClass(
+          roleData.team
+        )
+      }`;
+
+
+    $("roleTeam")
+      .textContent =
+      `${roleData.team.toUpperCase()} TEAM`;
+
+
+    $("roleTeam")
+      .className =
+      `team-badge ${
+        teamClass(
+          roleData.team
+        )
+      }`;
+
+
+    $("roleDescription")
+      .textContent =
+      roleData.description;
+
+
+    if (
+      roleData.allies &&
+      roleData.allies.length
+    ) {
+
+      $("hostileList")
+        .innerHTML = `
+
+          <div class="ally-box">
+
+            <strong>
+              HOSTILE ALLIES
+            </strong>
+
+            <br>
+
+            ${
+              roleData.allies
+                .map(
+                  ally =>
+                    `${
+                      ally.icon
+                    } ${
+                      esc(
+                        ally.name
+                      )
+                    }`
+                )
+                .join("<br>")
+            }
+
+          </div>
+
+        `;
+
+    } else {
+
+      $("hostileList")
+        .innerHTML = "";
+
+    }
+
+
+    $("showActionButton")
+      .textContent =
+      "CONTINUE TO ABILITY";
+
+
+    $("showActionButton")
+      .onclick =
+      function () {
+
+        renderRemoteAbility(
+          roleData
+        );
+
+      };
+
+
+    setScreen(
+      "roleScreen"
+    );
+
+  }
+
+
+  /* =========================================================
+     REMOTE TARGETS
+     ========================================================= */
+
+  function getRemoteTargets() {
+
+    return game.players
+      .filter(
+        player =>
+          player.alive &&
+          player.id !==
+            ONLINE.myPlayerId
+      );
+
+  }
+
+
+  function renderRemoteAbility(
+    roleData
+  ) {
+
+    const role =
+      roleData.role;
+
+
+    $("actionTitle")
+      .textContent =
+      `${
+        roleData.icon
+      } ${
+        ROLE_DATA[
+          role
+        ]?.name ||
+        role
+      }`;
+
+
+    $("actionOptions")
+      .innerHTML = "";
+
+
+    game.remoteAction =
+      null;
+
+    game.remoteTarget =
+      null;
+
+    game.remoteSystem =
+      null;
+
+    game.remoteSwap =
+      null;
+
+
+    /* -----------------------------------------
+       NO ABILITY
+       ----------------------------------------- */
+
+    if (
+      [
+        "survivor",
+        "jester",
+        "king",
+        "infected",
+        "diseased"
+      ].includes(role)
+    ) {
+
+      game.remoteAction =
+        "none";
+
+
+      $("actionDescription")
+        .textContent =
+        role === "diseased"
+          ? "You are Diseased. You cannot use an ability."
+          : "You have no special ability.";
+
+    }
+
+
+    /* -----------------------------------------
+       RADIO
+       ----------------------------------------- */
+
+    else if (
+      role === "radio"
+    ) {
+
+      game.remoteAction =
+        "radio";
+
+
+      $("actionDescription")
+        .textContent =
+        game.systems
+          .communications
+          ? "Receive a private message from Earth."
+          : "Communications is OFFLINE.";
+
+    }
+
+
+    /* -----------------------------------------
+       CAPTAIN / JUDGE
+       ----------------------------------------- */
+
+    else if (
+      role === "captain" ||
+      role === "judge"
+    ) {
+
+      game.remoteAction =
+        "none";
+
+
+      $("actionDescription")
+        .textContent =
+        "Your special ability activates automatically when required.";
+
+    }
+
+
+    /* -----------------------------------------
+       ALIEN
+       ----------------------------------------- */
+
+    else if (
+      role === "alien"
+    ) {
+
+      $("actionDescription")
+        .textContent =
+        "Choose Kill or Sabotage.";
+
+
+      $("actionOptions")
+        .innerHTML =
+
+        button(
+          "☠️ KILL",
+          "kill"
+        ) +
+
+        button(
+          "💥 SABOTAGE",
+          "sabotage"
+        );
+
+
+      $("actionOptions")
+        .querySelectorAll(
+          "button"
+        )
+        .forEach(
+          btn => {
+
+            btn.onclick =
+              function () {
+
+                if (
+                  btn.dataset.value ===
+                  "kill"
+                ) {
+
+                  renderRemoteTarget(
+                    "kill"
+                  );
+
+                } else {
+
+                  renderRemoteSystem(
+                    "sabotage"
+                  );
+
+                }
+
+              };
+
+          }
+        );
+
+    }
+
+
+    /* -----------------------------------------
+       OTHER TARGET ABILITIES
+       ----------------------------------------- */
+
+    else {
+
+      const actionMap = {
+
+        silencer:
+          "silence",
+
+        parasite:
+          "infect",
+
+        scientist:
+          "science",
+
+        detective:
+          "detect",
+
+        medic:
+          "protect",
+
+        guard:
+          "block"
+
+      };
+
+
+      const action =
+        actionMap[
+          role
+        ];
+
+
+      if (action) {
+
+        renderRemoteTarget(
+          action
+        );
+
+      }
+
+    }
+
+
+    $("confirmActionButton")
+      .textContent =
+      "CONFIRM";
+
+
+    $("confirmActionButton")
+      .onclick =
+      sendRemoteAbility;
+
+
+    setScreen(
+      "actionScreen"
+    );
+
+  }
+
+
+  /* =========================================================
+     REMOTE TARGET
+     ========================================================= */
+
+  function renderRemoteTarget(
+    action
+  ) {
+
+    game.remoteAction =
+      action;
+
+
+    $("actionDescription")
+      .textContent =
+      "Choose a player.";
+
+
+    $("actionOptions")
+      .innerHTML =
+      getRemoteTargets()
+        .map(
+          player =>
+            button(
+              player.name,
+              player.id
+            )
+        )
+        .join("");
+
+
+    $("actionOptions")
+      .querySelectorAll(
+        "button"
+      )
+      .forEach(
+        btn => {
+
+          btn.onclick =
+            function () {
+
+              game.remoteTarget =
+                btn.dataset.value;
+
+
+              $("actionOptions")
+                .querySelectorAll(
+                  "button"
+                )
+                .forEach(
+                  other =>
+                    other.classList
+                      .remove(
+                        "selected"
+                      )
+                );
+
+
+              btn.classList.add(
+                "selected"
+              );
+
+            };
+
+        }
+      );
+
+  }
+
+
+  /* =========================================================
+     REMOTE SYSTEM
+     ========================================================= */
+
+  function renderRemoteSystem(
+    action
+  ) {
+
+    game.remoteAction =
+      action;
+
+
+    const systems =
+      Object.keys(
+        game.systems
+      );
+
+
+    $("actionDescription")
+      .textContent =
+      action === "repair"
+        ? "Choose an offline system to repair."
+        : "Choose a system to sabotage.";
+
+
+    $("actionOptions")
+      .innerHTML =
+      systems
+        .filter(
+          system =>
+            action === "repair"
+              ? !game.systems[
+                  system
+                ]
+              : true
+        )
+        .map(
+          system =>
+            button(
+              `${
+                game.systems[
+                  system
+                ]
+                  ? "🟢"
+                  : "🔴"
+              } ${
+                system.toUpperCase()
+              }`,
+              system
+            )
+        )
+        .join("");
+
+
+    $("actionOptions")
+      .querySelectorAll(
+        "button"
+      )
+      .forEach(
+        btn => {
+
+          btn.onclick =
+            function () {
+
+              game.remoteSystem =
+                btn.dataset.value;
+
+
+              $("actionOptions")
+                .querySelectorAll(
+                  "button"
+                )
+                .forEach(
+                  other =>
+                    other.classList
+                      .remove(
+                        "selected"
+                      )
+                );
+
+
+              btn.classList.add(
+                "selected"
+              );
+
+            };
+
+        }
+      );
+
+  }
+
+
+  /* =========================================================
+     REMOTE SWAP
+     ========================================================= */
+
+  function renderRemoteSwap() {
+
+    const players =
+      game.players
+        .filter(
+          player =>
+            player.alive
+        );
+
+
+    let selected = [];
+
+
+    $("actionDescription")
+      .textContent =
+      "Choose TWO living players.";
+
+
+    $("actionOptions")
+      .innerHTML =
+      players
+        .map(
+          player =>
+            button(
+              player.name,
+              player.id
+            )
+        )
+        .join("");
+
+
+    $("actionOptions")
+      .querySelectorAll(
+        "button"
+      )
+      .forEach(
+        btn => {
+
+          btn.onclick =
+            function () {
+
+              const id =
+                btn.dataset.value;
+
+
+              if (
+                selected.includes(
+                  id
+                )
+              ) {
+
+                selected =
+                  selected.filter(
+                    value =>
+                      value !== id
+                  );
+
+
+                btn.classList.remove(
+                  "selected"
+                );
+
+              } else if (
+                selected.length < 2
+              ) {
+
+                selected.push(
+                  id
+                );
+
+
+                btn.classList.add(
+                  "selected"
+                );
+
+              }
+
+
+              if (
+                selected.length ===
+                2
+              ) {
+
+                game.remoteSwap =
+                  selected;
+
+              } else {
+
+                game.remoteSwap =
+                  null;
+
+              }
+
+            };
+
+        }
+      );
+
+  }
+
+
+  /* =========================================================
+     SEND REMOTE ABILITY
+     ========================================================= */
+
+  function sendRemoteAbility() {
+
+    let action =
+      "none";
+
+
+    if (
+      game.remoteAction ===
+      "kill"
+    ) {
+
+      action = {
+
+        type: "kill",
+
+        target:
+          game.remoteTarget
+
+      };
+
+    }
+
+
+    else if (
+      game.remoteAction ===
+      "sabotage"
+    ) {
+
+      action = {
+
+        type: "sabotage",
+
+        system:
+          game.remoteSystem
+
+      };
+
+    }
+
+
+    else if (
+      game.remoteAction ===
+      "silence"
+    ) {
+
+      action = {
+
+        type: "silence",
+
+        target:
+          game.remoteTarget
+
+      };
+
+    }
+
+
+    else if (
+      game.remoteAction ===
+      "infect"
+    ) {
+
+      action = {
+
+        type: "infect",
+
+        target:
+          game.remoteTarget
+
+      };
+
+    }
+
+
+    else if (
+      game.remoteAction ===
+      "detect"
+    ) {
+
+      action = {
+
+        type: "detect",
+
+        target:
+          game.remoteTarget
+
+      };
+
+    }
+
+
+    else if (
+      game.remoteAction ===
+      "protect"
+    ) {
+
+      action = {
+
+        type: "protect",
+
+        target:
+          game.remoteTarget
+
+      };
+
+    }
+
+
+    else if (
+      game.remoteAction ===
+      "block"
+    ) {
+
+      action = {
+
+        type: "block",
+
+        target:
+          game.remoteTarget
+
+      };
+
+    }
+
+
+    else if (
+      game.remoteAction ===
+      "science"
+    ) {
+
+      action = {
+
+        type: "science",
+
+        target:
+          game.remoteTarget,
+
+        mode: "check"
+
+      };
+
+    }
+
+
+    else if (
+      game.remoteAction ===
+      "repair"
+    ) {
+
+      action = {
+
+        type: "repair",
+
+        system:
+          game.remoteSystem
+
+      };
+
+    }
+
+
+    else if (
+      game.remoteAction ===
+      "radio"
+    ) {
+
+      action =
+        "radio";
+
+    }
+
+
+    else if (
+      game.remoteAction ===
+      "swap"
+    ) {
+
+      if (
+        !game.remoteSwap ||
+        game.remoteSwap.length !==
+          2
+      ) {
+
+        alert(
+          "Choose two players."
+        );
+
+        return;
+
+      }
+
+
+      action = {
+
+        type: "swap",
+
+        a:
+          game.remoteSwap[0],
+
+        b:
+          game.remoteSwap[1]
+
+      };
+
+    }
+
+
+    onlineSend({
+
+      type: "action",
+
+      playerId:
+        ONLINE.myPlayerId,
+
+      action:
+        action
+
+    });
+
+
+    onlineStatus(
+      "Action submitted. Waiting for the host..."
+    );
+
+
+    setScreen(
+      "onlineScreen"
+    );
+
+  }
+
+
+  /* =========================================================
+     PRIVATE MESSAGE RECEIVER
+     ========================================================= */
+
+  function receiveOnlinePrivate(
+    data
+  ) {
+
+    if (!data) {
+      return;
+    }
+
+
+    /* -----------------------------------------
+       ABILITY TURN
+       ----------------------------------------- */
+
+    if (
+      data.type ===
+      "abilityTurn"
+    ) {
+
+      applyOnlinePublicState(
+        data.state
+      );
+
+
+      game.localRole =
+        data.roleData.role;
+
+
+      showRemoteRole(
+        data.roleData
+      );
+
+
+      return;
+
+    }
+
+
+    /* -----------------------------------------
+       REACTION
+       ----------------------------------------- */
+
+    if (
+      data.type ===
+      "reaction"
+    ) {
+
+      applyOnlinePublicState(
+        data.state
+      );
+
+
+      $("reactionRound")
+        .textContent =
+        `ROUND ${game.round}`;
+
+
+      $("reactionStage")
+        .textContent =
+        `STAGE ${game.stage} / 10`;
+
+
+      $("reactionPlayerName")
+        .textContent =
+        getPlayer(
+          ONLINE.myPlayerId
+        )?.name ||
+        "YOU";
+
+
+      $("reactionReadyButton")
+        .textContent =
+        "SHOW MY RESULT";
+
+
+      $("reactionReadyButton")
+        .onclick =
+        function () {
+
+          $("reactionResultTitle")
+            .textContent =
+            data.title ||
+            "ROUND RESULT";
+
+
+          $("reactionResultMessage")
+            .textContent =
+            data.message ||
+            "Nothing happened to you this round.";
+
+
+          $("reactionContinueButton")
+            .onclick =
+            function () {
+
+              onlineSend({
+
+                type:
+                  "reactionContinue",
+
+                clientId:
+                  ONLINE.clientId
+
+              });
+
+            };
+
+
+          setScreen(
+            "reactionResultScreen"
+          );
+
+        };
+
+
+      setScreen(
+        "reactionScreen"
+      );
+
+
+      return;
+
+    }
+
+
+    /* -----------------------------------------
+       DISCUSSION
+       ----------------------------------------- */
+
+    if (
+      data.type ===
+      "discussion"
+    ) {
+
+      applyOnlinePublicState(
+        data.state
+      );
+
+
+      renderRemoteDiscussion();
+
+
+      return;
+
+    }
+
+
+    /* -----------------------------------------
+       VOTE TURN
+       ----------------------------------------- */
+
+    if (
+      data.type ===
+      "voteTurn"
+    ) {
+
+      applyOnlinePublicState(
+        data.state
+      );
+
+
+      renderRemoteVote(
+        data
+      );
+
+
+      return;
+
+    }
+
+
+    /* -----------------------------------------
+       CAPTAIN
+       ----------------------------------------- */
+
+    if (
+      data.type ===
+      "captain"
+    ) {
+
+      applyOnlinePublicState(
+        data.state
+      );
+
+
+      renderRemoteCaptain(
+        data
+      );
+
+
+      return;
+
+    }
+
+
+    /* -----------------------------------------
+       JUDGE
+       ----------------------------------------- */
+
+    if (
+      data.type ===
+      "judge"
+    ) {
+
+      applyOnlinePublicState(
+        data.state
+      );
+
+
+      renderRemoteJudge(
+        data
+      );
+
+
+      return;
+
+    }
+
+
+    /* -----------------------------------------
+       VOTE RESULT
+       ----------------------------------------- */
+
+    if (
+      data.type ===
+      "voteResult"
+    ) {
+
+      applyOnlinePublicState(
+        data.state
+      );
+
+
+      $("voteResultTitle")
+        .textContent =
+        data.title;
+
+
+      $("voteResultMessage")
+        .textContent =
+        data.message;
+
+
+      $("afterVoteButton")
+        .onclick =
+        function () {
+
+          onlineSend({
+
+            type:
+              "afterVote",
+
+            clientId:
+              ONLINE.clientId
+
+          });
+
+        };
+
+
+      setScreen(
+        "voteResultScreen"
+      );
+
+
+      return;
+
+    }
+
+
+    /* -----------------------------------------
+       LIFELINE
+       ----------------------------------------- */
+
+    if (
+      data.type ===
+      "lifeline"
+    ) {
+
+      applyOnlinePublicState(
+        data.state
+      );
+
+
+      $("lifelineTitle")
+        .textContent =
+        data.title;
+
+
+      $("lifelineMessage")
+        .textContent =
+        data.message;
+
+
+      $("lifelineContinue")
+        .onclick =
+        function () {
+
+          onlineSend({
+
+            type:
+              "lifelineContinue",
+
+            clientId:
+              ONLINE.clientId
+
+          });
+
+        };
+
+
+      setScreen(
+        "lifelineScreen"
+      );
+
+
+      return;
+
+    }
+
+
+    /* -----------------------------------------
+       SYSTEMS
+       ----------------------------------------- */
+
+    if (
+      data.type ===
+      "systems"
+    ) {
+
+      applyOnlinePublicState(
+        data.state
+      );
+
+
+      renderRemoteSystemsScreen();
+
+
+      return;
+
+    }
+
+
+    /* -----------------------------------------
+       GAME OVER
+       ----------------------------------------- */
+
+    if (
+      data.type ===
+      "gameOver"
+    ) {
+
+      applyOnlinePublicState(
+        data.state
+      );
+
+
+      $("gameOverTitle")
+        .textContent =
+        data.title;
+
+
+      $("gameOverMessage")
+        .textContent =
+        data.message;
+
+
+      $("finalPlayers")
+        .innerHTML =
+        data.players;
+
+
+      setScreen(
+        "gameOverScreen"
+      );
+
+    }
+
+  }
+
+
+  /* =========================================================
+     DISCUSSION
+     ========================================================= */
+
+  function renderRemoteDiscussion() {
+
+    const systems =
+      Object.entries(
+        game.systems
+      )
+        .map(
+          ([system, online]) =>
+            `${
+              online
+                ? "🟢"
+                : "🔴"
+            } ${
+              system.toUpperCase()
+            }`
+        )
+        .join("  ");
+
+
+    $("discussionRound")
+      .textContent =
+      `ROUND ${game.round}`;
+
+
+    $("discussionStage")
+      .textContent =
+      `STAGE ${game.stage} / 10`;
+
+
+    $("roundResults")
+      .innerHTML = `
+
+        <p>
+          ${
+            (
+              game.lastRoundResults ||
+              []
+            ).join("<br>") ||
+            "No deaths this round."
+          }
+        </p>
+
+        <p>
+          ${systems}
+        </p>
+
+      `;
+
+
+    $("startVotingButton")
+      .onclick =
+      function () {
+
+        onlineSend({
+
+          type:
+            "startVoting",
+
+          clientId:
+            ONLINE.clientId
+
+        });
+
+      };
+
+
+    setScreen(
+      "discussionScreen"
+    );
+
+  }
+
+
+  /* =========================================================
+     HOST REACTION
+     ========================================================= */
+
+  function broadcastOnlineReaction() {
+
+    if (
+      game.reactionIndex >=
+      game.reactionQueue.length
+    ) {
+
+      showDiscussion();
+
+      return;
+
+    }
+
+
+    const player =
+      getPlayer(
+        game.reactionQueue[
+          game.reactionIndex
+        ]
+      );
+
+
+    if (!player) {
+
+      game.reactionIndex++;
+
+      broadcastOnlineReaction();
+
+      return;
+
+    }
+
+
+    const message =
+      game.reactionInfo[
+        player.id
+      ] ||
+      (
+        player.alive
+          ? "Nothing happened to you this round."
+          : "You died this round."
+      );
+
+
+    const peer =
+      ONLINE.playerToPeer[
+        player.id
+      ];
+
+
+    if (peer) {
+
+      sendPrivate(
+
+        player.id,
+
+        {
+
+          type:
+            "reaction",
+
+          state:
+            getOnlinePublicState(),
+
+          title:
+            player.alive
+              ? "ROUND RESULT"
+              : "YOU DIED THIS ROUND",
+
+          message:
+            message
+
+        }
+
+      );
+
+
+      onlineStatus(
+        `Waiting for ${player.name} to see their result...`
+      );
+
+
+      setScreen(
+        "onlineScreen"
+      );
+
+    } else {
+
+      $("reactionRound")
+        .textContent =
+        `ROUND ${game.round}`;
+
+
+      $("reactionStage")
+        .textContent =
+        `STAGE ${game.stage} / 10`;
+
+
+      $("reactionPlayerName")
+        .textContent =
+        player.name;
+
+
+      $("reactionReadyButton")
+        .textContent =
+        "SHOW MY RESULT";
+
+
+      $("reactionReadyButton")
+        .onclick =
+        function () {
+
+          $("reactionResultTitle")
+            .textContent =
+            player.alive
+              ? "ROUND RESULT"
+              : "YOU DIED THIS ROUND";
+
+
+          $("reactionResultMessage")
+            .textContent =
+            message;
+
+
+          $("reactionContinueButton")
+            .onclick =
+            function () {
+
+              game.reactionIndex++;
+
+              broadcastOnlineReaction();
+
+            };
+
+
+          setScreen(
+            "reactionResultScreen"
+          );
+
+        };
+
+
+      setScreen(
+        "reactionScreen"
+      );
+
+    }
+
+  }
+
+
+  /* =========================================================
+     ONLINE VOTING
+     ========================================================= */
+
+  function hostStartOnlineVoting() {
+
+    game.votes =
+      {};
+
+    game.currentVoteIndex =
+      0;
+
+
+    onlineHostNextVote();
+
+  }
+
+
+  function onlineHostNextVote() {
+
+    const alivePlayers =
+      living();
+
+
+    if (
+      game.currentVoteIndex >=
+      alivePlayers.length
+    ) {
+
+      resolveVoting();
+
+      return;
+
+    }
+
+
+    const player =
+      alivePlayers[
+        game.currentVoteIndex
+      ];
+
+
+    const peer =
+      ONLINE.playerToPeer[
+        player.id
+      ];
+
+
+    const silenced =
+      (
+        game.silencedUntil[
+          player.id
+        ] ||
+        0
+      ) >
+      game.round;
+
+
+    if (peer) {
+
+      sendPrivate(
+
+        player.id,
+
+        {
+
+          type:
+            "voteTurn",
+
+          state:
+            getOnlinePublicState(),
+
+          silenced:
+            silenced
+
+        }
+
+      );
+
+
+      onlineStatus(
+        `Waiting for ${player.name} to vote...`
+      );
+
+
+      setScreen(
+        "onlineScreen"
+      );
+
+    } else {
+
+      game.currentVoteIndex =
+        game.currentVoteIndex;
+
+      showVote();
+
+    }
+
+  }
+
+
+  function hostReceiveOnlineVote(
+    message
+  ) {
+
+    const alivePlayers =
+      living();
+
+
+    const player =
+      alivePlayers[
+        game.currentVoteIndex
+      ];
+
+
+    if (
+      !player ||
+      player.id !==
+        message.playerId
+    ) {
+
+      return;
+
+    }
+
+
+    game.votes[
+      player.id
+    ] =
+      message.vote;
+
+
+    game.currentVoteIndex++;
+
+
+    onlineHostNextVote();
+
+  }
+
+
+  /* =========================================================
+     REMOTE VOTE
+     ========================================================= */
+
+  function renderRemoteVote(
+    data
+  ) {
+
+    $("votingRound")
+      .textContent =
+      `ROUND ${game.round}`;
+
+
+    $("votingStage")
+      .textContent =
+      `STAGE ${game.stage} / 10`;
+
+
+    $("voterName")
+      .textContent =
+      getPlayer(
+        ONLINE.myPlayerId
+      )?.name ||
+      "YOU";
+
+
+    $("votingSilenced")
+      .textContent =
+      data.silenced
+        ? "🔇 YOU ARE SILENCED — YOU CANNOT VOTE"
+        : "";
+
+
+    if (data.silenced) {
+
+      $("voteOptions")
+        .innerHTML =
+        button(
+          "SKIP (SILENCED)",
+          "skip"
+        );
+
+    } else {
+
+      $("voteOptions")
+        .innerHTML =
+        game.players
+          .filter(
+            player =>
+              player.alive &&
+              player.id !==
+                ONLINE.myPlayerId
+          )
+          .map(
+            player =>
+              button(
+                player.name,
+                player.id
+              )
+          )
+          .join("") +
+
+        button(
+          "⏭️ SKIP",
+          "skip"
+        );
+
+    }
+
+
+    game.selectedVote =
+      null;
+
+
+    $("voteOptions")
+      .querySelectorAll(
+        "button"
+      )
+      .forEach(
+        btn => {
+
+          btn.onclick =
+            function () {
+
+              game.selectedVote =
+                btn.dataset.value;
+
+
+              $("voteOptions")
+                .querySelectorAll(
+                  "button"
+                )
+                .forEach(
+                  other =>
+                    other.classList
+                      .remove(
+                        "selected"
+                      )
+                );
+
+
+              btn.classList.add(
+                "selected"
+              );
+
+            };
+
+        }
+      );
+
+
+    $("confirmVoteButton")
+      .onclick =
+      function () {
+
+        if (
+          !game.selectedVote
+        ) {
+
+          return;
+
+        }
+
+
+        onlineSend({
+
+          type:
+            "vote",
+
+          playerId:
+            ONLINE.myPlayerId,
+
+          vote:
+            game.selectedVote
+
+        });
+
+
+        onlineStatus(
+          "Vote submitted. Waiting..."
+        );
+
+
+        setScreen(
+          "onlineScreen"
+        );
+
+      };
+
+
+    setScreen(
+      "votingScreen"
+    );
+
+  }
+
+
+  /* =========================================================
+     CAPTAIN
+     ========================================================= */
+
+  function hostReceiveOnlineCaptain(
+    message
+  ) {
+
+    const captain =
+      living().find(
+        player =>
+          player.role ===
+            "captain" &&
+          player.id ===
+            message.playerId &&
+          game.systems.power &&
+          !game.blockedPlayers.has(
+            player.id
+          )
+      );
+
+
+    if (!captain) {
+      return;
+    }
+
+
+    finishEjection(
+      message.target,
+      true
+    );
+
+  }
+
+
+  function renderRemoteCaptain(
+    data
+  ) {
+
+    $("captainTieOptions")
+      .innerHTML = `
+
+        <p>
+          Choose one tied player to eject.
+        </p>
+
+        ${
+          data.tied
+            .map(
+              id =>
+                button(
+                  getPlayer(id)?.name ||
+                    "Unknown",
+                  id
+                )
+            )
+            .join("")
+        }
+
+      `;
+
+
+    $("captainTieOptions")
+      .querySelectorAll(
+        "button"
+      )
+      .forEach(
+        btn => {
+
+          btn.onclick =
+            function () {
+
+              onlineSend({
+
+                type:
+                  "captain",
+
+                playerId:
+                  ONLINE.myPlayerId,
+
+                target:
+                  btn.dataset.value
+
+              });
+
+
+              onlineStatus(
+                "Captain decision submitted."
+              );
+
+
+              setScreen(
+                "onlineScreen"
+              );
+
+            };
+
+        }
+      );
+
+
+    setScreen(
+      "captainTieScreen"
+    );
+
+  }
+
+
+  /* =========================================================
+     ONLINE CAPTAIN OVERRIDE
+     ========================================================= */
+
+  function onlineShowCaptainTie(
+    tied,
+    captain
+  ) {
+
+    if (!ONLINE.host) {
+      return;
+    }
+
+
+    const peer =
+      ONLINE.playerToPeer[
+        captain.id
+      ];
+
+
+    if (peer) {
+
+      sendPrivate(
+
+        captain.id,
+
+        {
+
+          type:
+            "captain",
+
+          state:
+            getOnlinePublicState(),
+
+          tied:
+            tied
+
+        }
+
+      );
+
+
+      onlineStatus(
+        `Waiting for Captain ${captain.name}...`
+      );
+
+
+      setScreen(
+        "onlineScreen"
+      );
+
+    } else {
+
+      ORIGINAL_SHOW_CAPTAIN_TIE(
+        tied,
+        captain
+      );
+
+    }
+
+  }
+
+
+  /* =========================================================
+     JUDGE
+     ========================================================= */
+
+  function renderRemoteJudge(
+    data
+  ) {
+
+    $("judgeDescription")
+      .textContent =
+      data.description ||
+      "The vote would eject a player. Do you want to cancel it?";
+
+
+    $("judgeCancelButton")
+      .onclick =
+      function () {
+
+        onlineSend({
+
+          type:
+            "judge",
+
+          playerId:
+            ONLINE.myPlayerId,
+
+          allow:
+            false
+
+        });
+
+
+        onlineStatus(
+          "Judge decision submitted."
+        );
+
+
+        setScreen(
+          "onlineScreen"
+        );
+
+      };
+
+
+    $("judgeAllowButton")
+      .onclick =
+      function () {
+
+        onlineSend({
+
+          type:
+            "judge",
+
+          playerId:
+            ONLINE.myPlayerId,
+
+          allow:
+            true
+
+        });
+
+
+        onlineStatus(
+          "Judge decision submitted."
+        );
+
+
+        setScreen(
+          "onlineScreen"
+        );
+
+      };
+
+
+    setScreen(
+      "judgeScreen"
+    );
+
+  }
+
+
+  /* =========================================================
+     ONLINE JUDGE RESOLUTION
+     ========================================================= */
+
+  function hostReceiveOnlineJudge(
+    message
+  ) {
+
+    const judge =
+      living().find(
+        player =>
+          player.role ===
+            "judge" &&
+          player.id ===
+            message.playerId &&
+          !game.judgeUsed &&
+          game.systems.power &&
+          !game.blockedPlayers.has(
+            player.id
+          )
+      );
+
+
+    if (
+      !judge ||
+      !ONLINE.pendingEjection
+    ) {
+
+      return;
+
+    }
+
+
+    game.judgeUsed =
+      true;
+
+
+    const pending =
+      ONLINE.pendingEjection;
+
+
+    ONLINE.pendingEjection =
+      null;
+
+
+    if (!message.allow) {
+
+      $("voteResultTitle")
+        .textContent =
+        "EJECTION CANCELLED";
+
+
+      $("voteResultMessage")
+        .textContent =
+        "The Judge cancelled the ejection. Nobody was voted out.";
+
+
+      $("afterVoteButton")
+        .onclick =
+        function () {
+
+          afterVoting();
+
+        };
+
+
+      setScreen(
+        "voteResultScreen"
+      );
+
+
+      onlineSend({
+
+        type:
+          "voteResult",
+
+        title:
+          "EJECTION CANCELLED",
+
+        message:
+          "The Judge cancelled the ejection. Nobody was voted out.",
+
+        state:
+          getOnlinePublicState()
+
+      });
+
+
+      return;
+
+    }
+
+
+    finishEjection(
+      pending.id,
+      pending.byCaptain
+    );
+
+  }
+
+
+  /* =========================================================
+     ONLINE EJECTION
+     ========================================================= */
+
+  function onlineFinishEjection(
+    id,
+    byCaptain
+  ) {
+
+    if (!id) {
+
+      $("voteResultTitle")
+        .textContent =
+        "NO EJECTION";
+
+
+      $("voteResultMessage")
+        .textContent =
+        "Nobody was voted out.";
+
+
+      $("afterVoteButton")
+        .onclick =
+        afterVoting;
+
+
+      setScreen(
+        "voteResultScreen"
+      );
+
+
+      if (ONLINE.host) {
+
+        onlineSend({
+
+          type:
+            "voteResult",
+
+          title:
+            "NO EJECTION",
+
+          message:
+            "Nobody was voted out.",
+
+          state:
+            getOnlinePublicState()
+
+        });
+
+      }
+
+
+      return;
+
+    }
+
+
+    const judge =
+      living().find(
+        player =>
+          player.role ===
+            "judge" &&
+          !game.judgeUsed &&
+          game.systems.power &&
+          !game.blockedPlayers.has(
+            player.id
+          )
+      );
+
+
+    if (judge) {
+
+      ONLINE.pendingEjection = {
+
+        id:
+          id,
+
+        byCaptain:
+          byCaptain
+
+      };
+
+
+      const description =
+        `The vote would eject ${displayName(id)}. Do you want to cancel this ejection?`;
+
+
+      const peer =
+        ONLINE.playerToPeer[
+          judge.id
+        ];
+
+
+      if (peer) {
+
+        sendPrivate(
+
+          judge.id,
+
+          {
+
+            type:
+              "judge",
+
+            state:
+              getOnlinePublicState(),
+
+            description:
+              description
+
+          }
+
+        );
+
+
+        onlineStatus(
+          `Waiting for Judge ${judge.name}...`
+        );
+
+
+        setScreen(
+          "onlineScreen"
+        );
+
+      } else {
+
+        $("judgeDescription")
+          .textContent =
+          description;
+
+
+        $("judgeCancelButton")
+          .onclick =
+          function () {
+
+            game.judgeUsed =
+              true;
+
+            ONLINE.pendingEjection =
+              null;
+
+            $("voteResultTitle")
+              .textContent =
+              "EJECTION CANCELLED";
+
+            $("voteResultMessage")
+              .textContent =
+              "The Judge cancelled the ejection. Nobody was voted out.";
+
+            $("afterVoteButton")
+              .onclick =
+              afterVoting;
+
+            setScreen(
+              "voteResultScreen"
+            );
+
+          };
+
+
+        $("judgeAllowButton")
+          .onclick =
+          function () {
+
+            game.judgeUsed =
+              true;
+
+            const target =
+              ONLINE.pendingEjection.id;
+
+            ONLINE.pendingEjection =
+              null;
+
+            actuallyEjectOnline(
+              target
+            );
+
+          };
+
+
+        setScreen(
+          "judgeScreen"
+        );
+
+      }
+
+
+      return;
+
+    }
+
+
+    actuallyEjectOnline(
+      id
+    );
+
+  }
+
+
+  function actuallyEjectOnline(
+    id
+  ) {
+
+    const player =
+      getPlayer(id);
+
+
+    if (!player) {
+      return;
+    }
+
+
+    player.alive =
+      false;
+
+
+    let title =
+      "PLAYER VOTED OUT";
+
+
+    let message =
+      `${player.name} was voted out.`;
+
+
+    if (
+      player.role ===
+      "jester"
+    ) {
+
+      title =
+        "JESTER WINS";
+
+
+      message =
+        `${player.name} was voted out and wins as the Jester!`;
+
+
+      game.gameOver =
+        true;
+
+    }
+
+
+    $("voteResultTitle")
+      .textContent =
+      title;
+
+
+    $("voteResultMessage")
+      .textContent =
+      message;
+
+
+    $("afterVoteButton")
+      .onclick =
+      afterVoting;
+
+
+    setScreen(
+      "voteResultScreen"
+    );
+
+
+    onlineSend({
+
+      type:
+        "voteResult",
+
+      title:
+        title,
+
+      message:
+        message,
+
+      state:
+        getOnlinePublicState()
+
+    });
+
+  }
+
+
+  /* =========================================================
+     SYSTEMS SCREEN
+     ========================================================= */
+
+  function renderRemoteSystemsScreen() {
+
+    $("systemsRound")
+      .textContent =
+      `ROUND ${game.round}`;
+
+
+    $("systemsStage")
+      .textContent =
+      `STAGE ${game.stage} / 10`;
+
+
+    $("systemsList")
+      .innerHTML =
+      Object.entries(
+        game.systems
+      )
+        .map(
+          ([system, online]) =>
+            `
+
+              <div>
+
+                ${
+                  online
+                    ? "🟢"
+                    : "🔴"
+                }
+
+                <strong>
+                  ${
+                    system.toUpperCase()
+                  }
+                </strong>
+
+                —
+
+                ${
+                  online
+                    ? "ONLINE"
+                    : "OFFLINE"
+                }
+
+              </div>
+
+            `
+        )
+        .join("");
+
+
+    $("nextRoundButton")
+      .onclick =
+      function () {
+
+        onlineSend({
+
+          type:
+            "nextRound",
+
+          clientId:
+            ONLINE.clientId
+
+        });
+
+      };
+
+
+    setScreen(
+      "systemsScreen"
+    );
+
+  }
+
+
+  /* =========================================================
+     OVERRIDE GAME FUNCTIONS
+     ========================================================= */
+
+  window.startGame =
+    function () {
+
+      if (
+        ONLINE.mode &&
+        ONLINE.host
+      ) {
+
+        startOnlineGame();
+
+        return;
+
+      }
+
+
+      ORIGINAL_START_GAME();
+
+    };
+
+
+  window.startRound =
+    function () {
+
+      if (
+        ONLINE.mode &&
+        ONLINE.host
+      ) {
+
+        if (checkVictory()) {
+          return;
+        }
+
+
+        game.previousActions =
+          {
+            ...game.actions
+          };
+
+
+        resetTransient();
+
+
+        game.roundStartAliveIds =
+          living().map(
+            player =>
+              player.id
+          );
+
+
+        game.abilityQueue =
+          [
+            ...game.roundStartAliveIds
+          ];
+
+
+        game.abilityIndex =
+          0;
+
+
+        game.actions =
+          {};
+
+
+        onlineHostNextAbility();
+
+        return;
+
+      }
+
+
+      ORIGINAL_START_ROUND();
+
+    };
+
+
+  window.passToAbility =
+    function () {
+
+      if (
+        ONLINE.mode &&
+        ONLINE.host
+      ) {
+
+        onlineHostNextAbility();
+
+        return;
+
+      }
+
+
+      ORIGINAL_PASS_TO_ABILITY();
+
+    };
+
+
+  window.showReactions =
+    function () {
+
+      if (
+        ONLINE.mode &&
+        ONLINE.host
+      ) {
+
+        game.reactionQueue =
+          [
+            ...game.roundStartAliveIds
+          ]
+            .filter(
+              id =>
+                getPlayer(id)
+            );
+
+
+        game.reactionIndex =
+          0;
+
+
+        broadcastOnlineReaction();
+
+        return;
+
+      }
+
+
+      ORIGINAL_SHOW_REACTIONS();
+
+    };
+
+
+  window.showDiscussion =
+    function () {
+
+      if (
+        ONLINE.mode &&
+        ONLINE.host
+      ) {
+
+        const systems =
+          Object.entries(
+            game.systems
+          )
+            .map(
+              ([system, online]) =>
+                `${
+                  online
+                    ? "🟢"
+                    : "🔴"
+                } ${
+                  system.toUpperCase()
+                }`
+            )
+            .join("  ");
+
+
+        $("discussionRound")
+          .textContent =
+          `ROUND ${game.round}`;
+
+
+        $("discussionStage")
+          .textContent =
+          `STAGE ${game.stage} / 10`;
+
+
+        $("roundResults")
+          .innerHTML = `
+
+            <p>
+              ${
+                (
+                  game.lastRoundResults ||
+                  []
+                ).join("<br>") ||
+                "No deaths this round."
+              }
+            </p>
+
+            <p>
+              ${systems}
+            </p>
+
+            ${
+              game.displaySwap
+                ? `
+                  <p class="warning">
+                    🎭 Identities are currently swapped until voting is fully resolved.
+                  </p>
+                `
+                : ""
+            }
+
+          `;
+
+
+        onlineSend({
+
+          type:
+            "private",
+
+          data: {
+
+            type:
+              "discussion",
+
+            state:
+              getOnlinePublicState()
+
+          }
+
+        });
+
+
+        $("startVotingButton")
+          .onclick =
+          function () {
+
+            hostStartOnlineVoting();
+
+          };
+
+
+        setScreen(
+          "discussionScreen"
+        );
+
+
+        return;
+
+      }
+
+
+      ORIGINAL_SHOW_DISCUSSION();
+
+    };
+
+
+  window.startVoting =
+    function () {
+
+      if (
+        ONLINE.mode &&
+        ONLINE.host
+      ) {
+
+        hostStartOnlineVoting();
+
+        return;
+
+      }
+
+
+      ORIGINAL_START_VOTING();
+
+    };
+
+
+  window.showVote =
+    function () {
+
+      if (
+        ONLINE.mode &&
+        ONLINE.host
+      ) {
+
+        onlineHostNextVote();
+
+        return;
+
+      }
+
+
+      ORIGINAL_SHOW_VOTE();
+
+    };
+
+
+  window.confirmVote =
+    function () {
+
+      if (
+        ONLINE.mode &&
+        ONLINE.host
+      ) {
+
+        const players =
+          living();
+
+
+        const player =
+          players[
+            game.currentVoteIndex
+          ];
+
+
+        if (
+          !player ||
+          !game.selectedVote
+        ) {
+
+          return;
+
+        }
+
+
+        game.votes[
+          player.id
+        ] =
+          game.selectedVote;
+
+
+        game.currentVoteIndex++;
+
+
+        onlineHostNextVote();
+
+        return;
+
+      }
+
+
+      ORIGINAL_CONFIRM_VOTE();
+
+    };
+
+
+  window.showCaptainTie =
+    function (
+      tied,
+      captain
+    ) {
+
+      if (
+        ONLINE.mode &&
+        ONLINE.host
+      ) {
+
+        onlineShowCaptainTie(
+          tied,
+          captain
+        );
+
+        return;
+
+      }
+
+
+      ORIGINAL_SHOW_CAPTAIN_TIE(
+        tied,
+        captain
+      );
+
+    };
+
+
+  window.finishEjection =
+    function (
+      id,
+      byCaptain
+    ) {
+
+      if (
+        ONLINE.mode &&
+        ONLINE.host
+      ) {
+
+        onlineFinishEjection(
+          id,
+          byCaptain
+        );
+
+        return;
+
+      }
+
+
+      /* Normal local game */
+
+      if (id) {
+
+        const judge =
+          living().find(
+            player =>
+              player.role ===
+                "judge" &&
+              !game.judgeUsed &&
+              game.systems.power &&
+              !game.blockedPlayers.has(
+                player.id
+              )
+          );
+
+
+        if (judge) {
+
+          $("judgeDescription")
+            .textContent =
+            `The vote would eject ${displayName(id)}. Do you want to cancel this ejection?`;
+
+
+          $("judgeCancelButton")
+            .onclick =
+            function () {
+
+              game.judgeUsed =
+                true;
+
+
+              $("voteResultTitle")
+                .textContent =
+                "EJECTION CANCELLED";
+
+
+              $("voteResultMessage")
+                .textContent =
+                "The Judge cancelled the ejection. Nobody was voted out.";
+
+
+              $("afterVoteButton")
+                .onclick =
+                afterVoting;
+
+
+              setScreen(
+                "voteResultScreen"
+              );
+
+            };
+
+
+          $("judgeAllowButton")
+            .onclick =
+            function () {
+
+              game.judgeUsed =
+                true;
+
+
+              const target =
+                id;
+
+
+              const player =
+                getPlayer(target);
+
+
+              if (!player) {
+                return;
+              }
+
+
+              player.alive =
+                false;
+
+
+              $("voteResultTitle")
+                .textContent =
+                player.role ===
+                  "jester"
+                    ? "JESTER WINS"
+                    : "PLAYER VOTED OUT";
+
+
+              $("voteResultMessage")
+                .textContent =
+                player.role ===
+                  "jester"
+                    ? `${player.name} was voted out and wins as the Jester!`
+                    : `${player.name} was voted out.`;
+
+
+              if (
+                player.role ===
+                "jester"
+              ) {
+
+                game.gameOver =
+                  true;
+
+              }
+
+
+              $("afterVoteButton")
+                .onclick =
+                afterVoting;
+
+
+              setScreen(
+                "voteResultScreen"
+              );
+
+            };
+
+
+          setScreen(
+            "judgeScreen"
+          );
+
+
+          return;
+
+        }
+
+      }
+
+
+      /* No Judge */
+
+      if (id) {
+
+        const player =
+          getPlayer(id);
+
+
+        if (player) {
+
+          player.alive =
+            false;
+
+
+          $("voteResultTitle")
+            .textContent =
+            player.role ===
+              "jester"
+                ? "JESTER WINS"
+                : "PLAYER VOTED OUT";
+
+
+          $("voteResultMessage")
+            .textContent =
+            player.role ===
+              "jester"
+                ? `${player.name} was voted out and wins as the Jester!`
+                : `${player.name} was voted out.`;
+
+
+          if (
+            player.role ===
+            "jester"
+          ) {
+
+            game.gameOver =
+              true;
+
+          }
+
+        }
+
+      } else {
+
+        $("voteResultTitle")
+          .textContent =
+          "NO EJECTION";
+
+
+        $("voteResultMessage")
+          .textContent =
+          "Nobody was voted out.";
+
+      }
+
+
+      $("afterVoteButton")
+        .onclick =
+        afterVoting;
+
+
+      setScreen(
+        "voteResultScreen"
+      );
+
+    };
+
+
+  /* =========================================================
+     DISCONNECT
+     ========================================================= */
+
+  function disconnectOnline() {
+
+    try {
+
+      if (
+        ONLINE.channel
+      ) {
+
+        ONLINE.channel.unsubscribe();
+
+      }
+
+    } catch (error) {
+
+      console.error(error);
+
+    }
+
+
+    ONLINE.mode =
+      false;
+
+    ONLINE.host =
+      false;
+
+    ONLINE.connected =
+      false;
+
+    ONLINE.started =
+      false;
+
+    ONLINE.code =
+      "";
+
+    ONLINE.channel =
+      null;
+
+    ONLINE.peers =
+      {};
+
+    ONLINE.peerToPlayer =
+      {};
+
+    ONLINE.playerToPeer =
+      {};
+
+    ONLINE.myPlayerId =
+      null;
+
+  }
+
+
+  /* =========================================================
+     INSTALL ONLINE BUTTON
+     ========================================================= */
+
+  function installOnlineMode() {
+
+    createOnlineScreen();
+
+
+    const actions =
+      document.querySelector(
+        ".setup-actions"
+      );
+
+
+    if (
+      actions &&
+      !$("onlineModeButton")
+    ) {
+
+      const buttonElement =
+        document.createElement(
+          "button"
+        );
+
+
+      buttonElement.id =
+        "onlineModeButton";
+
+
+      buttonElement.type =
+        "button";
+
+
+      buttonElement.className =
+        "secondary full";
+
+
+      buttonElement.textContent =
+        "🌐 ONLINE MODE";
+
+
+      buttonElement.onclick =
+        showOnlineMode;
+
+
+      actions.insertBefore(
+        buttonElement,
+        actions.firstChild
+      );
+
+    }
+
+
+    /* -----------------------------------------
+       Mobile random button
+       ----------------------------------------- */
+
+    const randomButton =
+      $("randomRolesButton");
+
+
+    if (randomButton) {
+
+      const newButton =
+        randomButton.cloneNode(
+          true
+        );
+
+
+      randomButton.replaceWith(
+        newButton
+      );
+
+
+      newButton.type =
+        "button";
+
+
+      newButton.addEventListener(
+        "pointerup",
+        function (event) {
+
+          event.preventDefault();
+
+          event.stopPropagation();
+
+          randomiseRoles();
+
+        }
+      );
+
+    }
+
+
+    /* -----------------------------------------
+       Start button
+       ----------------------------------------- */
+
+    const startButton =
+      $("startGameButton");
+
+
+    if (startButton) {
+
+      startButton.onclick =
+        function (event) {
+
+          event.preventDefault();
+
+          window.startGame();
+
+        };
+
+    }
+
+  }
+
+
+  /* =========================================================
+     START ONLINE PATCH
+     ========================================================= */
+
+  if (
+    document.readyState ===
+    "loading"
+  ) {
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      installOnlineMode,
+      {
+        once: true
+      }
+    );
+
+  } else {
+
+    installOnlineMode();
+
+  }
+
+})();
 
 /* =========================================================
    END GAME.JS
