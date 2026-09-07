@@ -37,7 +37,6 @@ const ROLE_DATA = {
     team:"Hostile",
     desc:"Infect 1 player once. An infection progresses to Diseased, then Parasite. You can see the other Hostile players."
   },
-
   engineer:{
     icon:"🔧",
     name:"Engineer",
@@ -92,7 +91,6 @@ const ROLE_DATA = {
     team:"Human",
     desc:"Once per game, cancel any ejection that would remove a player. Power must be online."
   },
-
   jester:{
     icon:"🃏",
     name:"Jester",
@@ -112,7 +110,6 @@ const ROLE_DATA = {
     concept:true,
     desc:"Once per game, swap the displayed identities of two living players. The swap lasts through voting, then ends."
   },
-
   infected:{
     icon:"🦠",
     name:"Infected",
@@ -227,7 +224,6 @@ let game = {
   randomRoles:{},
 
   reactionInfo:{},
-
   lastRoundResults:[],
 
   lifelineNumber:0,
@@ -240,6 +236,7 @@ let game = {
   displaySwap:null,
 
   judgeUsed:false,
+
   pendingEjection:null,
   pendingCaptain:null,
 
@@ -251,12 +248,7 @@ let game = {
   }
 };
 
-
-/* =========================================================
-   BASIC HELPERS
-   ========================================================= */
-
-function teamClass(team) {
+function teamClass(team){
   return team === "Human"
     ? "human"
     : team === "Hostile"
@@ -266,93 +258,37 @@ function teamClass(team) {
         : "infection";
 }
 
-function roleTeam(role) {
+function roleTeam(role){
   if(role === "infected") return "Human";
   if(role === "diseased") return "Hostile";
   return ROLE_DATA[role]?.team || "Human";
 }
 
-function isHostile(p) {
+function isHostile(p){
   return alive(p) && roleTeam(p.role) === "Hostile";
 }
 
-function isNeutral(p) {
+function isNeutral(p){
   return alive(p) && roleTeam(p.role) === "Neutral";
 }
 
-function isHuman(p) {
+function isHuman(p){
   return alive(p) && roleTeam(p.role) === "Human";
 }
 
-function getPlayer(id) {
+function getPlayer(id){
   return game.players.find(p => p.id === id);
 }
 
-function living() {
+function living(){
   return game.players.filter(alive);
 }
 
-function activeRole(p) {
+function activeRole(p){
   return ROLE_DATA[p.role];
 }
 
-function realName(id) {
-  return getPlayer(id)?.name || "";
-}
-
-function displayMap() {
-  const map = Object.fromEntries(
-    living().map(p => [p.id,p.id])
-  );
-
-  if(game.displaySwap) {
-    const [a,b] = game.displaySwap;
-
-    if(map[a] && map[b]) {
-      map[a] = b;
-      map[b] = a;
-    }
-  }
-
-  return map;
-}
-
-function displayName(id) {
-  return realName(displayMap()[id]);
-}
-
-function displayIdFromName(name) {
-  const map = displayMap();
-
-  const hit = Object.entries(map)
-    .find(([,realId]) => realName(realId) === name);
-
-  return hit ? hit[0] : null;
-}
-
-function targetOptions(actor=null,excludeId=null) {
-  return living()
-    .filter(p => {
-      if(p.id === excludeId) return false;
-
-      if(
-        actor &&
-        roleTeam(actor) === "Hostile" &&
-        isHostile(p) &&
-        !(game.displaySwap && game.displaySwap.includes(p.id))
-      ) {
-        return false;
-      }
-
-      return true;
-    })
-    .map(p => ({
-      id:p.id,
-      label:displayName(p.id)
-    }));
-}
-
-function canAct(p) {
+function canAct(p){
   if(!alive(p)) return false;
 
   if(p.role === "engineer") return true;
@@ -363,7 +299,7 @@ function canAct(p) {
     p.role === "survivor" ||
     p.role === "jester" ||
     p.role === "king"
-  ) {
+  ){
     return false;
   }
 
@@ -376,7 +312,66 @@ function canAct(p) {
   return true;
 }
 
-function resetTransient() {
+function realName(id){
+  return getPlayer(id)?.name || "";
+}
+
+function displayMap(){
+  const map = Object.fromEntries(
+    living().map(p => [p.id,p.id])
+  );
+
+  if(game.displaySwap){
+    const [a,b] = game.displaySwap;
+
+    if(map[a] && map[b]){
+      map[a] = b;
+      map[b] = a;
+    }
+  }
+
+  return map;
+}
+
+function displayName(id){
+  return realName(displayMap()[id]);
+}
+
+function displayIdFromName(name){
+  const map = displayMap();
+
+  const hit = Object.entries(map)
+    .find(([,realId]) => realName(realId) === name);
+
+  return hit ? hit[0] : null;
+}
+
+function targetOptions(actor=null,excludeId=null){
+  return living()
+    .filter(p => {
+      if(p.id === excludeId) return false;
+
+      if(
+        actor &&
+        roleTeam(actor.role) === "Hostile" &&
+        isHostile(p) &&
+        !(
+          game.displaySwap &&
+          game.displaySwap.includes(p.id)
+        )
+      ){
+        return false;
+      }
+
+      return true;
+    })
+    .map(p => ({
+      id:p.id,
+      label:displayName(p.id)
+    }));
+}
+
+function resetTransient(){
   game.actions = {};
   game.blockedPlayers = new Set();
   game.protectedPlayers = new Set();
@@ -384,7 +379,7 @@ function resetTransient() {
   game.reactionInfo = {};
 }
 
-function setScreen(id) {
+function setScreen(id){
   document
     .querySelectorAll(".screen")
     .forEach(s => s.classList.remove("active"));
@@ -394,7 +389,7 @@ function setScreen(id) {
   window.scrollTo(0,0);
 }
 
-function button(text,value,cls="choice-button") {
+function button(text,value,cls="choice-button"){
   return `
     <button
       type="button"
@@ -406,17 +401,16 @@ function button(text,value,cls="choice-button") {
   `;
 }
 
-
 /* =========================================================
    SETUP
    ========================================================= */
 
-function showSetup() {
+function showSetup(){
   setScreen("setupScreen");
   renderSetup();
 }
 
-function renderSetup() {
+function renderSetup(){
 
   $("playersSetup").innerHTML =
     game.players.length
@@ -439,7 +433,12 @@ function renderSetup() {
             >
 
             <select
-              class="role-select ${game.randomisedRoles && game.randomRoles[i] ? "random-hidden":""}"
+              class="role-select ${
+                game.randomisedRoles &&
+                game.randomRoles[i]
+                  ? "random-hidden"
+                  : ""
+              }"
               data-index="${i}"
             >
 
@@ -449,10 +448,14 @@ function renderSetup() {
 
               ${
                 [...HOSTILES,...HUMANS,...NEUTRALS,...CONCEPTS]
-                  .filter(r => settings.enabled[r] || r === "engineer")
+                  .filter(r =>
+                    settings.enabled[r] ||
+                    r === "engineer"
+                  )
                   .map(r => `
                     <option value="${r}">
-                      ${ROLE_DATA[r].icon} ${ROLE_DATA[r].name}
+                      ${ROLE_DATA[r].icon}
+                      ${ROLE_DATA[r].name}
                     </option>
                   `)
                   .join("")
@@ -472,7 +475,7 @@ function renderSetup() {
   bindSetupSelects();
 }
 
-function bindSetupNames() {
+function bindSetupNames(){
 
   document
     .querySelectorAll("[data-name-index]")
@@ -482,13 +485,14 @@ function bindSetupNames() {
 
         const i = Number(input.dataset.nameIndex);
 
-        const value = input.value
-          .trim()
-          .slice(0,20);
+        const value =
+          input.value
+            .trim()
+            .slice(0,20);
 
-        if(value) {
+        if(value){
           game.players[i].name = value;
-        } else {
+        }else{
           input.value = game.players[i].name;
         }
 
@@ -496,7 +500,7 @@ function bindSetupNames() {
           window.ONLINE &&
           window.ONLINE.mode &&
           window.ONLINE.host
-        ) {
+        ){
           window.ONLINE.updateLobbyNames();
         }
       };
@@ -505,7 +509,7 @@ function bindSetupNames() {
 
         const i = Number(input.dataset.nameIndex);
 
-        if(game.players[i]) {
+        if(game.players[i]){
           game.players[i].name =
             input.value.slice(0,20);
         }
@@ -514,17 +518,18 @@ function bindSetupNames() {
           window.ONLINE &&
           window.ONLINE.mode &&
           window.ONLINE.host
-        ) {
+        ){
           window.ONLINE.updateLobbyNames();
         }
 
       });
 
       input.addEventListener("blur",save);
+
     });
 }
 
-function bindSetupSelects() {
+function bindSetupSelects(){
 
   document
     .querySelectorAll(".role-select")
@@ -532,10 +537,13 @@ function bindSetupSelects() {
 
       select.onchange = () => {
 
-        const i = Number(select.dataset.index);
-        const value = select.value;
+        const i =
+          Number(select.dataset.index);
 
-        if(value !== "random") {
+        const value =
+          select.value;
+
+        if(value !== "random"){
 
           game.randomisedRoles = true;
 
@@ -545,30 +553,30 @@ function bindSetupSelects() {
 
           select.classList.add("random-hidden");
         }
+
       };
 
     });
 }
 
-function resetSetupPlayers() {
+function resetSetupPlayers(){
 
-  const n = Number($("playerCount").value);
+  const n =
+    Number($("playerCount").value);
 
-  game.players = Array.from(
-    {length:n},
-    (_,i) => ({
-      id:`p${i+1}`,
-      name:`Player ${i+1}`,
-
-      role:"survivor",
-      originalRole:"survivor",
-
-      alive:true,
-
-      infectionRound:null,
-      hasInfected:false
-    })
-  );
+  game.players =
+    Array.from(
+      {length:n},
+      (_,i) => ({
+        id:`p${i+1}`,
+        name:`Player ${i+1}`,
+        role:"survivor",
+        originalRole:"survivor",
+        alive:true,
+        infectionRound:null,
+        hasInfected:false
+      })
+    );
 
   game.randomisedRoles = false;
   game.randomRoles = {};
@@ -576,7 +584,7 @@ function resetSetupPlayers() {
   renderSetup();
 }
 
-function updatePlayerValidity() {
+function updatePlayerValidity(){
 
   const n = game.players.length;
 
@@ -592,42 +600,49 @@ function updatePlayerValidity() {
     }`;
 }
 
-
 /* =========================================================
-   ROLE RANDOMISATION
+   RANDOM ROLES
    ========================================================= */
 
-function weightedPick(items,weights) {
+function weightedPick(items,weights){
 
   const total =
     items.reduce(
-      (s,k) => s + (weights[k] || 0),
+      (s,k) => s+(weights[k] || 0),
       0
     );
 
-  let r = Math.random() * total;
+  let r =
+    Math.random()*total;
 
-  for(const k of items) {
+  for(const k of items){
 
     r -= weights[k] || 0;
 
-    if(r < 0) return k;
+    if(r < 0){
+      return k;
+    }
   }
 
   return items[items.length-1];
 }
 
-function randomiseRoles() {
+function randomiseRoles(){
 
-  const n = game.players.length;
-  const h = HOSTILE_COUNTS[n];
+  const n =
+    game.players.length;
+
+  const h =
+    HOSTILE_COUNTS[n];
 
   if(!h) return;
 
   const enabledHostiles =
-    HOSTILES.filter(r => settings.enabled[r]);
+    HOSTILES.filter(
+      r => settings.enabled[r]
+    );
 
-  if(enabledHostiles.length < h) {
+  if(enabledHostiles.length < h){
 
     return alert(
       "Enable enough Hostile roles to fill the random setup."
@@ -636,10 +651,12 @@ function randomiseRoles() {
 
   const enabledHumans =
     HUMANS.filter(
-      r => settings.enabled[r] || r === "engineer"
+      r =>
+        settings.enabled[r] ||
+        r === "engineer"
     );
 
-  if(enabledHumans.length < n-h) {
+  if(enabledHumans.length < n-h){
 
     return alert(
       "Enable enough Human roles to fill the random setup."
@@ -663,34 +680,41 @@ function randomiseRoles() {
       r => r !== "engineer"
     );
 
-  if(pool.length < humanNeeded) {
+  if(pool.length < humanNeeded){
 
     return alert(
       "Not enough enabled Human roles for this player count."
     );
   }
 
-  for(let i=0;i<humanNeeded;i++) {
+  for(let i=0;i<humanNeeded;i++){
 
     const pick =
-      weightedPick(pool,HUMAN_WEIGHTS);
+      weightedPick(
+        pool,
+        HUMAN_WEIGHTS
+      );
 
     roles.push(pick);
 
     pool =
-      pool.filter(r => r !== pick);
+      pool.filter(
+        r => r !== pick
+      );
   }
 
   const neutralSlots =
-    n - roles.length;
+    n-roles.length;
 
-  if(neutralSlots > 0) {
+  if(neutralSlots > 0){
 
     const enabledNeutral =
       [...NEUTRALS,...CONCEPTS]
-        .filter(r => settings.enabled[r]);
+        .filter(
+          r => settings.enabled[r]
+        );
 
-    if(enabledNeutral.length < neutralSlots) {
+    if(enabledNeutral.length < neutralSlots){
 
       return alert(
         "Enable enough Neutral roles, or use manual role counts."
@@ -715,15 +739,13 @@ function randomiseRoles() {
   renderSetup();
 }
 
+function buildMixedRoles(){
 
-/* =========================================================
-   MIXED MANUAL + RANDOM ROLES
-   ========================================================= */
+  const n =
+    game.players.length;
 
-function buildMixedRoles() {
-
-  const n = game.players.length;
-  const h = HOSTILE_COUNTS[n];
+  const h =
+    HOSTILE_COUNTS[n];
 
   const fixed =
     Array.from(
@@ -736,13 +758,16 @@ function buildMixedRoles() {
 
   const seen = new Set();
 
-  for(const r of chosen) {
+  for(const r of chosen){
 
-    if(!ROLE_DATA[r] || ROLE_DATA[r].sub) {
+    if(
+      !ROLE_DATA[r] ||
+      ROLE_DATA[r].sub
+    ){
       return null;
     }
 
-    if(seen.has(r)) {
+    if(seen.has(r)){
       return null;
     }
 
@@ -750,27 +775,38 @@ function buildMixedRoles() {
   }
 
   const hostileFixed =
-    chosen.filter(r => HOSTILES.includes(r)).length;
+    chosen.filter(
+      r => HOSTILES.includes(r)
+    ).length;
 
   const neutralFixed =
     chosen.filter(
-      r => NEUTRALS.includes(r) || CONCEPTS.includes(r)
+      r =>
+        NEUTRALS.includes(r) ||
+        CONCEPTS.includes(r)
     ).length;
 
   const humanFixed =
-    chosen.filter(r => HUMANS.includes(r)).length;
+    chosen.filter(
+      r => HUMANS.includes(r)
+    ).length;
 
   const engineerFixed =
-    chosen.filter(r => r === "engineer").length;
+    chosen.filter(
+      r => r === "engineer"
+    ).length;
 
   if(
     hostileFixed > h ||
     engineerFixed > 1
-  ) {
+  ){
     return null;
   }
 
-  let roles = [...chosen];
+  let remaining =
+    n-chosen.length;
+
+  const roles = [...chosen];
 
   const availableHostiles =
     shuffle(
@@ -782,32 +818,41 @@ function buildMixedRoles() {
     );
 
   const needHostiles =
-    h - hostileFixed;
+    h-hostileFixed;
 
   if(
     availableHostiles.length <
     needHostiles
-  ) {
+  ){
     return null;
   }
 
   roles.push(
-    ...availableHostiles
-      .slice(0,needHostiles)
+    ...availableHostiles.slice(
+      0,
+      needHostiles
+    )
   );
 
   for(
-    const r of availableHostiles
-      .slice(0,needHostiles)
-  ) {
+    const r of availableHostiles.slice(
+      0,
+      needHostiles
+    )
+  ){
     seen.add(r);
   }
 
-  if(!seen.has("engineer")) {
+  remaining =
+    n-roles.length;
+
+  if(!seen.has("engineer")){
 
     roles.push("engineer");
 
     seen.add("engineer");
+
+    remaining--;
   }
 
   const desiredHumans =
@@ -830,11 +875,15 @@ function buildMixedRoles() {
         !seen.has(r)
     );
 
-  if(pool.length < needHumans) {
+  if(pool.length < needHumans){
     return null;
   }
 
-  for(let i=0;i<needHumans;i++) {
+  for(
+    let i=0;
+    i<needHumans;
+    i++
+  ){
 
     const pick =
       weightedPick(
@@ -852,11 +901,14 @@ function buildMixedRoles() {
       );
   }
 
-  const remaining =
-    n - roles.length;
+  remaining =
+    n-roles.length;
 
   const neutralNeeded =
-    Math.max(0,remaining);
+    Math.max(
+      0,
+      remaining
+    );
 
   const neutralPool =
     [...NEUTRALS,...CONCEPTS]
@@ -866,7 +918,10 @@ function buildMixedRoles() {
           !seen.has(r)
       );
 
-  if(neutralPool.length < neutralNeeded) {
+  if(
+    neutralPool.length <
+    neutralNeeded
+  ){
     return null;
   }
 
@@ -875,22 +930,24 @@ function buildMixedRoles() {
       .slice(0,neutralNeeded)
   );
 
-  if(roles.length !== n) {
+  if(roles.length !== n){
     return null;
   }
 
-  const out = Array(n);
+  const out =
+    Array(n);
 
   const fixedSet =
-    new Set(
-      fixed.filter(Boolean)
-    );
+    new Set();
 
-  fixed.forEach((r,i) => {
-    if(r) {
-      out[i] = r;
+  fixed.forEach(
+    (r,i) => {
+      if(r){
+        out[i] = r;
+        fixedSet.add(r);
+      }
     }
-  });
+  );
 
   const unassigned =
     shuffle(
@@ -899,9 +956,9 @@ function buildMixedRoles() {
       )
     );
 
-  for(let i=0;i<n;i++) {
+  for(let i=0;i<n;i++){
 
-    if(!out[i]) {
+    if(!out[i]){
       out[i] =
         unassigned.pop();
     }
@@ -910,19 +967,21 @@ function buildMixedRoles() {
   return out;
 }
 
-
 /* =========================================================
    START GAME
    ========================================================= */
 
-function startGame() {
+function startGame(){
 
-  const n = game.players.length;
-  const h = HOSTILE_COUNTS[n];
+  const n =
+    game.players.length;
+
+  const h =
+    HOSTILE_COUNTS[n];
 
   let roles;
 
-  if(game.randomisedRoles) {
+  if(game.randomisedRoles){
 
     roles =
       Array.from(
@@ -931,11 +990,12 @@ function startGame() {
           game.randomRoles[i] || null
       );
 
-    if(roles.some(r => !r)) {
+    if(roles.some(r => !r)){
 
-      roles = buildMixedRoles();
+      roles =
+        buildMixedRoles();
 
-      if(!roles) {
+      if(!roles){
 
         return alert(
           "Your manual/random setup cannot be completed. Check for duplicate roles and make sure enough roles are enabled."
@@ -948,7 +1008,7 @@ function startGame() {
         );
     }
 
-  } else {
+  }else{
 
     roles =
       Array.from(
@@ -961,28 +1021,30 @@ function startGame() {
   if(
     roles.includes("random") ||
     roles.some(r => !r)
-  ) {
+  ){
 
     return alert(
       "Choose roles or press RANDOMISE ROLES first."
     );
   }
 
-  if(!roles.includes("engineer")) {
+  if(!roles.includes("engineer")){
     roles[n-1] = "engineer";
   }
 
   const counts =
     Object.fromEntries(
-      ROLE_KEYS.map(r => [r,0])
+      ROLE_KEYS.map(
+        r => [r,0]
+      )
     );
 
-  roles.forEach(r => {
-    counts[r] =
-      (counts[r] || 0) + 1;
-  });
+  roles.forEach(
+    r => counts[r] =
+      (counts[r] || 0)+1
+  );
 
-  if(counts.engineer !== 1) {
+  if(counts.engineer !== 1){
 
     return alert(
       "There must be exactly 1 Engineer."
@@ -994,7 +1056,7 @@ function startGame() {
     counts.saboteur +
     counts.silencer +
     counts.parasite !== h
-  ) {
+  ){
 
     return alert(
       `This setup needs exactly ${h} Hostile role(s).`
@@ -1012,20 +1074,25 @@ function startGame() {
         )
     );
 
-  if(!valid) {
-    return alert("A disabled role is selected.");
+  if(!valid){
+
+    return alert(
+      "A disabled role is selected."
+    );
   }
 
-  game.players.forEach((p,i) => {
+  game.players.forEach(
+    (p,i) => {
 
-    p.role = roles[i];
-    p.originalRole = roles[i];
+      p.role = roles[i];
+      p.originalRole = roles[i];
 
-    p.alive = true;
+      p.alive = true;
 
-    p.infectionRound = null;
-    p.hasInfected = false;
-  });
+      p.infectionRound = null;
+      p.hasInfected = false;
+    }
+  );
 
   game.round = 1;
   game.stage = 1;
@@ -1036,8 +1103,8 @@ function startGame() {
   game.lifelineLost = false;
 
   game.judgeUsed = false;
-
   game.tricksterUsed = false;
+
   game.displaySwap = null;
 
   game.pendingEjection = null;
@@ -1049,35 +1116,34 @@ function startGame() {
     window.ONLINE &&
     window.ONLINE.mode &&
     window.ONLINE.host
-  ) {
+  ){
     window.ONLINE.onHostGameStarted();
   }
 
   startRound();
 }
 
-
 /* =========================================================
-   ROUND START
+   ROUNDS
    ========================================================= */
 
-function startRound() {
+function startRound(){
 
-  if(checkVictory()) return;
-
-  /*
-     IMPORTANT:
-     Save the previous round's actions BEFORE
-     clearing the current round.
-  */
+  if(checkVictory()){
+    return;
+  }
 
   game.previousActions =
-    {...game.actions};
+    game.actions
+      ? {...game.actions}
+      : {};
 
   resetTransient();
 
   game.roundStartAliveIds =
-    living().map(p => p.id);
+    living().map(
+      p => p.id
+    );
 
   game.abilityQueue =
     [...game.roundStartAliveIds];
@@ -1089,17 +1155,16 @@ function startRound() {
   passToAbility();
 }
 
-
 /* =========================================================
-   ABILITY PASS
+   PASS / ROLE
    ========================================================= */
 
-function passToAbility() {
+function passToAbility(){
 
   if(
     game.abilityIndex >=
     game.abilityQueue.length
-  ) {
+  ){
     return resolveAbilities();
   }
 
@@ -1109,6 +1174,35 @@ function passToAbility() {
         game.abilityIndex
       ]
     );
+
+  if(
+    window.ONLINE &&
+    window.ONLINE.mode &&
+    window.ONLINE.host
+  ){
+
+    if(
+      p?.clientId ===
+      window.ONLINE.clientId
+    ){
+
+      /*
+       * ONLINE:
+       * Host controls Player 1 only.
+       * Never show pass-the-phone.
+       */
+
+      showRole();
+
+      return;
+    }
+
+    if(p?.clientId){
+
+      return window.ONLINE
+        .promptRemoteAbility(p);
+    }
+  }
 
   $("passPlayerName").textContent =
     p.name;
@@ -1125,12 +1219,7 @@ function passToAbility() {
   setScreen("passScreen");
 }
 
-
-/* =========================================================
-   ROLE SCREEN
-   ========================================================= */
-
-function showRole() {
+function showRole(){
 
   const p =
     getPlayer(
@@ -1139,14 +1228,18 @@ function showRole() {
       ]
     );
 
+  if(!p) return;
+
   $("rolePlayerName").textContent =
     p.name;
 
   $("roleIcon").textContent =
-    ROLE_DATA[p.role]?.icon || "❓";
+    ROLE_DATA[p.role]?.icon ||
+    "❓";
 
   $("roleName").textContent =
-    ROLE_DATA[p.role]?.name || p.role;
+    ROLE_DATA[p.role]?.name ||
+    p.role;
 
   const team =
     roleTeam(p.role);
@@ -1161,11 +1254,12 @@ function showRole() {
     `team-badge ${teamClass(team)}`;
 
   $("roleDescription").textContent =
-    ROLE_DATA[p.role]?.desc || "";
+    ROLE_DATA[p.role]?.desc ||
+    "";
 
   $("hostileList").innerHTML = "";
 
-  if(team === "Hostile") {
+  if(team === "Hostile"){
 
     const allies =
       living().filter(
@@ -1176,22 +1270,18 @@ function showRole() {
 
     $("hostileList").innerHTML =
       allies.length
-
         ? `
           <div class="ally-box">
             <strong>HOSTILE ALLIES</strong>
             <br>
             ${
-              allies
-                .map(
-                  x =>
-                    `${ROLE_DATA[x.role].icon} ${esc(x.name)}`
-                )
-                .join("<br>")
+              allies.map(
+                x =>
+                  `${ROLE_DATA[x.role].icon} ${esc(x.name)}`
+              ).join("<br>")
             }
           </div>
         `
-
         : `
           <div class="ally-box">
             <strong>HOSTILE ALLIES</strong>
@@ -1204,12 +1294,11 @@ function showRole() {
   setScreen("roleScreen");
 }
 
-
 /* =========================================================
-   ABILITY UI
+   ACTIONS
    ========================================================= */
 
-function showAction() {
+function showAction(){
 
   const p =
     getPlayer(
@@ -1217,6 +1306,8 @@ function showAction() {
         game.abilityIndex
       ]
     );
+
+  if(!p) return;
 
   $("actionTitle").textContent =
     `${ROLE_DATA[p.role]?.icon || ""} ${ROLE_DATA[p.role]?.name || ""}`;
@@ -1227,18 +1318,13 @@ function showAction() {
 
   game.selectedAction = null;
 
-  if(!canAct(p)) {
+  if(!canAct(p)){
 
     $("actionDescription").textContent =
-
       p.role === "diseased"
-
         ? "You are Diseased. You cannot use an ability."
-
         : p.role === "infected"
-
           ? "You are Infected and do not have an ability."
-
           : "Your ability cannot be used this round.";
 
     $("confirmActionButton").textContent =
@@ -1259,101 +1345,109 @@ function showAction() {
         desc;
 
       $("actionOptions").innerHTML =
-        items
-          .map(
-            o =>
-              button(
-                o.label,
-                o.id
-              )
+        items.map(
+          o => button(
+            o.label,
+            o.id
           )
-          .join("");
+        ).join("");
 
       $("actionOptions")
         .querySelectorAll("button")
-        .forEach(b => {
+        .forEach(
+          b =>
+            b.onclick = () => {
 
-          b.onclick = () => {
+              game.selectedAction =
+                b.dataset.value;
 
-            game.selectedAction =
-              b.dataset.value;
+              $("actionOptions")
+                .querySelectorAll("button")
+                .forEach(
+                  x =>
+                    x.classList.remove(
+                      "selected"
+                    )
+                );
 
-            $("actionOptions")
-              .querySelectorAll("button")
-              .forEach(
-                x =>
-                  x.classList.remove("selected")
-              );
-
-            b.classList.add("selected");
-          };
-
-        });
+              b.classList.add("selected");
+            }
+        );
     };
 
-
-  /* ALIEN */
-
-  if(p.role === "alien") {
-
-    const saboteurAlive =
-      living().some(
-        x => x.role === "saboteur"
-      );
+  if(p.role === "alien"){
 
     $("actionOptions").innerHTML = `
       ${button("☠️ KILL","kill")}
       ${
-        saboteurAlive
-          ? ""
-          : button("💥 SABOTAGE","sabotage")
+        !living().some(
+          x => x.role === "saboteur"
+        )
+          ? button(
+              "💥 SABOTAGE",
+              "sabotage"
+            )
+          : ""
       }
     `;
 
-    $("actionDescription").textContent =
-      saboteurAlive
-        ? "A living Saboteur exists, so you can only kill."
-        : "Choose Kill or Sabotage.";
+    if(
+      living().some(
+        x => x.role === "saboteur"
+      )
+    ){
+
+      $("actionDescription").textContent =
+        "A living Saboteur exists, so you can only kill.";
+
+    }else{
+
+      $("actionDescription").textContent =
+        "Choose Kill or Sabotage.";
+    }
 
     $("actionOptions")
       .querySelectorAll("button")
-      .forEach(b => {
+      .forEach(
+        b =>
+          b.onclick = () => {
 
-        b.onclick = () => {
+            const mode =
+              b.dataset.value;
 
-          const mode =
-            b.dataset.value;
+            if(mode === "kill"){
 
-          if(mode === "kill") {
+              renderTargetChoices(
+                p,
+                null,
+                "kill"
+              );
 
-            renderTargetChoices(
-              p,
-              null,
-              "kill"
-            );
+            }else{
 
-          } else {
-
-            renderSystemChoices(false);
+              renderSystemChoices();
+            }
           }
-        };
-      });
+      );
 
-  }
+    if(
+      living().some(
+        x => x.role === "saboteur"
+      )
+    ){
 
+      renderTargetChoices(
+        p,
+        null,
+        "kill"
+      );
+    }
 
-  /* SABOTEUR */
+  }else if(p.role === "saboteur"){
 
-  else if(p.role === "saboteur") {
+    renderSystemChoices();
 
-    renderSystemChoices(false);
-
-  }
-
-
-  /* SILENCER */
-
-  else if(p.role === "silencer") {
+  }else if(p.role === "silencer"){
 
     renderTargetChoices(
       p,
@@ -1361,14 +1455,9 @@ function showAction() {
       "silence"
     );
 
-  }
+  }else if(p.role === "parasite"){
 
-
-  /* PARASITE */
-
-  else if(p.role === "parasite") {
-
-    if(p.hasInfected) {
+    if(p.hasInfected){
 
       $("actionDescription").textContent =
         "You already used your infection.";
@@ -1389,30 +1478,16 @@ function showAction() {
       null,
       "infect"
     );
-  }
 
-
-  /* ENGINEER */
-
-  else if(p.role === "engineer") {
+  }else if(p.role === "engineer"){
 
     renderSystemChoices(true);
 
-  }
-
-
-  /* SCIENTIST */
-
-  else if(p.role === "scientist") {
+  }else if(p.role === "scientist"){
 
     renderScientistChoices(p);
 
-  }
-
-
-  /* DETECTIVE */
-
-  else if(p.role === "detective") {
+  }else if(p.role === "detective"){
 
     renderTargetChoices(
       p,
@@ -1420,12 +1495,7 @@ function showAction() {
       "detect"
     );
 
-  }
-
-
-  /* MEDIC */
-
-  else if(p.role === "medic") {
+  }else if(p.role === "medic"){
 
     renderTargetChoices(
       p,
@@ -1433,12 +1503,7 @@ function showAction() {
       "protect"
     );
 
-  }
-
-
-  /* GUARD */
-
-  else if(p.role === "guard") {
+  }else if(p.role === "guard"){
 
     renderTargetChoices(
       p,
@@ -1446,80 +1511,60 @@ function showAction() {
       "block"
     );
 
-  }
+  }else if(p.role === "radio"){
 
-
-  /* RADIO */
-
-  else if(p.role === "radio") {
-
-    if(!game.systems.communications) {
+    if(!game.systems.communications){
 
       $("actionDescription").textContent =
         "Communications is OFFLINE.";
 
-    } else {
+    }else{
 
       $("actionDescription").textContent =
         "Receive a private message from Earth.";
 
-      game.selectedAction = "radio";
+      game.selectedAction =
+        "radio";
     }
 
-  }
-
-
-  /* CAPTAIN */
-
-  else if(p.role === "captain") {
+  }else if(p.role === "captain"){
 
     $("actionDescription").textContent =
-      "Your ability is automatic only if a vote ties.";
+      "Your ability is automatic only if the vote ties.";
 
-    game.selectedAction = "none";
+    game.selectedAction =
+      "none";
 
-  }
-
-
-  /* JUDGE */
-
-  else if(p.role === "judge") {
+  }else if(p.role === "judge"){
 
     $("actionDescription").textContent =
-      "Your ability appears whenever an ejection would occur. You may cancel one ejection per game.";
+      "Your Judge ability appears when an ejection would occur.";
 
-    game.selectedAction = "none";
+    game.selectedAction =
+      "none";
 
-  }
+  }else if(p.role === "trickster"){
 
-
-  /* TRICKSTER */
-
-  else if(p.role === "trickster") {
-
-    if(game.tricksterUsed) {
+    if(game.tricksterUsed){
 
       $("actionDescription").textContent =
         "You already used your Trickster swap.";
 
-      game.selectedAction = "none";
+      game.selectedAction =
+        "none";
 
-    } else {
+    }else{
 
       renderSwapChoices(p);
     }
 
-  }
-
-
-  /* NO ABILITY */
-
-  else {
+  }else{
 
     $("actionDescription").textContent =
       "No ability.";
 
-    game.selectedAction = "none";
+    game.selectedAction =
+      "none";
   }
 
   $("confirmActionButton").textContent =
@@ -1531,15 +1576,10 @@ function showAction() {
   setScreen("actionScreen");
 }
 
-
-/* =========================================================
-   SCIENTIST
-   ========================================================= */
-
-function renderScientistChoices(p) {
+function renderScientistChoices(p){
 
   $("actionDescription").textContent =
-    "Choose a living player to check. If they are Infected or Diseased, you may then choose whether to cure them.";
+    "Choose a living player to check.";
 
   $("actionOptions").innerHTML =
     targetOptions(p)
@@ -1554,96 +1594,89 @@ function renderScientistChoices(p) {
 
   $("actionOptions")
     .querySelectorAll("button")
-    .forEach(b => {
+    .forEach(
+      b =>
+        b.onclick = () => {
 
-      b.onclick = () => {
+          const t =
+            getPlayer(
+              b.dataset.value
+            );
 
-        const t =
-          getPlayer(
-            b.dataset.value
-          );
+          game.selectedAction =
+            JSON.stringify({
+              type:"science",
+              target:t.id
+            });
 
-        game.selectedAction =
-          JSON.stringify({
-            type:"science",
-            target:t.id
-          });
+          $("actionOptions").innerHTML = `
+            ${button(
+              "🔬 CHECK",
+              "check"
+            )}
+            ${
+              [
+                "infected",
+                "diseased"
+              ].includes(t.role)
+                ? button(
+                    "💉 CURE",
+                    "cure"
+                  )
+                : ""
+            }
+          `;
 
-        $("actionOptions").innerHTML = `
-          ${button("🔬 CHECK","check")}
-          ${
-            ["infected","diseased"]
-              .includes(t.role)
-              ? button("💉 CURE","cure")
-              : ""
-          }
-        `;
+          $("actionOptions")
+            .querySelectorAll("button")
+            .forEach(
+              x =>
+                x.onclick = () => {
 
-        $("actionOptions")
-          .querySelectorAll("button")
-          .forEach(x => {
+                  const mode =
+                    x.dataset.value;
 
-            x.onclick = () => {
+                  game.selectedAction =
+                    JSON.stringify({
+                      type:"science",
+                      target:t.id,
+                      mode
+                    });
 
-              const mode =
-                x.dataset.value;
+                  $("actionOptions")
+                    .querySelectorAll("button")
+                    .forEach(
+                      y =>
+                        y.classList.remove(
+                          "selected"
+                        )
+                    );
 
-              game.selectedAction =
-                JSON.stringify({
-                  type:"science",
-                  target:t.id,
-                  mode
-                });
-
-              $("actionOptions")
-                .querySelectorAll("button")
-                .forEach(
-                  y =>
-                    y.classList.remove("selected")
-                );
-
-              x.classList.add("selected");
-            };
-          });
-      };
-    });
+                  x.classList.add(
+                    "selected"
+                  );
+                }
+            );
+        }
+    );
 }
-
-
-/* =========================================================
-   TARGET CHOICES
-   ========================================================= */
 
 function renderTargetChoices(
   p,
   unused,
   action
-) {
+){
 
-  $("actionDescription").textContent = {
-
-    kill:
-      "Choose a player to kill.",
-
-    silence:
-      "Choose a player to silence for 2 rounds.",
-
-    infect:
-      "Choose a player to infect.",
-
-    science:
-      "Choose a player to investigate.",
-
-    detect:
-      "Choose a player to investigate.",
-
-    protect:
-      "Choose a player to protect.",
-
-    block:
-      "Choose a player whose ability to block."
-
-  }[action] || "Choose a player.";
+  $("actionDescription").textContent =
+    {
+      kill:"Choose a player to kill.",
+      silence:"Choose a player to silence for 2 rounds.",
+      infect:"Choose a player to infect.",
+      detect:"Choose a player to investigate.",
+      protect:"Choose a player to protect.",
+      block:"Choose a player whose ability to block."
+    }[action] ||
+    "Choose a player.";
 
   $("actionOptions").innerHTML =
     targetOptions(p)
@@ -1658,47 +1691,45 @@ function renderTargetChoices(
 
   $("actionOptions")
     .querySelectorAll("button")
-    .forEach(b => {
+    .forEach(
+      b =>
+        b.onclick = () => {
 
-      b.onclick = () => {
+          game.selectedAction =
+            JSON.stringify({
+              type:action,
+              target:b.dataset.value
+            });
 
-        game.selectedAction =
-          JSON.stringify({
-            type:action,
-            target:b.dataset.value
-          });
+          $("actionOptions")
+            .querySelectorAll("button")
+            .forEach(
+              x =>
+                x.classList.remove(
+                  "selected"
+                )
+            );
 
-        $("actionOptions")
-          .querySelectorAll("button")
-          .forEach(
-            x =>
-              x.classList.remove("selected")
+          b.classList.add(
+            "selected"
           );
-
-        b.classList.add("selected");
-      };
-
-    });
+        }
+    );
 }
 
-
-/* =========================================================
-   SYSTEM CHOICES
-   ========================================================= */
-
-function renderSystemChoices(engineer=false) {
+function renderSystemChoices(
+  engineer=false
+){
 
   const systems =
     engineer
-
       ? Object.keys(game.systems)
           .filter(
             k => !game.systems[k]
           )
-
       : Object.keys(game.systems);
 
-  if(!systems.length) {
+  if(!systems.length){
 
     $("actionDescription").textContent =
       "No systems are offline.";
@@ -1711,9 +1742,7 @@ function renderSystemChoices(engineer=false) {
 
   $("actionDescription").textContent =
     engineer
-
       ? "Choose an offline system to repair."
-
       : "Choose a ship system to sabotage.";
 
   $("actionOptions").innerHTML =
@@ -1721,7 +1750,11 @@ function renderSystemChoices(engineer=false) {
       .map(
         k =>
           button(
-            `${game.systems[k] ? "🟢" : "🔴"} ${k.toUpperCase()}`,
+            `${
+              game.systems[k]
+                ? "🟢"
+                : "🔴"
+            } ${k.toUpperCase()}`,
             k
           )
       )
@@ -1729,40 +1762,37 @@ function renderSystemChoices(engineer=false) {
 
   $("actionOptions")
     .querySelectorAll("button")
-    .forEach(b => {
+    .forEach(
+      b =>
+        b.onclick = () => {
 
-      b.onclick = () => {
+          game.selectedAction =
+            JSON.stringify({
+              type:
+                engineer
+                  ? "repair"
+                  : "sabotage",
+              system:
+                b.dataset.value
+            });
 
-        game.selectedAction =
-          JSON.stringify({
-            type:
-              engineer
-                ? "repair"
-                : "sabotage",
+          $("actionOptions")
+            .querySelectorAll("button")
+            .forEach(
+              x =>
+                x.classList.remove(
+                  "selected"
+                )
+            );
 
-            system:
-              b.dataset.value
-          });
-
-        $("actionOptions")
-          .querySelectorAll("button")
-          .forEach(
-            x =>
-              x.classList.remove("selected")
+          b.classList.add(
+            "selected"
           );
-
-        b.classList.add("selected");
-      };
-
-    });
+        }
+    );
 }
 
-
-/* =========================================================
-   TRICKSTER
-   ========================================================= */
-
-function renderSwapChoices(p) {
+function renderSwapChoices(p){
 
   const ids =
     living().map(
@@ -1787,52 +1817,56 @@ function renderSwapChoices(p) {
 
   $("actionOptions")
     .querySelectorAll("button")
-    .forEach(b => {
+    .forEach(
+      b =>
+        b.onclick = () => {
 
-      b.onclick = () => {
+          const id =
+            b.dataset.value;
 
-        const id =
-          b.dataset.value;
+          if(chosen.includes(id)){
 
-        if(chosen.includes(id)) {
+            chosen =
+              chosen.filter(
+                x => x !== id
+              );
 
-          chosen =
-            chosen.filter(
-              x => x !== id
+            b.classList.remove(
+              "selected"
             );
 
-          b.classList.remove("selected");
+          }else if(chosen.length < 2){
 
-        } else if(chosen.length < 2) {
+            chosen.push(id);
 
-          chosen.push(id);
+            b.classList.add(
+              "selected"
+            );
+          }
 
-          b.classList.add("selected");
+          if(chosen.length === 2){
+
+            game.selectedAction =
+              JSON.stringify({
+                type:"swap",
+                a:chosen[0],
+                b:chosen[1]
+              });
+
+          }else{
+
+            game.selectedAction =
+              null;
+          }
         }
-
-        if(chosen.length === 2) {
-
-          game.selectedAction =
-            JSON.stringify({
-              type:"swap",
-              a:chosen[0],
-              b:chosen[1]
-            });
-
-        } else {
-
-          game.selectedAction = null;
-        }
-      };
-    });
+    );
 }
-
 
 /* =========================================================
    COMPLETE ABILITY
    ========================================================= */
 
-function completeAbility() {
+function completeAbility(){
 
   const p =
     getPlayer(
@@ -1841,7 +1875,7 @@ function completeAbility() {
       ]
     );
 
-  if(!alive(p)) {
+  if(!alive(p)){
     return advanceAbility();
   }
 
@@ -1852,15 +1886,20 @@ function completeAbility() {
     action &&
     typeof action === "string" &&
     action.startsWith("{")
-  ) {
-    try {
-      action = JSON.parse(action);
-    } catch {
-      action = null;
+  ){
+
+    try{
+      action =
+        JSON.parse(action);
+    }catch{
+      action = "none";
     }
   }
 
-  if(action && typeof action === "object") {
+  if(
+    action &&
+    typeof action === "object"
+  ){
 
     game.actions[p.id] =
       action;
@@ -1870,17 +1909,17 @@ function completeAbility() {
       action
     );
 
-  } else if(
+  }else if(
     action === "radio" &&
     game.systems.communications
-  ) {
+  ){
 
     game.actions[p.id] = {
       type:"radio",
       message:randomRadioMessage()
     };
 
-  } else {
+  }else{
 
     game.actions[p.id] = {
       type:"none"
@@ -1890,80 +1929,87 @@ function completeAbility() {
   advanceAbility();
 }
 
-function advanceAbility() {
+function advanceAbility(){
 
   game.abilityIndex++;
 
   if(
     game.abilityIndex <
     game.abilityQueue.length
-  ) {
+  ){
 
     passToAbility();
 
-  } else {
+  }else{
 
     resolveAbilities();
   }
 }
 
-
 /* =========================================================
-   APPLY IMMEDIATE ACTION
+   APPLY ACTIONS
    ========================================================= */
 
-function applyImmediateAction(p,a) {
+function applyImmediateAction(p,a){
 
-  if(a.type === "repair") {
+  if(a.type === "repair"){
 
     if(
-      game.systems[a.system] === false &&
-      p.role === "engineer"
-    ) {
+      p.role === "engineer" &&
+      game.systems[a.system] === false
+    ){
       game.systems[a.system] = true;
     }
   }
 
-  if(a.type === "sabotage") {
+  if(a.type === "sabotage"){
 
     if(
+      (
+        p.role === "saboteur" ||
+        (
+          p.role === "alien" &&
+          !living().some(
+            x => x.role === "saboteur"
+          )
+        )
+      ) &&
       game.systems[a.system] !== undefined
-    ) {
+    ){
+
       game.systems[a.system] = false;
     }
   }
 
-  if(a.type === "protect") {
+  if(a.type === "protect"){
 
     game.protectedPlayers.add(
       a.target
     );
   }
 
-  if(a.type === "block") {
+  if(a.type === "block"){
 
     game.blockedPlayers.add(
       a.target
     );
   }
 
-  if(a.type === "silence") {
+  if(a.type === "silence"){
 
     game.silencedUntil[a.target] =
       Math.max(
         game.silencedUntil[a.target] || 0,
-        game.round + 2
+        game.round+2
       );
   }
 
-  if(a.type === "swap") {
+  if(a.type === "swap"){
 
     if(
-      !game.tricksterUsed &&
-      a.a !== a.b &&
-      getPlayer(a.a)?.alive &&
-      getPlayer(a.b)?.alive
-    ) {
+      p.role === "trickster" &&
+      !game.tricksterUsed
+    ){
 
       game.displaySwap = [
         a.a,
@@ -1974,9 +2020,14 @@ function applyImmediateAction(p,a) {
     }
   }
 
-  if(a.type === "infect") {
+  if(a.type === "infect"){
 
-    p.hasInfected = true;
+    if(
+      p.role !== "parasite" ||
+      p.hasInfected
+    ){
+      return;
+    }
 
     const target =
       getPlayer(a.target);
@@ -1984,9 +2035,11 @@ function applyImmediateAction(p,a) {
     if(
       target &&
       alive(target) &&
-      target.infectionRound === null &&
+      !target.infectionRound &&
       !game.blockedPlayers.has(target.id)
-    ) {
+    ){
+
+      p.hasInfected = true;
 
       target.infectionRound =
         game.round;
@@ -1997,61 +2050,64 @@ function applyImmediateAction(p,a) {
       target.role =
         "infected";
 
-      target.hasInfected =
-        false;
+      target.hasInfected = false;
 
       /*
-        IMPORTANT:
-        The target is NOT told that they
-        were infected.
-
-        They keep seeing their original
-        role until they become Diseased.
-      */
+       * IMPORTANT:
+       * The player DOES NOT get told
+       * that they were infected.
+       */
+      delete game.reactionInfo[target.id];
     }
   }
 
-  if(a.type === "science") {
+  if(a.type === "science"){
 
     const t =
       getPlayer(a.target);
 
-    if(t) {
+    if(!t) return;
 
-      const status =
-        ROLE_DATA[t.role]?.name ||
-        t.role;
+    let status;
+
+    if(t.role === "infected"){
+      status = "Infected";
+    }else if(t.role === "diseased"){
+      status = "Diseased";
+    }else if(t.role === "parasite"){
+      status = "Parasite";
+    }else{
+      status = "Healthy";
+    }
+
+    game.reactionInfo[p.id] =
+      `SCIENCE: ${t.name} is ${status}.`;
+
+    if(
+      a.mode === "cure" &&
+      (
+        t.role === "infected" ||
+        t.role === "diseased"
+      )
+    ){
+
+      t.role = "survivor";
+
+      t.infectionRound = null;
+
+      t.hasInfected = false;
 
       game.reactionInfo[p.id] =
-        `SCIENCE: ${t.name} is ${status}.`;
-
-      if(
-        a.mode === "cure" &&
-        (
-          t.role === "infected" ||
-          t.role === "diseased"
-        )
-      ) {
-
-        t.role = "survivor";
-
-        t.infectionRound =
-          null;
-
-        t.hasInfected =
-          false;
-
-        game.reactionInfo[p.id] =
-          `SCIENCE: ${t.name} was cured and is now a Survivor.`;
-
-      }
+        `SCIENCE: ${t.name} was cured and is now a Survivor.`;
     }
   }
 
-  if(a.type === "detect") {
+  if(a.type === "detect"){
 
     const t =
       getPlayer(a.target);
+
+    if(!t) return;
 
     const prev =
       game.previousActions[t.id];
@@ -2063,35 +2119,30 @@ function applyImmediateAction(p,a) {
       );
   }
 
-  if(a.type === "radio") {
+  if(a.type === "radio"){
 
     game.reactionInfo[p.id] =
       a.message;
   }
 }
 
-
 /* =========================================================
    RESOLVE ABILITIES
    ========================================================= */
 
-function resolveAbilities() {
-
-  /*
-    Kills happen after protection and blocking
-    are known.
-  */
+function resolveAbilities(){
 
   const killActions =
-    Object.entries(game.actions)
-      .filter(
-        ([,a]) =>
-          a.type === "kill"
-      );
+    Object.entries(
+      game.actions
+    ).filter(
+      ([,a]) =>
+        a.type === "kill"
+    );
 
   for(
     const [id,a] of killActions
-  ) {
+  ){
 
     const actor =
       getPlayer(id);
@@ -2104,14 +2155,16 @@ function resolveAbilities() {
       target &&
       alive(actor) &&
       alive(target) &&
-      !game.blockedPlayers.has(actor.id)
-    ) {
+      !game.blockedPlayers.has(
+        actor.id
+      )
+    ){
 
       if(
         !game.protectedPlayers.has(
           target.id
         )
-      ) {
+      ){
 
         target.alive = false;
 
@@ -2122,7 +2175,7 @@ function resolveAbilities() {
         game.reactionInfo[target.id] =
           "You were killed this round.";
 
-      } else {
+      }else{
 
         game.reactionInfo[target.id] =
           "You were attacked, but you were protected.";
@@ -2130,21 +2183,27 @@ function resolveAbilities() {
     }
   }
 
-
   /*
-    Infection progression:
+   * Infection progression.
+   *
+   * Round infected:
+   * hidden.
+   *
+   * Next full round:
+   * Diseased.
+   *
+   * Following round:
+   * Parasite.
+   */
 
-    Round of infection = hidden
-    Next full round = Diseased
-    Following full round = Parasite
-  */
-
-  for(const p of game.players) {
+  for(
+    const p of game.players
+  ){
 
     if(
       !p.alive ||
-      p.infectionRound === null
-    ) {
+      !p.infectionRound
+    ){
       continue;
     }
 
@@ -2156,7 +2215,7 @@ function resolveAbilities() {
     if(
       age === 2 &&
       p.role === "infected"
-    ) {
+    ){
 
       p.role =
         "diseased";
@@ -2164,10 +2223,10 @@ function resolveAbilities() {
       game.reactionInfo[p.id] =
         "You became DISEASED. You are on the HOSTILE TEAM.";
 
-    } else if(
+    }else if(
       age >= 3 &&
       p.role === "diseased"
-    ) {
+    ){
 
       p.role =
         "parasite";
@@ -2183,40 +2242,35 @@ function resolveAbilities() {
   showReactions();
 }
 
-
-/* =========================================================
-   DETECTIVE
-   ========================================================= */
-
 function detectiveMessage(
   target,
   action
-) {
+){
 
   if(
     !action ||
     action.type === "none"
-  ) {
+  ){
 
     return `${target.name} had no interaction last round.`;
   }
 
-  if(action.type === "radio") {
+  if(action.type === "radio"){
 
     return `${target.name} interacted with Communications.`;
   }
 
-  if(action.target) {
+  if(action.target){
 
     return `${target.name} interacted with ${displayName(action.target)}.`;
   }
 
-  if(action.system) {
+  if(action.system){
 
     return `${target.name} interacted with ${action.system.toUpperCase()}.`;
   }
 
-  if(action.type === "swap") {
+  if(action.type === "swap"){
 
     return `${target.name} interacted with ${displayName(action.a)} and ${displayName(action.b)}.`;
   }
@@ -2224,57 +2278,42 @@ function detectiveMessage(
   return `${target.name} had an interaction last round.`;
 }
 
-
-/* =========================================================
-   RADIO
-   ========================================================= */
-
-function randomRadioMessage() {
+function randomRadioMessage(){
 
   const messages = [
-
     "EARTH: There are exactly 2 hostiles remaining.",
-
-    "EARTH: There are exactly 1 hostile remaining.",
-
-    "EARTH: One of the living players is hostile.",
-
-    "EARTH: A ship system was recently tampered with.",
-
-    "EARTH: Player 2, Player 4, Player 5 — one of them is hostile.",
-
     "EARTH: Player 2, Player 4, Player 5 — one of them made POWER OFFLINE.",
-
-    "EARTH: Communications is stable. Stay alert.",
-
-    "EARTH: We cannot identify a hostile player from this transmission."
+    "EARTH: Player 2, Player 4, Player 5 — one of them is hostile.",
+    "EARTH: A ship system was recently tampered with.",
+    "EARTH: Communications is stable. Stay alert."
   ];
 
   return rand(messages);
 }
 
-
 /* =========================================================
-   REACTION ROUND
+   REACTION
    ========================================================= */
 
-function showReactions() {
+function showReactions(){
 
   game.reactionQueue =
     [...game.roundStartAliveIds]
-      .filter(id => getPlayer(id));
+      .filter(
+        id => getPlayer(id)
+      );
 
   game.reactionIndex = 0;
 
   nextReaction();
 }
 
-function nextReaction() {
+function nextReaction(){
 
   if(
     game.reactionIndex >=
     game.reactionQueue.length
-  ) {
+  ){
 
     return showDiscussion();
   }
@@ -2285,6 +2324,46 @@ function nextReaction() {
         game.reactionIndex
       ]
     );
+
+  if(
+    window.ONLINE &&
+    window.ONLINE.mode &&
+    window.ONLINE.host &&
+    p?.clientId &&
+    p.clientId !==
+      window.ONLINE.clientId
+  ){
+
+    const msg =
+      game.reactionInfo[p.id] ||
+      (
+        (
+          game.silencedUntil[p.id] ||
+          0
+        ) > game.round
+          ? `You have been silenced for ${game.silencedUntil[p.id]-game.round} more round(s). You cannot vote.`
+          : "Nothing happened to you this round."
+      );
+
+    window.ONLINE.sendPrivate(
+      p.clientId,
+      {
+        type:"reaction_prompt",
+        round:game.round,
+        title:
+          p.alive
+            ? "ROUND RESULT"
+            : "YOU DIED THIS ROUND",
+        message:msg
+      }
+    );
+
+    window.ONLINE.setHostWaiting(
+      `${p.name} is checking their private reaction result…`
+    );
+
+    return;
+  }
 
   $("reactionRound").textContent =
     `ROUND ${game.round}`;
@@ -2298,10 +2377,12 @@ function nextReaction() {
   $("reactionReadyButton").textContent =
     "SHOW MY RESULT";
 
-  setScreen("reactionScreen");
+  setScreen(
+    "reactionScreen"
+  );
 }
 
-function showReactionResult() {
+function showReactionResult(){
 
   const p =
     getPlayer(
@@ -2318,18 +2399,18 @@ function showReactionResult() {
   let msg =
     game.reactionInfo[p.id];
 
-  if(!msg) {
+  if(!msg){
 
     if(
       game.silencedUntil[p.id] &&
       game.silencedUntil[p.id] >
         game.round
-    ) {
+    ){
 
       msg =
         `You have been silenced for ${game.silencedUntil[p.id]-game.round} more round(s). You cannot vote.`;
 
-    } else {
+    }else{
 
       msg =
         "Nothing happened to you this round.";
@@ -2339,25 +2420,28 @@ function showReactionResult() {
   $("reactionResultMessage").textContent =
     msg;
 
-  setScreen("reactionResultScreen");
+  setScreen(
+    "reactionResultScreen"
+  );
 }
 
-function advanceReaction() {
+function advanceReaction(){
 
   game.reactionIndex++;
 
   nextReaction();
 }
 
-
 /* =========================================================
    DISCUSSION
    ========================================================= */
 
-function showDiscussion() {
+function showDiscussion(){
 
   const systems =
-    Object.entries(game.systems)
+    Object.entries(
+      game.systems
+    )
       .map(
         ([k,v]) =>
           `${v ? "🟢" : "🔴"} ${k.toUpperCase()}`
@@ -2379,42 +2463,57 @@ function showDiscussion() {
         }
       </p>
 
-      <p>
-        ${systems}
-      </p>
+      <p>${systems}</p>
 
       ${
         game.displaySwap
-          ? `
-            <p class="warning">
+          ? `<p class="warning">
               🎭 Identities are currently swapped until voting is fully resolved.
-            </p>
-          `
+            </p>`
           : ""
       }
     `;
 
-  setScreen("discussionScreen");
-}
+  setScreen(
+    "discussionScreen"
+  );
 
+  if(
+    window.ONLINE &&
+    window.ONLINE.mode &&
+    window.ONLINE.host
+  ){
+
+    window.ONLINE.broadcastPublic({
+      kind:"discussion",
+      round:game.round,
+      stage:game.stage,
+      results:
+        game.lastRoundResults.join("<br>") ||
+        "No deaths this round.",
+      systems:{
+        ...game.systems
+      }
+    });
+  }
+}
 
 /* =========================================================
    VOTING
    ========================================================= */
 
-function startVoting() {
+function startVoting(){
 
   game.votes = {};
 
   game.currentVoteIndex = 0;
 
-  game.voteResolutionDone =
-    false;
+  game.voteResolutionDone = false;
 
   showVote();
 }
 
-function showVote() {
+function showVote(){
 
   const alivePlayers =
     living();
@@ -2422,7 +2521,7 @@ function showVote() {
   if(
     game.currentVoteIndex >=
     alivePlayers.length
-  ) {
+  ){
 
     return resolveVoting();
   }
@@ -2431,6 +2530,57 @@ function showVote() {
     alivePlayers[
       game.currentVoteIndex
     ];
+
+  /*
+   * ONLINE REMOTE PLAYER
+   */
+
+  if(
+    window.ONLINE &&
+    window.ONLINE.mode &&
+    window.ONLINE.host &&
+    p.clientId &&
+    p.clientId !==
+      window.ONLINE.clientId
+  ){
+
+    const silenced =
+      (
+        game.silencedUntil[p.id] ||
+        0
+      ) > game.round;
+
+    window.ONLINE.sendPrivate(
+      p.clientId,
+      {
+        type:"vote_prompt",
+        round:game.round,
+        stage:game.stage,
+        playerId:p.id,
+        silenced,
+
+        options:
+          silenced
+            ? []
+            : living()
+                .filter(
+                  x => x.id !== p.id
+                )
+                .map(
+                  x => ({
+                    id:x.id,
+                    name:displayName(x.id)
+                  })
+                )
+      }
+    );
+
+    window.ONLINE.setHostWaiting(
+      `${p.name} is voting…`
+    );
+
+    return;
+  }
 
   $("votingRound").textContent =
     `ROUND ${game.round}`;
@@ -2454,12 +2604,10 @@ function showVote() {
 
   $("voteOptions").innerHTML =
     silenced
-
       ? button(
           "SKIP (SILENCED)",
           "skip"
         )
-
       : [
           ...living()
             .filter(
@@ -2479,43 +2627,48 @@ function showVote() {
           )
         ].join("");
 
-  game.selectedVote =
-    null;
+  game.selectedVote = null;
 
   $("voteOptions")
     .querySelectorAll("button")
-    .forEach(b => {
+    .forEach(
+      b =>
+        b.onclick = () => {
 
-      b.onclick = () => {
+          game.selectedVote =
+            b.dataset.value;
 
-        game.selectedVote =
-          b.dataset.value;
+          $("voteOptions")
+            .querySelectorAll("button")
+            .forEach(
+              x =>
+                x.classList.remove(
+                  "selected"
+                )
+            );
 
-        $("voteOptions")
-          .querySelectorAll("button")
-          .forEach(
-            x =>
-              x.classList.remove("selected")
+          b.classList.add(
+            "selected"
           );
-
-        b.classList.add("selected");
-      };
-    });
+        }
+    );
 
   $("confirmVoteButton").onclick =
     confirmVote;
 
-  setScreen("votingScreen");
+  setScreen(
+    "votingScreen"
+  );
 }
 
-function confirmVote() {
+function confirmVote(){
 
   const p =
     living()[
       game.currentVoteIndex
     ];
 
-  if(!game.selectedVote) {
+  if(!game.selectedVote){
     return;
   }
 
@@ -2527,24 +2680,22 @@ function confirmVote() {
   showVote();
 }
 
-
-/* =========================================================
-   RESOLVE VOTING
-   ========================================================= */
-
-function resolveVoting() {
+function resolveVoting(){
 
   const tally = {};
 
-  Object.values(game.votes)
-    .forEach(v => {
+  Object.values(
+    game.votes
+  ).forEach(
+    v => {
 
-      if(v !== "skip") {
+      if(v !== "skip"){
 
         tally[v] =
-          (tally[v] || 0) + 1;
+          (tally[v] || 0)+1;
       }
-    });
+    }
+  );
 
   const max =
     Math.max(
@@ -2560,7 +2711,7 @@ function resolveVoting() {
           max > 0
       );
 
-  if(tied.length === 1) {
+  if(tied.length === 1){
 
     return finishEjection(
       tied[0],
@@ -2568,7 +2719,7 @@ function resolveVoting() {
     );
   }
 
-  if(tied.length > 1) {
+  if(tied.length > 1){
 
     const captain =
       living().find(
@@ -2578,19 +2729,12 @@ function resolveVoting() {
           !game.blockedPlayers.has(p.id)
       );
 
-    if(captain) {
+    if(captain){
 
-      game.pendingCaptain = {
-        tied:[...tied],
-        captainId:captain.id
-      };
-
-      showCaptainTie(
+      return showCaptainTie(
         tied,
         captain
       );
-
-      return;
     }
   }
 
@@ -2600,7 +2744,6 @@ function resolveVoting() {
   );
 }
 
-
 /* =========================================================
    CAPTAIN
    ========================================================= */
@@ -2608,46 +2751,72 @@ function resolveVoting() {
 function showCaptainTie(
   tied,
   captain
-) {
+){
+
+  if(
+    window.ONLINE &&
+    window.ONLINE.mode &&
+    window.ONLINE.host &&
+    captain.clientId &&
+    captain.clientId !==
+      window.ONLINE.clientId
+  ){
+
+    game.pendingCaptain = {
+      tied:[...tied],
+      captainId:captain.id
+    };
+
+    window.ONLINE.sendPrivate(
+      captain.clientId,
+      {
+        type:"captain_prompt",
+        tied:
+          tied.map(
+            id => ({
+              id,
+              name:displayName(id)
+            })
+          )
+      }
+    );
+
+    window.ONLINE.setHostWaiting(
+      `${captain.name} is choosing the tie-break…`
+    );
+
+    return;
+  }
 
   $("captainTieOptions").innerHTML =
     `
-      <p>
-        Choose one tied player to eject.
-      </p>
-
+      <p>Choose one tied player to eject.</p>
       ${
-        tied
-          .map(
-            id =>
-              button(
-                displayName(id),
-                id
-              )
-          )
-          .join("")
+        tied.map(
+          id =>
+            button(
+              displayName(id),
+              id
+            )
+        ).join("")
       }
     `;
 
   $("captainTieOptions")
     .querySelectorAll("button")
-    .forEach(b => {
+    .forEach(
+      b =>
+        b.onclick = () =>
+          finishEjection(
+            b.dataset.value,
+            true
+          )
+    );
 
-      b.onclick = () => {
-
-        game.pendingCaptain =
-          null;
-
-        finishEjection(
-          b.dataset.value,
-          true
-        );
-      };
-    });
-
-  setScreen("captainTieScreen");
+  setScreen(
+    "captainTieScreen"
+  );
 }
-
 
 /* =========================================================
    JUDGE
@@ -2656,9 +2825,9 @@ function showCaptainTie(
 function finishEjection(
   id,
   byCaptain
-) {
+){
 
-  if(!id) {
+  if(!id){
 
     return resolveEjection(
       null,
@@ -2675,7 +2844,7 @@ function finishEjection(
         !game.blockedPlayers.has(p.id)
     );
 
-  if(judge) {
+  if(judge){
 
     game.pendingEjection = {
       id,
@@ -2690,7 +2859,7 @@ function finishEjection(
       judge.clientId &&
       judge.clientId !==
         window.ONLINE.clientId
-    ) {
+    ){
 
       window.ONLINE.sendPrivate(
         judge.clientId,
@@ -2700,6 +2869,10 @@ function finishEjection(
             displayName(id),
           byCaptain
         }
+      );
+
+      window.ONLINE.setHostWaiting(
+        `${judge.name} is deciding whether to cancel the ejection…`
       );
 
       return;
@@ -2713,12 +2886,16 @@ function finishEjection(
       }. Do you want to cancel this ejection?`;
 
     $("judgeCancelButton").onclick =
-      () => resolveJudgeDecision(true);
+      () =>
+        resolveJudgeDecision(true);
 
     $("judgeAllowButton").onclick =
-      () => resolveJudgeDecision(false);
+      () =>
+        resolveJudgeDecision(false);
 
-    setScreen("judgeScreen");
+    setScreen(
+      "judgeScreen"
+    );
 
     return;
   }
@@ -2731,12 +2908,12 @@ function finishEjection(
 
 function resolveJudgeDecision(
   cancel
-) {
+){
 
   const pending =
     game.pendingEjection;
 
-  if(!pending) {
+  if(!pending){
     return;
   }
 
@@ -2744,18 +2921,20 @@ function resolveJudgeDecision(
     living().find(
       p =>
         p.role === "judge" &&
+        p.id === pending.judgeId &&
         !game.judgeUsed &&
         game.systems.power &&
         !game.blockedPlayers.has(p.id)
     );
 
-  if(cancel && judge) {
+  if(
+    cancel &&
+    judge
+  ){
 
-    game.judgeUsed =
-      true;
+    game.judgeUsed = true;
 
-    game.pendingEjection =
-      null;
+    game.pendingEjection = null;
 
     $("voteResultTitle").textContent =
       "EJECTION CANCELLED";
@@ -2766,13 +2945,11 @@ function resolveJudgeDecision(
     $("afterVoteButton").onclick =
       () => afterVoting();
 
-    setScreen("voteResultScreen");
-
     if(
       window.ONLINE &&
       window.ONLINE.mode &&
       window.ONLINE.host
-    ) {
+    ){
 
       window.ONLINE.broadcastPublic({
         kind:"vote_result",
@@ -2782,10 +2959,13 @@ function resolveJudgeDecision(
       });
     }
 
-  } else {
+    setScreen(
+      "voteResultScreen"
+    );
 
-    game.pendingEjection =
-      null;
+  }else{
+
+    game.pendingEjection = null;
 
     resolveEjection(
       pending.id,
@@ -2794,26 +2974,21 @@ function resolveJudgeDecision(
   }
 }
 
-
-/* =========================================================
-   ACTUAL EJECTION
-   ========================================================= */
-
 function resolveEjection(
   id,
   byCaptain
-) {
+){
 
-  if(id) {
+  if(id){
 
     const p =
       getPlayer(id);
 
-    if(p) {
+    if(p){
 
       p.alive = false;
 
-      if(p.role === "jester") {
+      if(p.role === "jester"){
 
         $("voteResultTitle").textContent =
           "JESTER WINS";
@@ -2823,7 +2998,7 @@ function resolveEjection(
 
         game.gameOver = true;
 
-      } else {
+      }else{
 
         $("voteResultTitle").textContent =
           "PLAYER VOTED OUT";
@@ -2833,7 +3008,7 @@ function resolveEjection(
       }
     }
 
-  } else {
+  }else{
 
     $("voteResultTitle").textContent =
       "NO EJECTION";
@@ -2849,17 +3024,14 @@ function resolveEjection(
     window.ONLINE &&
     window.ONLINE.mode &&
     window.ONLINE.host
-  ) {
+  ){
 
     window.ONLINE.broadcastPublic({
       kind:"vote_result",
-
       title:
         $("voteResultTitle").textContent,
-
       message:
         $("voteResultMessage").textContent,
-
       alive:
         game.players.map(
           p => ({
@@ -2871,70 +3043,49 @@ function resolveEjection(
     });
   }
 
-  setScreen("voteResultScreen");
+  setScreen(
+    "voteResultScreen"
+  );
 }
 
-
 /* =========================================================
-   AFTER VOTING
+   AFTER VOTE / LIFELINE
    ========================================================= */
 
-function afterVoting() {
-
-  /*
-    Trickster swap lasts through the complete
-    voting result, then disappears.
-  */
+function afterVoting(){
 
   game.displaySwap = null;
 
-  if(game.gameOver) {
+  if(game.gameOver){
 
     return showGameOver();
   }
 
-  /*
-    Exact lifeline checkpoints:
-    Round 3
-    Round 6
-    Round 9
-    etc.
-
-    If Communications is offline at the checkpoint,
-    the lifeline is permanently lost.
-  */
-
-  if(game.round % 3 === 0) {
+  if(game.round % 3 === 0){
 
     if(
       game.systems.communications &&
       !game.lifelineLost
-    ) {
+    ){
 
       game.lifelineNumber++;
 
       showLifeline();
 
-    } else {
+    }else{
 
-      game.lifelineLost =
-        true;
+      game.lifelineLost = true;
 
       proceedToSystems();
     }
 
-  } else {
+  }else{
 
     proceedToSystems();
   }
 }
 
-
-/* =========================================================
-   EARTH LIFELINE
-   ========================================================= */
-
-function showLifeline() {
+function showLifeline(){
 
   const livingHostile =
     living().filter(
@@ -2948,30 +3099,22 @@ function showLifeline() {
 
   const pool = [];
 
-  /*
-    Exactly one actual Hostile is included.
-  */
-
-  if(livingHostile.length) {
+  if(livingHostile.length){
 
     pool.push(
-      ...shuffle(
-        livingHostile
-      ).slice(0,1)
+      ...shuffle(livingHostile)
+        .slice(0,1)
     );
   }
 
   pool.push(
-    ...shuffle(
-      others
-    ).slice(0,2)
+    ...shuffle(others)
+      .slice(0,2)
   );
 
   const msg =
     pool.length
-
       ? `⚠️ ONE OF THESE PLAYERS IS HOSTILE: ${pool.map(p => p.name).join(", ")}`
-
       : "Earth sent no useful clue.";
 
   $("lifelineTitle").textContent =
@@ -2983,25 +3126,37 @@ function showLifeline() {
   $("lifelineContinue").onclick =
     proceedToSystems;
 
-  setScreen("lifelineScreen");
+  setScreen(
+    "lifelineScreen"
+  );
+
+  if(
+    window.ONLINE &&
+    window.ONLINE.mode &&
+    window.ONLINE.host
+  ){
+
+    window.ONLINE.broadcastPublic({
+      kind:"lifeline",
+      title:
+        $("lifelineTitle").textContent,
+      message:msg
+    });
+  }
 }
 
-
 /* =========================================================
-   SYSTEMS / STAGE
+   SYSTEMS
    ========================================================= */
 
-function proceedToSystems() {
+function proceedToSystems(){
 
-  /*
-    Engines must be online for the stage to advance.
-  */
+  if(game.systems.engines){
 
-  if(game.systems.engines) {
     game.stage++;
   }
 
-  if(game.stage > 10) {
+  if(game.stage > 10){
 
     return earthCheck();
   }
@@ -3013,13 +3168,17 @@ function proceedToSystems() {
     `STAGE ${game.stage} / 10`;
 
   $("systemsList").innerHTML =
-    Object.entries(game.systems)
+    Object.entries(
+      game.systems
+    )
       .map(
         ([k,v]) =>
           `
             <div>
               ${v ? "🟢" : "🔴"}
-              <strong>${k.toUpperCase()}</strong>
+              <strong>
+                ${k.toUpperCase()}
+              </strong>
               —
               ${v ? "ONLINE" : "OFFLINE"}
             </div>
@@ -3032,49 +3191,63 @@ function proceedToSystems() {
 
       game.round++;
 
-      game.lastRoundResults =
-        [];
+      game.lastRoundResults = [];
 
       startRound();
     };
 
-  setScreen("systemsScreen");
+  setScreen(
+    "systemsScreen"
+  );
+
+  if(
+    window.ONLINE &&
+    window.ONLINE.mode &&
+    window.ONLINE.host &&
+    !game.gameOver
+  ){
+
+    window.ONLINE.broadcastPublic({
+      kind:"systems",
+      round:game.round,
+      stage:game.stage,
+      systems:{
+        ...game.systems
+      }
+    });
+  }
 }
 
-
-/* =========================================================
-   EARTH CHECK
-   ========================================================= */
-
-function earthCheck() {
+function earthCheck(){
 
   const neutrals =
     living().filter(
       isNeutral
     );
 
-  if(neutrals.length) {
+  if(neutrals.length){
 
-    return endGame(
+    endGame(
       "NEUTRAL VICTORY",
       "The ship reached Earth with a Neutral player still alive."
     );
-  }
 
-  endGame(
-    "HUMAN VICTORY",
-    "The crew completed all 10 stages and reached Earth."
-  );
+  }else{
+
+    endGame(
+      "HUMAN VICTORY",
+      "The crew completed all 10 stages and reached Earth."
+    );
+  }
 }
 
-
 /* =========================================================
-   VICTORY CHECK
+   VICTORY
    ========================================================= */
 
-function checkVictory() {
+function checkVictory(){
 
-  if(game.gameOver) {
+  if(game.gameOver){
     return true;
   }
 
@@ -3091,7 +3264,7 @@ function checkVictory() {
   if(
     host >= nonHost &&
     host > 0
-  ) {
+  ){
 
     endGame(
       "HOSTILE VICTORY",
@@ -3109,15 +3282,14 @@ function checkVictory() {
   if(
     living().length === 2 &&
     neutrals.length
-  ) {
+  ){
 
     const kings =
       neutrals.filter(
-        p =>
-          p.role === "king"
+        p => p.role === "king"
       );
 
-    if(kings.length) {
+    if(kings.length){
 
       endGame(
         "SURVIVOR KING WINS",
@@ -3131,7 +3303,6 @@ function checkVictory() {
   return false;
 }
 
-
 /* =========================================================
    GAME OVER
    ========================================================= */
@@ -3139,7 +3310,7 @@ function checkVictory() {
 function endGame(
   title,
   msg
-) {
+){
 
   game.gameOver = true;
 
@@ -3154,7 +3325,11 @@ function endGame(
       .map(
         p =>
           `
-            <div class="${p.alive ? "" : "dead"}">
+            <div class="${
+              p.alive
+                ? ""
+                : "dead"
+            }">
 
               <strong>
                 ${esc(p.name)}
@@ -3175,19 +3350,19 @@ function endGame(
       )
       .join("");
 
-  setScreen("gameOverScreen");
+  setScreen(
+    "gameOverScreen"
+  );
 
   if(
     window.ONLINE &&
     window.ONLINE.mode &&
     window.ONLINE.host
-  ) {
+  ){
 
     window.ONLINE.send({
       type:"game_over",
-
       title,
-
       message:msg,
 
       players:
@@ -3203,7 +3378,7 @@ function endGame(
   }
 }
 
-function showGameOver() {
+function showGameOver(){
 
   endGame(
     $("voteResultTitle").textContent,
@@ -3211,53 +3386,58 @@ function showGameOver() {
   );
 }
 
-
 /* =========================================================
    MODALS
    ========================================================= */
 
-function openModal(id) {
-  $(id).classList.add("open");
+function openModal(id){
+
+  $(id)?.classList.add(
+    "open"
+  );
 }
 
-function closeModal(id) {
-  $(id).classList.remove("open");
+function closeModal(id){
+
+  $(id)?.classList.remove(
+    "open"
+  );
 }
 
-
-/* =========================================================
-   ROLE GUIDE
-   ========================================================= */
-
-function renderRoleGuide() {
+function renderRoleGuide(){
 
   const sections = [
-
     [
       "HOSTILE",
-      HOSTILES.concat(["diseased"])
+      HOSTILES.concat([
+        "diseased"
+      ])
     ],
-
     [
       "HUMAN",
       HUMANS
     ],
-
     [
       "NEUTRAL",
-      ["jester","king"]
+      [
+        "jester",
+        "king"
+      ]
     ],
-
     [
       "INFECTION / SUB-ROLES",
-      ["infected","diseased","parasite"]
+      [
+        "infected",
+        "diseased",
+        "parasite"
+      ]
     ],
-
     [
       "ROLE CONCEPT",
-      ["trickster"]
+      [
+        "trickster"
+      ]
     ]
-
   ];
 
   $("roleGuideContent").innerHTML =
@@ -3272,38 +3452,34 @@ function renderRoleGuide() {
               </h3>
 
               ${
-                roles
-                  .map(
-                    r =>
-                      `
-                        <article
-                          class="guide-card ${teamClass(ROLE_DATA[r].team)}"
-                        >
+                roles.map(
+                  r =>
+                    `
+                      <article class="guide-card ${teamClass(ROLE_DATA[r].team)}">
 
-                          <div class="guide-icon">
-                            ${ROLE_DATA[r].icon}
+                        <div class="guide-icon">
+                          ${ROLE_DATA[r].icon}
+                        </div>
+
+                        <div>
+
+                          <strong>
+                            ${ROLE_DATA[r].name}
+                          </strong>
+
+                          <div class="guide-team">
+                            ${ROLE_DATA[r].team}
                           </div>
 
-                          <div>
+                          <p>
+                            ${ROLE_DATA[r].desc}
+                          </p>
 
-                            <strong>
-                              ${ROLE_DATA[r].name}
-                            </strong>
+                        </div>
 
-                            <div class="guide-team">
-                              ${ROLE_DATA[r].team}
-                            </div>
-
-                            <p>
-                              ${ROLE_DATA[r].desc}
-                            </p>
-
-                          </div>
-
-                        </article>
-                      `
-                  )
-                  .join("")
+                      </article>
+                    `
+                ).join("")
               }
 
             </section>
@@ -3312,18 +3488,25 @@ function renderRoleGuide() {
       .join("");
 }
 
-
-/* =========================================================
-   CUSTOM ROLES
-   ========================================================= */
-
-function renderCustomRoles() {
+function renderCustomRoles(){
 
   const groups = [
-    ["HOSTILE",HOSTILES],
-    ["HUMAN",HUMANS],
-    ["NEUTRAL",NEUTRALS],
-    ["ROLE CONCEPT",CONCEPTS]
+    [
+      "HOSTILE",
+      HOSTILES
+    ],
+    [
+      "HUMAN",
+      HUMANS
+    ],
+    [
+      "NEUTRAL",
+      NEUTRALS
+    ],
+    [
+      "ROLE CONCEPT",
+      CONCEPTS
+    ]
   ];
 
   $("customRoleContent").innerHTML =
@@ -3338,16 +3521,18 @@ function renderCustomRoles() {
               </h3>
 
               ${
-                roles
-                  .map(r => {
+                roles.map(
+                  r => {
 
                     const locked =
                       r === "engineer";
 
                     return `
-                      <div
-                        class="custom-row ${locked ? "locked" : ""}"
-                      >
+                      <div class="custom-row ${
+                        locked
+                          ? "locked"
+                          : ""
+                      }">
 
                         <span>
                           ${ROLE_DATA[r].icon}
@@ -3361,11 +3546,16 @@ function renderCustomRoles() {
                             type="number"
                             min="0"
                             max="1"
-                            value="${settings.counts[r] || 0}"
+                            value="${
+                              settings.counts[r] || 0
+                            }"
                             data-role-count="${r}"
-                            ${locked ? "readonly" : ""}
+                            ${
+                              locked
+                                ? "readonly"
+                                : ""
+                            }
                           >
-
                         </label>
 
                         <label class="switch">
@@ -3381,7 +3571,11 @@ function renderCustomRoles() {
                                 ? "checked"
                                 : ""
                             }
-                            ${locked ? "disabled" : ""}
+                            ${
+                              locked
+                                ? "disabled"
+                                : ""
+                            }
                           >
 
                           <span>
@@ -3392,8 +3586,8 @@ function renderCustomRoles() {
 
                       </div>
                     `;
-                  })
-                  .join("")
+                  }
+                ).join("")
               }
 
             </section>
@@ -3405,68 +3599,63 @@ function renderCustomRoles() {
     .querySelectorAll(
       "[data-role-enabled]"
     )
-    .forEach(el => {
+    .forEach(
+      el =>
+        el.onchange = () => {
 
-      el.onchange = () => {
-
-        settings.enabled[
-          el.dataset.roleEnabled
-        ] = el.checked;
-
-        if(!el.checked) {
-
-          settings.counts[
+          settings.enabled[
             el.dataset.roleEnabled
-          ] = 0;
+          ] = el.checked;
+
+          if(!el.checked){
+
+            settings.counts[
+              el.dataset.roleEnabled
+            ] = 0;
+          }
+
+          renderCustomRoles();
+
+          renderSetup();
         }
-
-        renderCustomRoles();
-
-        renderSetup();
-      };
-    });
+    );
 
   $("customRoleContent")
     .querySelectorAll(
       "[data-role-count]"
     )
-    .forEach(el => {
+    .forEach(
+      el =>
+        el.onchange = () => {
 
-      el.onchange = () => {
-
-        settings.counts[
-          el.dataset.roleCount
-        ] =
-          Math.max(
-            0,
-            Math.min(
-              1,
-              Number(el.value) || 0
-            )
-          );
-
-        if(
           settings.counts[
             el.dataset.roleCount
-          ] > 0
-        ) {
+          ] =
+            Math.max(
+              0,
+              Math.min(
+                1,
+                Number(el.value) || 0
+              )
+            );
 
-          settings.enabled[
-            el.dataset.roleCount
-          ] = true;
+          if(
+            settings.counts[
+              el.dataset.roleCount
+            ] > 0
+          ){
+
+            settings.enabled[
+              el.dataset.roleCount
+            ] = true;
+          }
+
+          updatePlayerValidity();
         }
-
-        updatePlayerValidity();
-      };
-    });
+    );
 }
 
-
-/* =========================================================
-   APPLY CUSTOM ROLES
-   ========================================================= */
-
-function applyCustomRoles() {
+function applyCustomRoles(){
 
   const n =
     game.players.length;
@@ -3478,20 +3667,29 @@ function applyCustomRoles() {
   ).forEach(
     ([r,c]) => {
 
-      for(let i=0;i<c;i++) {
+      for(
+        let i=0;
+        i<c;
+        i++
+      ){
+
         selected.push(r);
       }
     }
   );
 
-  if(selected.length !== n) {
+  if(selected.length !== n){
 
     return alert(
       `Custom roles must total exactly ${n} players. Current total: ${selected.length}.`
     );
   }
 
-  if(!selected.includes("engineer")) {
+  if(
+    !selected.includes(
+      "engineer"
+    )
+  ){
 
     return alert(
       "Engineer is required."
@@ -3503,7 +3701,7 @@ function applyCustomRoles() {
       r => HOSTILES.includes(r)
     ).length !==
     HOSTILE_COUNTS[n]
-  ) {
+  ){
 
     return alert(
       `You need exactly ${HOSTILE_COUNTS[n]} Hostile role(s).`
@@ -3518,8 +3716,7 @@ function applyCustomRoles() {
         )
     );
 
-  game.randomisedRoles =
-    true;
+  game.randomisedRoles = true;
 
   renderSetup();
 
@@ -3528,43 +3725,40 @@ function applyCustomRoles() {
   );
 }
 
-
 /* =========================================================
-   INIT
+   LOCAL INITIALISATION
    ========================================================= */
 
-function initGameUI() {
+function initGameUI(){
 
   const playerCount =
     $("playerCount");
 
-  if(!playerCount) return;
+  if(!playerCount){
+    return;
+  }
 
   playerCount.onchange =
     resetSetupPlayers;
 
-  if(!game.players.length) {
+  if(!game.players.length){
 
     resetSetupPlayers();
 
-  } else {
+  }else{
 
     renderSetup();
   }
-
-
-  /*
-    MOBILE RANDOM BUTTON FIX
-
-    Clone the button so any stale listener
-    is completely removed.
-  */
 
   const randomButton =
     $("randomRolesButton");
 
   randomButton.type =
     "button";
+
+  /*
+   * MOBILE RANDOM BUTTON FIX
+   */
 
   const freshRandom =
     randomButton.cloneNode(true);
@@ -3598,7 +3792,6 @@ function initGameUI() {
     }
   );
 
-
   $("startGameButton").onclick =
     e => {
 
@@ -3606,7 +3799,6 @@ function initGameUI() {
 
       startGame();
     };
-
 
   $("roleGuideButton").onclick =
     () => {
@@ -3618,7 +3810,6 @@ function initGameUI() {
       );
     };
 
-
   $("customRolesButton").onclick =
     () => {
 
@@ -3628,7 +3819,6 @@ function initGameUI() {
         "customRoleModal"
       );
     };
-
 
   document
     .querySelectorAll("[data-close]")
@@ -3640,7 +3830,6 @@ function initGameUI() {
               b.dataset.close
             )
     );
-
 
   $("readyButton").onclick =
     showRole;
@@ -3658,15 +3847,17 @@ function initGameUI() {
     startVoting;
 
   $("restartButton").onclick =
-    () => location.reload();
+    () =>
+      location.reload();
 
   $("applyCustomRolesButton").onclick =
     applyCustomRoles;
 }
 
 if(
-  document.readyState === "loading"
-) {
+  document.readyState ===
+  "loading"
+){
 
   document.addEventListener(
     "DOMContentLoaded",
@@ -3676,11 +3867,10 @@ if(
     }
   );
 
-} else {
+}else{
 
   initGameUI();
 }
-
 
 /* =========================================================
    ALIEN — ONLINE MODE
@@ -3698,14 +3888,15 @@ if(
     "sb_publishable_ck6DlHqxEFmoCex44rXbKw_HlAtPkaW";
 
   let supabaseClient =
-    window.supabaseClient || null;
+    window.supabaseClient ||
+    null;
 
   if(
     !supabaseClient &&
     window.supabase?.createClient
-  ) {
+  ){
 
-    try {
+    try{
 
       supabaseClient =
         window.supabase.createClient(
@@ -3713,7 +3904,7 @@ if(
           SUPABASE_KEY
         );
 
-    } catch(err) {
+    }catch(err){
 
       console.error(
         "Supabase error:",
@@ -3722,13 +3913,10 @@ if(
     }
   }
 
-
   window.ONLINE = {
 
     mode:false,
-
     host:false,
-
     started:false,
 
     roomCode:"",
@@ -3745,55 +3933,49 @@ if(
 
     lobbyPlayers:[],
 
+    pending:null,
+
     connected:false,
+
+    waiting:false,
+
+    lastPublic:null,
 
     joinName:"",
 
     remoteRole:null,
-
-    remoteName:"",
-
-    remoteRound:1,
-
-    remoteStage:1,
-
-    remoteSystems:{},
+    remoteName:null,
 
     lastAbilityTargets:[],
 
-    pending:null,
+    send(payload){
 
-    lastPublic:null,
+      if(!this.channel){
+        return;
+      }
 
+      this.channel.send({
+        type:"broadcast",
+        event:"alien",
 
-    send(payload) {
+        payload:{
+          ...payload,
+          sender:this.clientId
+        }
 
-      if(!this.channel) return;
-
-      this.channel
-        .send({
-          type:"broadcast",
-          event:"alien",
-
-          payload:{
-            ...payload,
-            sender:this.clientId
-          }
-        })
-        .catch(
-          err =>
-            console.error(
-              "Broadcast error:",
-              err
-            )
-        );
+      }).catch(
+        err =>
+          console.error(
+            "Supabase send error:",
+            err
+          )
+      );
     },
-
 
     sendPrivate(
       clientId,
       payload
-    ) {
+    ){
 
       this.send({
         ...payload,
@@ -3801,8 +3983,7 @@ if(
       });
     },
 
-
-    broadcastPublic(data) {
+    broadcastPublic(data){
 
       this.send({
         type:"public",
@@ -3810,26 +3991,61 @@ if(
       });
     },
 
+    updateLobbyNames(){
 
-    async connect(code) {
+      if(!this.host){
+        return;
+      }
 
-      if(!supabaseClient) {
+      this.lobbyPlayers =
+        game.players.map(
+          p => ({
+            id:p.id,
+            name:p.name,
+            clientId:p.clientId,
+            host:p.id === "p1"
+          })
+        );
+
+      this.broadcastLobby();
+    },
+
+    broadcastLobby(){
+
+      this.send({
+        type:"lobby",
+
+        players:
+          this.lobbyPlayers.map(
+            p => ({
+              id:p.id,
+              name:p.name,
+              clientId:p.clientId,
+              host:!!p.host
+            })
+          )
+      });
+    },
+
+    async connect(code){
+
+      if(!supabaseClient){
 
         throw new Error(
           "Supabase could not be loaded."
         );
       }
 
-      if(this.channel) {
+      if(this.channel){
 
-        try {
+        try{
 
           await supabaseClient
             .removeChannel(
               this.channel
             );
 
-        } catch(e){}
+        }catch(e){}
       }
 
       this.roomCode =
@@ -3839,7 +4055,6 @@ if(
         supabaseClient.channel(
           "alien-room-" +
           this.roomCode,
-
           {
             config:{
               broadcast:{
@@ -3854,10 +4069,11 @@ if(
         {
           event:"alien"
         },
-
         ({payload}) => {
 
-          this.receive(payload);
+          this.receive(
+            payload
+          );
         }
       );
 
@@ -3865,19 +4081,22 @@ if(
         status => {
 
           this.connected =
-            status === "SUBSCRIBED";
+            status ===
+            "SUBSCRIBED";
 
           if(
-            status === "SUBSCRIBED"
-          ) {
+            status ===
+            "SUBSCRIBED"
+          ){
 
             this.onConnected();
-          }
 
-          if(
-            status === "CHANNEL_ERROR" ||
-            status === "TIMED_OUT"
-          ) {
+          }else if(
+            status ===
+              "CHANNEL_ERROR" ||
+            status ===
+              "TIMED_OUT"
+          ){
 
             this.setStatus(
               "Connection failed. Check the room code and try again."
@@ -3887,8 +4106,7 @@ if(
       );
     },
 
-
-    onConnected() {
+    onConnected(){
 
       this.setStatus(
         this.host
@@ -3896,33 +4114,30 @@ if(
           : "Connected. Joining room…"
       );
 
-      if(this.host) {
+      if(this.host){
 
         this.broadcastLobby();
 
-      } else {
+      }else{
 
         this.send({
           type:"join",
           name:
             this.joinName ||
             "Player",
-
           clientId:
             this.clientId
         });
       }
     },
 
-
-    receive(msg) {
-
-      if(!msg) return;
+    receive(msg){
 
       if(
+        !msg ||
         msg.sender ===
-        this.clientId
-      ) {
+          this.clientId
+      ){
         return;
       }
 
@@ -3930,148 +4145,145 @@ if(
         msg.to &&
         msg.to !==
           this.clientId
-      ) {
+      ){
         return;
       }
-
 
       if(
         msg.type === "join" &&
         this.host
-      ) {
+      ){
 
         return this.hostAddPlayer(
           msg
         );
       }
 
-
       if(
         msg.type === "lobby"
-      ) {
+      ){
 
         return this.receiveLobby(
           msg.players || []
         );
       }
 
+      if(
+        msg.type === "assigned"
+      ){
+
+        this.myPlayerId =
+          msg.playerId;
+
+        return;
+      }
 
       if(
         msg.type === "game_start" &&
         !this.host
-      ) {
+      ){
 
         return this.receiveGameStart(
           msg
         );
       }
 
-
       if(
         msg.type === "ability_prompt" &&
         !this.host
-      ) {
+      ){
 
         return this.receiveAbilityPrompt(
           msg
         );
       }
 
-
       if(
         msg.type === "reaction_prompt" &&
         !this.host
-      ) {
+      ){
 
         return this.receiveReactionPrompt(
           msg
         );
       }
 
-
       if(
         msg.type === "discussion" &&
         !this.host
-      ) {
+      ){
 
         return this.receiveDiscussion(
           msg
         );
       }
 
-
       if(
         msg.type === "vote_prompt" &&
         !this.host
-      ) {
+      ){
 
         return this.receiveVotePrompt(
           msg
         );
       }
 
-
       if(
         msg.type === "captain_prompt" &&
         !this.host
-      ) {
+      ){
 
         return this.receiveCaptainPrompt(
           msg
         );
       }
 
-
       if(
         msg.type === "judge_prompt" &&
         !this.host
-      ) {
+      ){
 
         return this.receiveJudgePrompt(
           msg
         );
       }
 
-
       if(
         msg.type === "public"
-      ) {
+      ){
 
         return this.receivePublic(
           msg.data
         );
       }
 
-
       if(
         msg.type === "game_over" &&
         !this.host
-      ) {
+      ){
 
         return this.receiveGameOver(
           msg
         );
       }
 
+      if(this.host){
 
-      if(this.host) {
-
-        this.receiveHostCommand(
+        return this.receiveHostCommand(
           msg
         );
       }
     },
 
+    hostAddPlayer(msg){
 
-    hostAddPlayer(msg) {
-
-      if(this.started) {
+      if(this.started){
         return;
       }
 
       if(
         this.lobbyPlayers.length >= 12
-      ) {
+      ){
 
         return this.sendPrivate(
           msg.clientId,
@@ -4088,38 +4300,44 @@ if(
             p.clientId ===
             msg.clientId
         )
-      ) {
+      ){
 
         return this.broadcastLobby();
       }
 
-      const number =
-        this.lobbyPlayers.length + 1;
-
       const id =
-        "p" + number;
-
-      const fallback =
-        "Player " + number;
+        "p" +
+        (
+          this.lobbyPlayers.length +
+          1
+        );
 
       const name =
         String(
           msg.name ||
-          fallback
+          (
+            "Player " +
+            (
+              this.lobbyPlayers.length +
+              1
+            )
+          )
         )
-        .trim()
-        .slice(0,20) ||
-        fallback;
+          .trim()
+          .slice(0,20) ||
+        (
+          "Player " +
+          (
+            this.lobbyPlayers.length +
+            1
+          )
+        );
 
       const player = {
-
         id,
-
         name,
-
         clientId:
           msg.clientId,
-
         host:false
       };
 
@@ -4140,13 +4358,12 @@ if(
       renderOnlineLobby();
     },
 
-
-    receiveLobby(players) {
+    receiveLobby(players){
 
       this.lobbyPlayers =
         players;
 
-      if(!this.host) {
+      if(!this.host){
 
         const mine =
           players.find(
@@ -4155,7 +4372,7 @@ if(
               this.clientId
           );
 
-        if(mine) {
+        if(mine){
 
           this.myPlayerId =
             mine.id;
@@ -4165,54 +4382,16 @@ if(
       renderOnlineLobby();
     },
 
+    startOnline(){
 
-    broadcastLobby() {
-
-      this.send({
-
-        type:"lobby",
-
-        players:
-          this.lobbyPlayers
-            .map(
-              p => ({
-                id:p.id,
-                name:p.name,
-                clientId:p.clientId,
-                host:!!p.host
-              })
-            )
-      });
-    },
-
-
-    updateLobbyNames() {
-
-      if(!this.host) return;
-
-      this.lobbyPlayers =
-        game.players.map(
-          p => ({
-            id:p.id,
-            name:p.name,
-            clientId:p.clientId,
-            host:p.id === "p1"
-          })
-        );
-
-      this.broadcastLobby();
-    },
-
-
-    startOnline() {
-
-      if(!this.host) {
+      if(!this.host){
         return;
       }
 
       if(
-        this.lobbyPlayers.length < 4
-      ) {
+        this.lobbyPlayers.length <
+        4
+      ){
 
         return alert(
           "Online Mode needs at least 4 players."
@@ -4221,24 +4400,20 @@ if(
 
       this.started = true;
 
+      document.body.classList.add(
+        "online-active"
+      );
+
       game.players =
         this.lobbyPlayers.map(
           p => ({
             id:p.id,
-
             name:p.name,
-
             role:"survivor",
-
-            originalRole:
-              "survivor",
-
+            originalRole:"survivor",
             alive:true,
-
             infectionRound:null,
-
             hasInfected:false,
-
             clientId:p.clientId
           })
         );
@@ -4246,7 +4421,7 @@ if(
       const pc =
         $("playerCount");
 
-      if(pc) {
+      if(pc){
 
         pc.value =
           String(
@@ -4266,18 +4441,29 @@ if(
       this.setStatus(
         "Online setup: choose roles or RANDOMISE ROLES, then START GAME."
       );
+
+      const hostStatus =
+        $("onlineHostStatus");
+
+      if(hostStatus){
+
+        hostStatus.style.display =
+          "block";
+
+        hostStatus.textContent =
+          "Online game setup. You control Player 1 only.";
+      }
     },
 
+    onHostGameStarted(){
 
-    onHostGameStarted() {
+      const publicState = {
 
-      this.broadcastPublic({
+        round:
+          game.round,
 
-        kind:"start",
-
-        round:game.round,
-
-        stage:game.stage,
+        stage:
+          game.stage,
 
         systems:{
           ...game.systems
@@ -4291,22 +4477,35 @@ if(
               alive:p.alive
             })
           )
+      };
+
+      /*
+       * Public state has NO roles.
+       */
+
+      this.broadcastPublic({
+        kind:"start",
+        ...publicState
       });
+
+      /*
+       * Each remote player gets ONLY
+       * their own role.
+       */
 
       for(
         const p of game.players
-      ) {
+      ){
 
         if(
           p.clientId &&
           p.clientId !==
             this.clientId
-        ) {
+        ){
 
           this.sendPrivate(
             p.clientId,
             {
-
               type:"game_start",
 
               playerId:p.id,
@@ -4334,11 +4533,9 @@ if(
       }
     },
 
-
-    receiveGameStart(msg) {
+    receiveGameStart(msg){
 
       this.started = true;
-
       this.mode = true;
 
       this.myPlayerId =
@@ -4359,6 +4556,10 @@ if(
       this.remoteSystems =
         msg.systems || {};
 
+      document.body.classList.add(
+        "online-active"
+      );
+
       this.showRemoteBase();
 
       renderRemoteRole(
@@ -4368,8 +4569,7 @@ if(
       );
     },
 
-
-    promptRemoteAbility(p) {
+    promptRemoteAbility(p){
 
       const prompt =
         makeRemoteAbilityPrompt(
@@ -4379,13 +4579,9 @@ if(
       this.pending =
         "ability";
 
-      this.lastAbilityTargets =
-        prompt.targets || [];
-
       this.sendPrivate(
         p.clientId,
         {
-
           type:"ability_prompt",
 
           playerId:p.id,
@@ -4396,24 +4592,24 @@ if(
           stage:
             game.stage,
 
-          role:p.role,
+          role:
+            p.role,
 
-          name:p.name,
+          name:
+            p.name,
 
           prompt
         }
       );
+
+      this.waiting = true;
 
       this.setHostWaiting(
         `${p.name} is choosing their ability…`
       );
     },
 
-
-    receiveAbilityPrompt(msg) {
-
-      this.lastAbilityTargets =
-        msg.prompt?.targets || [];
+    receiveAbilityPrompt(msg){
 
       this.remoteRole =
         msg.role;
@@ -4430,25 +4626,28 @@ if(
       this.pending =
         "ability";
 
+      this.lastAbilityTargets =
+        msg.prompt?.targets ||
+        [];
+
       renderRemoteAbility(
         msg
       );
     },
 
-
-    receiveHostCommand(msg) {
+    receiveHostCommand(msg){
 
       if(
         msg.type !==
         "command"
-      ) {
+      ){
         return;
       }
 
       if(
         msg.command ===
         "ability"
-      ) {
+      ){
 
         return hostRemoteAbility(
           msg
@@ -4458,7 +4657,7 @@ if(
       if(
         msg.command ===
         "reaction_ack"
-      ) {
+      ){
 
         return hostRemoteReactionAck(
           msg
@@ -4468,7 +4667,7 @@ if(
       if(
         msg.command ===
         "vote"
-      ) {
+      ){
 
         return hostRemoteVote(
           msg
@@ -4478,7 +4677,7 @@ if(
       if(
         msg.command ===
         "captain"
-      ) {
+      ){
 
         return hostRemoteCaptain(
           msg
@@ -4488,7 +4687,7 @@ if(
       if(
         msg.command ===
         "judge"
-      ) {
+      ){
 
         return hostRemoteJudge(
           msg
@@ -4496,61 +4695,51 @@ if(
       }
     },
 
-
-    receiveReactionPrompt(msg) {
+    receiveReactionPrompt(msg){
 
       renderRemoteReaction(
         msg
       );
     },
 
-
-    receiveDiscussion(msg) {
+    receiveDiscussion(msg){
 
       renderRemoteDiscussion(
         msg.data || {}
       );
     },
 
-
-    receiveVotePrompt(msg) {
+    receiveVotePrompt(msg){
 
       renderRemoteVote(
         msg
       );
     },
 
-
-    receiveCaptainPrompt(msg) {
+    receiveCaptainPrompt(msg){
 
       renderRemoteCaptain(
         msg
       );
     },
 
-
-    receiveJudgePrompt(msg) {
+    receiveJudgePrompt(msg){
 
       renderRemoteJudge(
         msg
       );
     },
 
-
-    receivePublic(data) {
+    receivePublic(data){
 
       this.lastPublic =
         data;
 
       if(
-        this.host
-      ) {
-        return;
-      }
-
-      if(
-        data?.kind === "start"
-      ) {
+        !this.host &&
+        data?.kind ===
+          "start"
+      ){
 
         this.remoteRound =
           data.round;
@@ -4562,9 +4751,14 @@ if(
           data.systems || {};
       }
 
+      if(this.host){
+        return;
+      }
+
       if(
-        data?.kind === "discussion"
-      ) {
+        data?.kind ===
+        "discussion"
+      ){
 
         renderRemoteDiscussion(
           data
@@ -4572,8 +4766,9 @@ if(
       }
 
       if(
-        data?.kind === "lifeline"
-      ) {
+        data?.kind ===
+        "lifeline"
+      ){
 
         renderRemoteLifeline(
           data
@@ -4581,8 +4776,9 @@ if(
       }
 
       if(
-        data?.kind === "vote_result"
-      ) {
+        data?.kind ===
+        "vote_result"
+      ){
 
         renderRemoteVoteResult(
           data
@@ -4590,8 +4786,9 @@ if(
       }
 
       if(
-        data?.kind === "systems"
-      ) {
+        data?.kind ===
+        "systems"
+      ){
 
         renderRemoteSystems(
           data
@@ -4599,8 +4796,9 @@ if(
       }
 
       if(
-        data?.kind === "game_over"
-      ) {
+        data?.kind ===
+        "game_over"
+      ){
 
         renderRemoteGameOver(
           data.title,
@@ -4610,8 +4808,7 @@ if(
       }
     },
 
-
-    receiveGameOver(msg) {
+    receiveGameOver(msg){
 
       renderRemoteGameOver(
         msg.title,
@@ -4620,55 +4817,55 @@ if(
       );
     },
 
-
-    showRemoteBase() {
+    showRemoteBase(){
 
       setScreen(
         "onlineRemoteScreen"
       );
     },
 
+    setHostWaiting(message){
 
-    setHostWaiting(message) {
-
-      if(!this.host) {
+      if(!this.host){
         return;
       }
 
       const box =
         $("onlineHostStatus");
 
-      if(box) {
+      if(box){
+
+        box.style.display =
+          "block";
+
         box.textContent =
           message;
       }
     },
 
-
-    setStatus(message) {
+    setStatus(message){
 
       const el =
         $("onlineStatus");
 
-      if(el) {
+      if(el){
+
         el.textContent =
           message;
       }
     }
   };
 
-
   const ONLINE =
     window.ONLINE;
-
 
   /* =======================================================
      ONLINE UI
      ======================================================= */
 
-  function injectOnlineUI() {
+  function injectOnlineUI(){
 
-    if($("onlineScreen")) {
+    if($("onlineScreen")){
       return;
     }
 
@@ -4679,19 +4876,19 @@ if(
 
     css.textContent = `
 
-      .player-name-input {
+      .player-name-input{
         display:block;
         width:100%;
         margin-top:7px;
         margin-bottom:7px;
       }
 
-      .online-card {
+      .online-card{
         max-width:760px;
         margin:0 auto;
       }
 
-      .online-code {
+      .online-code{
         font-size:42px;
         font-weight:950;
         letter-spacing:8px;
@@ -4702,20 +4899,20 @@ if(
         margin:12px 0;
       }
 
-      .online-list {
+      .online-list{
         display:grid;
         gap:8px;
         margin:14px 0;
       }
 
-      .online-player {
+      .online-player{
         padding:12px;
         background:#0b111a;
         border:1px solid var(--line);
         border-radius:12px;
       }
 
-      .online-status {
+      .online-status{
         padding:12px;
         border-radius:12px;
         background:#0b111a;
@@ -4724,201 +4921,227 @@ if(
         line-height:1.45;
       }
 
-      .online-role {
+      .online-role{
         font-size:64px;
         text-align:center;
       }
 
-      .online-small {
+      .online-small{
         font-size:12px;
         color:var(--muted);
       }
 
-      .online-choice-title {
-        margin-top:10px;
+      .online-role-name{
+        text-align:center;
+        font-size:28px;
         font-weight:900;
+        margin:8px 0;
       }
+
+      .online-waiting{
+        text-align:center;
+        padding:25px 10px;
+      }
+
+      /*
+       * ONLINE MODE NEVER USES
+       * THE PASS-THE-PHONE SCREEN.
+       */
+
+      body.online-active #passScreen{
+        display:none !important;
+      }
+
+      body.online-active #readyButton{
+        display:none !important;
+      }
+
+      body.online-active #passScreen.active{
+        display:none !important;
+      }
+
+      #onlineRemoteScreen .choice-button,
+      #onlineRemoteScreen button{
+        touch-action:manipulation;
+        -webkit-tap-highlight-color:transparent;
+        user-select:none;
+      }
+
     `;
 
     document.head.appendChild(
       css
     );
 
-
     const setup =
       $("setupScreen");
 
     setup.insertAdjacentHTML(
       "beforebegin",
-
       `
-        <section
-          id="onlineScreen"
-          class="screen"
-        >
+
+      <section
+        id="onlineScreen"
+        class="screen"
+      >
+
+        <div class="panel online-card center">
+
+          <div class="eyebrow">
+            ONLINE MODE
+          </div>
+
+          <h1>
+            🌐 PLAY ONLINE
+          </h1>
+
+          <p class="muted">
+            Create a room and invite friends,
+            or join using a 5-character room code.
+          </p>
 
           <div
-            class="panel online-card center"
+            id="onlineHome"
+            class="button-row"
           >
 
-            <div class="eyebrow">
-              ONLINE MODE
-            </div>
-
-            <h1>
-              🌐 PLAY ONLINE
-            </h1>
-
-            <p class="muted">
-              Create a room and invite friends,
-              or join using a 5-character room code.
-            </p>
-
-            <div
-              id="onlineHome"
-              class="button-row"
+            <button
+              id="createRoomButton"
+              class="primary"
+              type="button"
             >
+              CREATE ROOM
+            </button>
 
-              <button
-                id="createRoomButton"
-                class="primary"
-                type="button"
-              >
-                CREATE ROOM
-              </button>
-
-              <button
-                id="joinRoomButton"
-                type="button"
-              >
-                JOIN ROOM
-              </button>
-
-              <button
-                id="onlineBackButton"
-                class="secondary"
-                type="button"
-              >
-                LOCAL MODE
-              </button>
-
-            </div>
-
-
-            <div
-              id="onlineJoinBox"
-              style="display:none"
+            <button
+              id="joinRoomButton"
+              type="button"
             >
+              JOIN ROOM
+            </button>
 
-              <input
-                id="onlineJoinName"
-                maxlength="20"
-                placeholder="Your name"
-                autocomplete="off"
-                style="width:100%;margin-bottom:9px"
-              >
-
-              <input
-                id="onlineJoinCode"
-                maxlength="5"
-                placeholder="ROOM CODE"
-                autocomplete="off"
-                autocapitalize="characters"
-                style="width:100%;text-transform:uppercase"
-              >
-
-              <button
-                id="connectRoomButton"
-                class="primary full"
-                type="button"
-              >
-                JOIN ROOM
-              </button>
-
-            </div>
-
-
-            <div
-              id="onlineLobby"
-              style="display:none"
+            <button
+              id="onlineBackButton"
+              class="secondary"
+              type="button"
             >
-
-              <div class="online-small">
-                ROOM CODE
-              </div>
-
-              <div
-                id="onlineRoomCode"
-                class="online-code"
-              ></div>
-
-              <div
-                id="onlineStatus"
-                class="online-status"
-              >
-                Connecting…
-              </div>
-
-              <div
-                id="onlineHostStatus"
-                class="online-status"
-              >
-                Host status
-              </div>
-
-              <div
-                id="onlineLobbyPlayers"
-                class="online-list"
-              ></div>
-
-              <button
-                id="onlineHostSetupButton"
-                class="primary full"
-                type="button"
-                style="display:none"
-              >
-                OPEN GAME SETUP
-              </button>
-
-            </div>
+              LOCAL MODE
+            </button>
 
           </div>
 
-        </section>
+          <div
+            id="onlineJoinBox"
+            style="display:none"
+          >
+
+            <input
+              id="onlineJoinName"
+              maxlength="20"
+              placeholder="Your name"
+              autocomplete="off"
+              style="width:100%;margin-bottom:9px"
+            >
+
+            <input
+              id="onlineJoinCode"
+              maxlength="5"
+              placeholder="ROOM CODE"
+              autocomplete="off"
+              autocapitalize="characters"
+              style="width:100%;text-transform:uppercase"
+            >
+
+            <button
+              id="connectRoomButton"
+              class="primary full"
+              type="button"
+            >
+              JOIN ROOM
+            </button>
+
+          </div>
+
+          <div
+            id="onlineLobby"
+            style="display:none"
+          >
+
+            <div class="online-small">
+              ROOM CODE
+            </div>
+
+            <div
+              id="onlineRoomCode"
+              class="online-code"
+            ></div>
+
+            <div
+              id="onlineStatus"
+              class="online-status"
+            >
+              Connecting…
+            </div>
+
+            <div
+              id="onlineHostStatus"
+              class="online-status"
+              style="display:none"
+            >
+              Host controls the game.
+            </div>
+
+            <div
+              id="onlineLobbyPlayers"
+              class="online-list"
+            ></div>
+
+            <button
+              id="onlineHostSetupButton"
+              class="primary full"
+              type="button"
+              style="display:none"
+            >
+              OPEN GAME SETUP
+            </button>
+
+          </div>
+
+        </div>
+
+      </section>
+
       `
     );
-
 
     document
       .querySelector("main.app")
       .insertAdjacentHTML(
         "beforeend",
-
         `
-          <section
-            id="onlineRemoteScreen"
-            class="screen"
-          >
+
+        <section
+          id="onlineRemoteScreen"
+          class="screen"
+        >
+
+          <div class="panel online-card">
 
             <div
-              class="panel online-card"
-            >
+              id="onlineRemoteContent"
+            ></div>
 
-              <div
-                id="onlineRemoteContent"
-              ></div>
+          </div>
 
-            </div>
+        </section>
 
-          </section>
         `
       );
   }
 
+  function addOnlineButton(){
 
-  function addOnlineButton() {
-
-    if($("openOnlineButton")) {
+    if($("openOnlineButton")){
       return;
     }
 
@@ -4927,7 +5150,7 @@ if(
         "#setupScreen .button-row"
       );
 
-    if(!row) {
+    if(!row){
       return;
     }
 
@@ -4949,13 +5172,13 @@ if(
       "🌐 ONLINE MODE";
 
     b.onclick =
-      () => openOnline();
+      () =>
+        openOnline();
 
     row.appendChild(b);
   }
 
-
-  function openOnline() {
+  function openOnline(){
 
     injectOnlineUI();
 
@@ -4972,11 +5195,12 @@ if(
     $("onlineLobby").style.display =
       "none";
 
-    ONLINE.setStatus("");
+    document.body.classList.add(
+      "online-active"
+    );
   }
 
-
-  function showJoinBox() {
+  function showJoinBox(){
 
     $("onlineHome").style.display =
       "none";
@@ -4990,15 +5214,18 @@ if(
     $("onlineJoinName").focus();
   }
 
-
-  function randomCode() {
+  function randomCode(){
 
     const chars =
       "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
     let out = "";
 
-    for(let i=0;i<5;i++) {
+    for(
+      let i=0;
+      i<5;
+      i++
+    ){
 
       out +=
         chars[
@@ -5012,10 +5239,9 @@ if(
     return out;
   }
 
+  async function createRoom(){
 
-  async function createRoom() {
-
-    if(!supabaseClient) {
+    if(!supabaseClient){
 
       return alert(
         "Supabase is not available. Make sure the Supabase CDN script is loaded before game.js."
@@ -5023,10 +5249,12 @@ if(
     }
 
     ONLINE.mode = true;
-
     ONLINE.host = true;
-
     ONLINE.started = false;
+
+    document.body.classList.add(
+      "online-active"
+    );
 
     ONLINE.clientId =
       "host_" +
@@ -5035,18 +5263,13 @@ if(
         .slice(2,10);
 
     ONLINE.lobbyPlayers = [
-
       {
         id:"p1",
-
         name:"Player 1",
-
         clientId:
           ONLINE.clientId,
-
         host:true
       }
-
     ];
 
     ONLINE.myPlayerId =
@@ -5055,26 +5278,27 @@ if(
     const code =
       randomCode();
 
-    try {
+    try{
 
       await ONLINE.connect(
         code
       );
 
-    } catch(e) {
+    }catch(e){
 
       console.error(e);
 
-      return alert(
+      alert(
         "Could not create the online room."
       );
+
+      return;
     }
 
     renderOnlineLobby();
   }
 
-
-  async function joinRoom() {
+  async function joinRoom(){
 
     const name =
       $("onlineJoinName")
@@ -5088,7 +5312,7 @@ if(
         .trim()
         .toUpperCase();
 
-    if(!name) {
+    if(!name){
 
       return alert(
         "Enter your name."
@@ -5096,10 +5320,8 @@ if(
     }
 
     if(
-      !/^[A-Z0-9]{5}$/.test(
-        code
-      )
-    ) {
+      !/^[A-Z0-9]{5}$/.test(code)
+    ){
 
       return alert(
         "Enter the 5-character room code."
@@ -5107,27 +5329,31 @@ if(
     }
 
     ONLINE.mode = true;
-
     ONLINE.host = false;
-
     ONLINE.started = false;
+
+    document.body.classList.add(
+      "online-active"
+    );
 
     ONLINE.joinName =
       name;
 
-    try {
+    try{
 
       await ONLINE.connect(
         code
       );
 
-    } catch(e) {
+    }catch(e){
 
       console.error(e);
 
-      return alert(
+      alert(
         "Could not join the room."
       );
+
+      return;
     }
 
     $("onlineHome").style.display =
@@ -5149,8 +5375,7 @@ if(
     renderOnlineLobby();
   }
 
-
-  function renderOnlineLobby() {
+  function renderOnlineLobby(){
 
     injectOnlineUI();
 
@@ -5179,16 +5404,24 @@ if(
               <div class="online-player">
 
                 <strong>
-                  ${i === 0 ? "👑 " : ""}
+                  ${
+                    i === 0
+                      ? "👑 "
+                      : ""
+                  }
+
                   ${esc(p.name)}
                 </strong>
 
                 <span class="online-small">
+
                   ${
                     i === 0
                       ? "HOST"
-                      : "PLAYER " + (i+1)
+                      : "PLAYER " +
+                        (i+1)
                   }
+
                 </span>
 
               </div>
@@ -5209,62 +5442,77 @@ if(
 
     setupBtn.textContent =
       list.length < 4
-
-        ? `NEED ${4-list.length} MORE PLAYER${
+        ? `NEED ${
+            4-list.length
+          } MORE PLAYER${
             4-list.length === 1
               ? ""
               : "S"
           }`
-
         : "OPEN GAME SETUP";
 
+    const hostStatus =
+      $("onlineHostStatus");
+
+    if(hostStatus){
+
+      hostStatus.style.display =
+        ONLINE.host
+          ? "block"
+          : "none";
+
+      hostStatus.textContent =
+        ONLINE.started
+          ? "Game started — you only see your own role and choices."
+          : "You are the host. You control Player 1 only.";
+    }
+
     ONLINE.setStatus(
-
       ONLINE.host
-
         ? `Share the code. ${list.length}/12 players connected.`
-
         : `You are connected as ${
             ONLINE.myPlayerId
               ? "Player " +
-                ONLINE.myPlayerId.replace("p","")
+                ONLINE.myPlayerId
+                  .replace("p","")
               : "a player"
           }. Waiting for host.`
     );
   }
 
-
-  function beginOnlineSetup() {
+  function beginOnlineSetup(){
 
     ONLINE.startOnline();
   }
 
-
   /* =======================================================
-     REMOTE ABILITY PROMPTS
+     REMOTE PROMPTS
      ======================================================= */
 
-  function makeRemoteAbilityPrompt(p) {
+  function makeRemoteAbilityPrompt(p){
 
     const target =
       () =>
-
         living()
           .filter(
             x => {
 
-              if(x.id === p.id) {
+              if(x.id === p.id){
                 return false;
               }
 
               if(
-                roleTeam(p.role) === "Hostile" &&
+                roleTeam(p.role) ===
+                "Hostile" &&
                 isHostile(x) &&
                 !(
                   game.displaySwap &&
-                  game.displaySwap.includes(x.id)
+                  game.displaySwap.includes(
+                    x.id
+                  )
                 )
-              ) {
+              ){
+
                 return false;
               }
 
@@ -5278,25 +5526,25 @@ if(
             })
           );
 
-
     const systems =
       Object.keys(
         game.systems
       )
-      .map(
-        k => ({
-          id:k,
+        .map(
+          k => ({
+            id:k,
+            label:
+              `${
+                game.systems[k]
+                  ? "🟢"
+                  : "🔴"
+              } ${k.toUpperCase()}`
+          })
+        );
 
-          label:
-            `${game.systems[k] ? "🟢" : "🔴"} ${k.toUpperCase()}`
-        })
-      );
-
-
-    if(p.role === "alien") {
+    if(p.role === "alien"){
 
       return {
-
         kind:"alien",
 
         canSabotage:
@@ -5313,8 +5561,7 @@ if(
       };
     }
 
-
-    if(p.role === "saboteur") {
+    if(p.role === "saboteur"){
 
       return {
         kind:"systems",
@@ -5323,8 +5570,7 @@ if(
       };
     }
 
-
-    if(p.role === "silencer") {
+    if(p.role === "silencer"){
 
       return {
         kind:"targets",
@@ -5333,18 +5579,15 @@ if(
       };
     }
 
-
-    if(p.role === "parasite") {
+    if(p.role === "parasite"){
 
       return p.hasInfected
-
         ? {
             kind:"none",
             message:
               "You already used your infection.",
             continueOnly:true
           }
-
         : {
             kind:"targets",
             action:"infect",
@@ -5352,8 +5595,7 @@ if(
           };
     }
 
-
-    if(p.role === "engineer") {
+    if(p.role === "engineer"){
 
       return {
         kind:"systems",
@@ -5369,12 +5611,15 @@ if(
       };
     }
 
-
-    if(p.role === "scientist") {
+    if(p.role === "scientist"){
 
       return {
-
         kind:"scientist",
+
+        /*
+         * Only the Scientist receives
+         * these statuses.
+         */
 
         targets:
           living()
@@ -5385,15 +5630,19 @@ if(
             .map(
               x => ({
                 id:x.id,
-
-                name:
-                  displayName(x.id),
+                name:displayName(x.id),
 
                 status:
-                  ROLE_DATA[
-                    x.role
-                  ]?.name ||
-                  x.role,
+                  x.role ===
+                    "infected"
+                    ? "Infected"
+                    : x.role ===
+                      "diseased"
+                      ? "Diseased"
+                      : x.role ===
+                        "parasite"
+                        ? "Parasite"
+                        : "Healthy",
 
                 cure:
                   [
@@ -5407,8 +5656,7 @@ if(
       };
     }
 
-
-    if(p.role === "detective") {
+    if(p.role === "detective"){
 
       return {
         kind:"targets",
@@ -5417,8 +5665,7 @@ if(
       };
     }
 
-
-    if(p.role === "medic") {
+    if(p.role === "medic"){
 
       return {
         kind:"targets",
@@ -5427,8 +5674,7 @@ if(
       };
     }
 
-
-    if(p.role === "guard") {
+    if(p.role === "guard"){
 
       return {
         kind:"targets",
@@ -5437,15 +5683,12 @@ if(
       };
     }
 
-
-    if(p.role === "radio") {
+    if(p.role === "radio"){
 
       return game.systems.communications
-
         ? {
             kind:"radio"
           }
-
         : {
             kind:"none",
             message:
@@ -5454,8 +5697,7 @@ if(
           };
     }
 
-
-    if(p.role === "captain") {
+    if(p.role === "captain"){
 
       return {
         kind:"none",
@@ -5465,8 +5707,7 @@ if(
       };
     }
 
-
-    if(p.role === "judge") {
+    if(p.role === "judge"){
 
       return {
         kind:"none",
@@ -5476,18 +5717,15 @@ if(
       };
     }
 
-
-    if(p.role === "trickster") {
+    if(p.role === "trickster"){
 
       return game.tricksterUsed
-
         ? {
             kind:"none",
             message:
               "You already used your Trickster swap.",
             continueOnly:true
           }
-
         : {
             kind:"swap",
             targets:
@@ -5500,24 +5738,18 @@ if(
           };
     }
 
-
     return {
-
       kind:"none",
-
-      message:
-        "You have no ability.",
-
+      message:"You have no ability.",
       continueOnly:true
     };
   }
-
 
   function remoteButton(
     text,
     value,
     cls="choice-button"
-  ) {
+  ){
 
     return `
       <button
@@ -5530,16 +5762,76 @@ if(
     `;
   }
 
+  /*
+   * Uses pointerup for touch devices.
+   * A small guard prevents accidental double activation.
+   */
 
-  /* =======================================================
-     REMOTE ROLE
-     ======================================================= */
+  function bindRemoteTap(
+    element,
+    callback
+  ){
+
+    if(!element){
+      return;
+    }
+
+    let last = 0;
+
+    const fire =
+      e => {
+
+        const now =
+          Date.now();
+
+        if(
+          now-last <
+          350
+        ){
+          return;
+        }
+
+        last = now;
+
+        e.preventDefault();
+
+        callback(e);
+      };
+
+    element.addEventListener(
+      "pointerup",
+      fire,
+      {
+        passive:false
+      }
+    );
+
+    element.addEventListener(
+      "click",
+      e => {
+
+        const now =
+          Date.now();
+
+        if(
+          now-last <
+          350
+        ){
+          return;
+        }
+
+        last = now;
+
+        callback(e);
+      }
+    );
+  }
 
   function renderRemoteRole(
     role,
     name,
     desc
-  ) {
+  ){
 
     const d =
       ROLE_DATA[role] ||
@@ -5563,66 +5855,83 @@ if(
           ${d.icon || "❓"}
         </div>
 
-        <h1 class="center">
+        <div class="online-role-name">
           ${esc(d.name || role)}
-        </h1>
+        </div>
 
         <div
           class="team-badge ${teamClass(team)}"
-          style="display:block;width:max-content;margin:0 auto"
+          style="
+            display:block;
+            width:max-content;
+            margin:0 auto;
+          "
         >
-          ${esc(team.toUpperCase())}
+          ${esc(
+            team.toUpperCase()
+          )}
           TEAM
         </div>
 
         <p class="role-description">
-          ${esc(desc || d.desc || "")}
+          ${esc(
+            desc ||
+            d.desc ||
+            ""
+          )}
         </p>
 
-        <button
-          id="remoteRoleContinue"
-          class="primary full"
-          type="button"
-        >
-          CONTINUE
-        </button>
+        <div class="online-waiting">
+          <strong>
+            ✓ Role received privately
+          </strong>
+
+          <p class="muted">
+            Wait for the host to begin your turn.
+          </p>
+        </div>
+
       `;
 
     setScreen(
       "onlineRemoteScreen"
     );
-
-    /*
-      The actual ability prompt will arrive
-      from the host immediately after.
-    */
   }
 
-
-  /* =======================================================
-     REMOTE ABILITY
-     ======================================================= */
-
-  function renderRemoteAbility(msg) {
+  function renderRemoteAbility(msg){
 
     const p =
-      msg.prompt || {};
+      msg.prompt ||
+      {};
 
     let html =
       `
-
         <div class="eyebrow">
           ABILITY ROUND • ROUND ${msg.round}
           • STAGE ${msg.stage}/10
         </div>
 
         <h1>
-          ${ROLE_DATA[msg.role]?.icon || ""}
-          ${esc(ROLE_DATA[msg.role]?.name || msg.role)}
+          ${
+            ROLE_DATA[msg.role]?.icon ||
+            ""
+          }
+
+          ${
+            esc(
+              ROLE_DATA[msg.role]?.name ||
+              msg.role
+            )
+          }
         </h1>
 
         <p class="muted">
-          ${esc(ROLE_DATA[msg.role]?.desc || "")}
+          ${
+            esc(
+              ROLE_DATA[msg.role]?.desc ||
+              ""
+            )
+          }
         </p>
 
         <div
@@ -5649,54 +5958,65 @@ if(
     const area =
       $("remoteAbilityArea");
 
-    let selected =
-      null;
+    const confirm =
+      $("remoteAbilityConfirm");
+
+    let selected = null;
 
     const select =
-      (value,btn) => {
+      (v,b) => {
 
-        selected =
-          value;
+        selected = v;
 
         area
           .querySelectorAll("button")
           .forEach(
             x =>
-              x.classList.remove("selected")
+              x.classList.remove(
+                "selected"
+              )
           );
 
-        btn.classList.add(
+        b.classList.add(
           "selected"
         );
       };
 
-
-    if(p.kind === "none") {
+    if(
+      p.kind ===
+      "none"
+    ){
 
       area.innerHTML =
         `
           <p class="large-message">
-            ${esc(p.message || "")}
+            ${esc(
+              p.message || ""
+            )}
           </p>
         `;
 
-      $("remoteAbilityConfirm").textContent =
+      confirm.textContent =
         "CONTINUE";
 
-      $("remoteAbilityConfirm").onclick =
+      bindRemoteTap(
+        confirm,
         () =>
           sendRemoteCommand(
             "ability",
             {
               type:"none"
             }
-          );
+          )
+      );
 
       return;
     }
 
-
-    if(p.kind === "radio") {
+    if(
+      p.kind ===
+      "radio"
+    ){
 
       area.innerHTML =
         remoteButton(
@@ -5704,18 +6024,19 @@ if(
           "radio"
         );
 
-      area
-        .querySelector("button")
-        .onclick =
-          e =>
-            select(
-              "radio",
-              e.currentTarget
-            );
-    }
+      bindRemoteTap(
+        area.querySelector("button"),
+        e =>
+          select(
+            "radio",
+            e.currentTarget
+          )
+      );
 
-
-    else if(p.kind === "systems") {
+    }else if(
+      p.kind ===
+      "systems"
+    ){
 
       area.innerHTML =
         (p.systems || [])
@@ -5732,7 +6053,8 @@ if(
         .querySelectorAll("button")
         .forEach(
           b =>
-            b.onclick =
+            bindRemoteTap(
+              b,
               () =>
                 select(
                   JSON.stringify({
@@ -5742,11 +6064,13 @@ if(
                   }),
                   b
                 )
+            )
         );
-    }
 
-
-    else if(p.kind === "targets") {
+    }else if(
+      p.kind ===
+      "targets"
+    ){
 
       area.innerHTML =
         (p.targets || [])
@@ -5763,7 +6087,8 @@ if(
         .querySelectorAll("button")
         .forEach(
           b =>
-            b.onclick =
+            bindRemoteTap(
+              b,
               () =>
                 select(
                   JSON.stringify({
@@ -5773,18 +6098,19 @@ if(
                   }),
                   b
                 )
+            )
         );
-    }
 
-
-    else if(p.kind === "alien") {
+    }else if(
+      p.kind ===
+      "alien"
+    ){
 
       area.innerHTML =
         remoteButton(
           "☠️ KILL",
           "kill"
         ) +
-
         (
           p.canSabotage
             ? remoteButton(
@@ -5798,41 +6124,85 @@ if(
         .querySelectorAll("button")
         .forEach(
           b =>
-            b.onclick = () => {
+            bindRemoteTap(
+              b,
+              () => {
 
-              const mode =
-                b.dataset.onlineValue;
+                const mode =
+                  b.dataset.onlineValue;
 
-              select(
-                mode,
-                b
-              );
+                if(mode === "kill"){
 
-              if(mode === "kill") {
+                  area.innerHTML =
+                    (p.targets || [])
+                      .map(
+                        x =>
+                          remoteButton(
+                            x.name,
+                            x.id
+                          )
+                      )
+                      .join("");
 
-                showRemoteAlienTargets(
-                  area,
-                  select
-                );
+                  area
+                    .querySelectorAll("button")
+                    .forEach(
+                      targetButton =>
+                        bindRemoteTap(
+                          targetButton,
+                          () =>
+                            select(
+                              JSON.stringify({
+                                type:"kill",
+                                target:
+                                  targetButton.dataset.onlineValue
+                              }),
+                              targetButton
+                            )
+                        )
+                    );
+
+                }else{
+
+                  area.innerHTML =
+                    (p.systems || [])
+                      .map(
+                        x =>
+                          remoteButton(
+                            x.label,
+                            x.id
+                          )
+                      )
+                      .join("");
+
+                  area
+                    .querySelectorAll("button")
+                    .forEach(
+                      systemButton =>
+                        bindRemoteTap(
+                          systemButton,
+                          () =>
+                            select(
+                              JSON.stringify({
+                                type:"sabotage",
+                                system:
+                                  systemButton.dataset.onlineValue
+                              }),
+                              systemButton
+                            )
+                        )
+                    );
+                }
               }
-
-              if(mode === "sabotage") {
-
-                showRemoteSystemsAfterMode(
-                  area,
-                  select,
-                  "sabotage",
-                  p.systems
-                );
-              }
-            }
+            )
         );
-    }
 
+    }else if(
+      p.kind ===
+      "scientist"
+    ){
 
-    else if(p.kind === "scientist") {
-
-      $("remoteAbilityConfirm").disabled =
+      confirm.disabled =
         true;
 
       area.innerHTML =
@@ -5850,70 +6220,75 @@ if(
         .querySelectorAll("button")
         .forEach(
           b =>
-            b.onclick = () => {
+            bindRemoteTap(
+              b,
+              () => {
 
-              const t =
-                p.targets.find(
-                  x =>
-                    x.id ===
-                    b.dataset.onlineValue
-                );
+                const t =
+                  p.targets.find(
+                    x =>
+                      x.id ===
+                      b.dataset.onlineValue
+                  );
 
-              area.innerHTML =
-                remoteButton(
-                  "🔬 CHECK",
-                  "check"
-                ) +
+                area.innerHTML =
+                  remoteButton(
+                    "🔬 CHECK",
+                    "check"
+                  ) +
+                  (
+                    t.cure
+                      ? remoteButton(
+                          "💉 CURE",
+                          "cure"
+                        )
+                      : ""
+                  );
 
-                (
-                  t.cure
-                    ? remoteButton(
-                        "💉 CURE",
-                        "cure"
+                area
+                  .querySelectorAll("button")
+                  .forEach(
+                    x =>
+                      bindRemoteTap(
+                        x,
+                        () => {
+
+                          selected =
+                            JSON.stringify({
+                              type:"science",
+                              target:t.id,
+                              mode:
+                                x.dataset.onlineValue
+                            });
+
+                          area
+                            .querySelectorAll("button")
+                            .forEach(
+                              y =>
+                                y.classList.remove(
+                                  "selected"
+                                )
+                            );
+
+                          x.classList.add(
+                            "selected"
+                          );
+
+                          confirm.disabled =
+                            false;
+                        }
                       )
-                    : ""
-                );
-
-              area
-                .querySelectorAll("button")
-                .forEach(
-                  x =>
-                    x.onclick = () => {
-
-                      selected =
-                        JSON.stringify({
-                          type:"science",
-                          target:t.id,
-                          mode:
-                            x.dataset.onlineValue
-                        });
-
-                      area
-                        .querySelectorAll("button")
-                        .forEach(
-                          y =>
-                            y.classList.remove(
-                              "selected"
-                            )
-                        );
-
-                      x.classList.add(
-                        "selected"
-                      );
-
-                      $("remoteAbilityConfirm")
-                        .disabled =
-                          false;
-                    }
-                );
-            }
+                  );
+              }
+            )
         );
-    }
 
+    }else if(
+      p.kind ===
+      "swap"
+    ){
 
-    else if(p.kind === "swap") {
-
-      $("remoteAbilityConfirm").disabled =
+      confirm.disabled =
         true;
 
       let chosen = [];
@@ -5933,62 +6308,70 @@ if(
         .querySelectorAll("button")
         .forEach(
           b =>
-            b.onclick = () => {
+            bindRemoteTap(
+              b,
+              () => {
 
-              const id =
-                b.dataset.onlineValue;
+                const id =
+                  b.dataset.onlineValue;
 
-              if(chosen.includes(id)) {
+                if(
+                  chosen.includes(id)
+                ){
 
-                chosen =
-                  chosen.filter(
-                    x =>
-                      x !== id
+                  chosen =
+                    chosen.filter(
+                      x =>
+                        x !== id
+                    );
+
+                  b.classList.remove(
+                    "selected"
                   );
 
-                b.classList.remove(
-                  "selected"
-                );
+                }else if(
+                  chosen.length < 2
+                ){
 
-              } else if(
-                chosen.length < 2
-              ) {
+                  chosen.push(id);
 
-                chosen.push(id);
+                  b.classList.add(
+                    "selected"
+                  );
+                }
 
-                b.classList.add(
-                  "selected"
-                );
-              }
+                if(
+                  chosen.length === 2
+                ){
 
-              if(chosen.length === 2) {
+                  selected =
+                    JSON.stringify({
+                      type:"swap",
+                      a:chosen[0],
+                      b:chosen[1]
+                    });
 
-                selected =
-                  JSON.stringify({
-                    type:"swap",
-                    a:chosen[0],
-                    b:chosen[1]
-                  });
-
-                $("remoteAbilityConfirm")
-                  .disabled =
+                  confirm.disabled =
                     false;
 
-              } else {
+                }else{
 
-                $("remoteAbilityConfirm")
-                  .disabled =
+                  confirm.disabled =
                     true;
+                }
               }
-            }
+            )
         );
     }
 
-
-    $("remoteAbilityConfirm").onclick =
+    bindRemoteTap(
+      confirm,
       () => {
 
-        if(selected === "radio") {
+        if(
+          selected ===
+          "radio"
+        ){
 
           sendRemoteCommand(
             "ability",
@@ -5997,104 +6380,25 @@ if(
             }
           );
 
-          return;
-        }
-
-        if(selected) {
+        }else if(selected){
 
           sendRemoteCommand(
             "ability",
             JSON.parse(selected)
           );
         }
-      };
+      }
+    );
   }
-
-
-  function showRemoteAlienTargets(
-    area,
-    select
-  ) {
-
-    area.innerHTML =
-      (
-        ONLINE.lastAbilityTargets ||
-        []
-      )
-      .map(
-        x =>
-          remoteButton(
-            x.name,
-            x.id
-          )
-      )
-      .join("");
-
-    area
-      .querySelectorAll("button")
-      .forEach(
-        b =>
-          b.onclick =
-            () =>
-              select(
-                JSON.stringify({
-                  type:"kill",
-                  target:
-                    b.dataset.onlineValue
-                }),
-                b
-              )
-      );
-  }
-
-
-  function showRemoteSystemsAfterMode(
-    area,
-    select,
-    action,
-    systems
-  ) {
-
-    area.innerHTML =
-      (systems || [])
-        .map(
-          x =>
-            remoteButton(
-              x.label,
-              x.id
-            )
-        )
-        .join("");
-
-    area
-      .querySelectorAll("button")
-      .forEach(
-        b =>
-          b.onclick =
-            () =>
-              select(
-                JSON.stringify({
-                  type:action,
-                  system:
-                    b.dataset.onlineValue
-                }),
-                b
-              )
-      );
-  }
-
 
   function sendRemoteCommand(
     command,
     data
-  ) {
+  ){
 
     ONLINE.send({
-
       type:"command",
-
       command,
-
       ...data
     });
 
@@ -6102,34 +6406,42 @@ if(
 
     $("onlineRemoteContent").innerHTML =
       `
+        <div class="online-waiting">
 
-        <div class="eyebrow">
-          WAITING
+          <div class="eyebrow">
+            WAITING
+          </div>
+
+          <h1>
+            ✓ SENT
+          </h1>
+
+          <p class="large-message">
+            Waiting for the host to process your choice…
+          </p>
+
         </div>
-
-        <h1>
-          ✓ SENT
-        </h1>
-
-        <p class="large-message">
-          Waiting for the host to process your choice…
-        </p>
       `;
   }
 
-
   /* =======================================================
-     HOST REMOTE ABILITY
+     HOST REMOTE COMMANDS
      ======================================================= */
 
-  function hostRemoteAbility(msg) {
+  function hostRemoteAbility(msg){
 
     const p =
       getPlayer(
         msg.playerId
       );
 
-    if(!p || !alive(p)) {
+    if(
+      !p ||
+      !alive(p) ||
+      p.clientId ===
+        ONLINE.clientId
+    ){
+
       return;
     }
 
@@ -6139,34 +6451,40 @@ if(
         "none"
     };
 
-    if(msg.target) {
+    if(msg.target){
+
       action.target =
         msg.target;
     }
 
-    if(msg.system) {
+    if(msg.system){
+
       action.system =
         msg.system;
     }
 
-    if(msg.a) {
+    if(msg.a){
+
       action.a =
         msg.a;
     }
 
-    if(msg.b) {
+    if(msg.b){
+
       action.b =
         msg.b;
     }
 
-    if(msg.mode) {
+    if(msg.mode){
+
       action.mode =
         msg.mode;
     }
 
     if(
-      msg.type === "radio"
-    ) {
+      msg.type ===
+      "radio"
+    ){
 
       action = {
         type:"radio",
@@ -6180,7 +6498,7 @@ if(
         p,
         action
       )
-    ) {
+    ){
 
       action = {
         type:"none"
@@ -6201,15 +6519,17 @@ if(
     advanceAbility();
   }
 
-
   function validateRemoteAction(
     p,
     a
-  ) {
+  ){
 
-    if(!canAct(p)) {
+    if(!canAct(p)){
 
-      return a.type === "none";
+      return (
+        a.type ===
+        "none"
+      );
     }
 
     const validTarget =
@@ -6220,15 +6540,19 @@ if(
             x.id !== p.id
         );
 
-
-    if(a.type === "kill") {
+    if(
+      a.type ===
+      "kill"
+    ){
 
       return (
         p.role === "alien" &&
         validTarget(a.target) &&
         !(
           isHostile(
-            getPlayer(a.target)
+            getPlayer(
+              a.target
+            )
           ) &&
           !(
             game.displaySwap &&
@@ -6240,89 +6564,127 @@ if(
       );
     }
 
-
-    if(a.type === "sabotage") {
+    if(
+      a.type ===
+      "sabotage"
+    ){
 
       return (
         (
-          p.role === "saboteur" ||
+          p.role ===
+            "saboteur" ||
+
           (
-            p.role === "alien" &&
+            p.role ===
+              "alien" &&
+
             !living().some(
               x =>
-                x.role === "saboteur"
+                x.role ===
+                "saboteur"
             )
           )
         ) &&
-        game.systems[
+
+        Object.prototype.hasOwnProperty.call(
+          game.systems,
           a.system
-        ] !== undefined
+        )
       );
     }
 
-
     if(
-      a.type === "silence" ||
-      a.type === "infect" ||
-      a.type === "detect" ||
-      a.type === "protect" ||
-      a.type === "block"
-    ) {
+      [
+        "silence",
+        "infect",
+        "detect",
+        "protect",
+        "block"
+      ].includes(a.type)
+    ){
 
-      const required = {
-
+      const expected = {
         silence:"silencer",
         infect:"parasite",
         detect:"detective",
         protect:"medic",
         block:"guard"
-
       }[a.type];
 
-      return (
-        p.role === required &&
-        validTarget(a.target)
-      );
+      if(
+        p.role !== expected ||
+        !validTarget(a.target)
+      ){
+
+        return false;
+      }
+
+      if(
+        a.type === "infect" &&
+        p.hasInfected
+      ){
+
+        return false;
+      }
+
+      return true;
     }
 
-
-    if(a.type === "repair") {
+    if(
+      a.type ===
+      "repair"
+    ){
 
       return (
-        p.role === "engineer" &&
+        p.role ===
+          "engineer" &&
         game.systems[
           a.system
         ] === false
       );
     }
 
-
-    if(a.type === "science") {
+    if(
+      a.type ===
+      "science"
+    ){
 
       return (
-        p.role === "scientist" &&
-        validTarget(a.target) &&
+        p.role ===
+          "scientist" &&
+        validTarget(
+          a.target
+        ) &&
         (
-          a.mode === "check" ||
-          a.mode === "cure"
+          a.mode ===
+            "check" ||
+          a.mode ===
+            "cure"
         )
       );
     }
 
-
-    if(a.type === "radio") {
+    if(
+      a.type ===
+      "radio"
+    ){
 
       return (
-        p.role === "radio" &&
-        game.systems.communications
+        p.role ===
+          "radio" &&
+        game.systems
+          .communications
       );
     }
 
-
-    if(a.type === "swap") {
+    if(
+      a.type ===
+      "swap"
+    ){
 
       return (
-        p.role === "trickster" &&
+        p.role ===
+          "trickster" &&
         !game.tricksterUsed &&
         a.a !== a.b &&
         validTarget(a.a) &&
@@ -6330,22 +6692,22 @@ if(
       );
     }
 
-
-    return a.type === "none";
+    return (
+      a.type ===
+      "none"
+    );
   }
 
-
-  /* =======================================================
-     REMOTE REACTION
-     ======================================================= */
-
-  function hostRemoteReactionAck(msg) {
+  function hostRemoteReactionAck(
+    msg
+  ){
 
     if(
       game.reactionQueue[
         game.reactionIndex
-      ] !== msg.playerId
-    ) {
+      ] !==
+      msg.playerId
+    ){
 
       return;
     }
@@ -6355,8 +6717,115 @@ if(
     nextReaction();
   }
 
+  function hostRemoteVote(msg){
 
-  function renderRemoteReaction(msg) {
+    const alivePlayers =
+      living();
+
+    const p =
+      alivePlayers[
+        game.currentVoteIndex
+      ];
+
+    if(
+      !p ||
+      p.id !==
+        msg.playerId
+    ){
+
+      return;
+    }
+
+    const valid =
+      msg.vote === "skip" ||
+      alivePlayers.some(
+        x =>
+          x.id ===
+            msg.vote &&
+          x.id !== p.id
+      );
+
+    if(!valid){
+      return;
+    }
+
+    const silenced =
+      (
+        game.silencedUntil[p.id] ||
+        0
+      ) > game.round;
+
+    if(
+      silenced &&
+      msg.vote !==
+        "skip"
+    ){
+
+      return;
+    }
+
+    game.votes[p.id] =
+      msg.vote;
+
+    game.currentVoteIndex++;
+
+    showVote();
+  }
+
+  function hostRemoteCaptain(
+    msg
+  ){
+
+    if(
+      game.pendingCaptain &&
+      game.pendingCaptain.captainId ===
+        msg.playerId &&
+      game.pendingCaptain.tied.includes(
+        msg.target
+      )
+    ){
+
+      game.pendingCaptain =
+        null;
+
+      finishEjection(
+        msg.target,
+        true
+      );
+    }
+  }
+
+  function hostRemoteJudge(
+    msg
+  ){
+
+    if(
+      !game.pendingEjection
+    ){
+
+      return;
+    }
+
+    if(
+      msg.playerId !==
+      game.pendingEjection.judgeId
+    ){
+
+      return;
+    }
+
+    resolveJudgeDecision(
+      !!msg.cancel
+    );
+  }
+
+  /* =======================================================
+     REMOTE REACTION
+     ======================================================= */
+
+  function renderRemoteReaction(
+    msg
+  ){
 
     $("onlineRemoteContent").innerHTML =
       `
@@ -6386,32 +6855,29 @@ if(
         >
           CONTINUE
         </button>
+
       `;
 
     setScreen(
       "onlineRemoteScreen"
     );
 
-    $("remoteReactionAck").onclick =
+    bindRemoteTap(
+      $("remoteReactionAck"),
       () => {
 
         ONLINE.send({
-
           type:"command",
-
-          command:
-            "reaction_ack",
-
+          command:"reaction_ack",
           playerId:
             ONLINE.myPlayerId
         });
 
-        $("remoteReactionAck")
-          .disabled =
-            true;
-      };
+        $("remoteReactionAck").disabled =
+          true;
+      }
+    );
   }
-
 
   /* =======================================================
      REMOTE DISCUSSION
@@ -6419,17 +6885,17 @@ if(
 
   function renderRemoteDiscussion(
     data
-  ) {
+  ){
 
     const systems =
       Object.entries(
         data.systems || {}
       )
-      .map(
-        ([k,v]) =>
-          `${v ? "🟢" : "🔴"} ${k.toUpperCase()}`
-      )
-      .join("  ");
+        .map(
+          ([k,v]) =>
+            `${v ? "🟢" : "🔴"} ${k.toUpperCase()}`
+        )
+        .join("  ");
 
     $("onlineRemoteContent").innerHTML =
       `
@@ -6443,18 +6909,17 @@ if(
         </h1>
 
         <div class="results-box">
-
           ${data.results || "No deaths this round."}
 
           <hr>
 
           ${systems}
-
         </div>
 
         <p class="muted">
           Wait for the host to start voting.
         </p>
+
       `;
 
     setScreen(
@@ -6462,12 +6927,13 @@ if(
     );
   }
 
-
   /* =======================================================
      REMOTE VOTE
      ======================================================= */
 
-  function renderRemoteVote(msg) {
+  function renderRemoteVote(
+    msg
+  ){
 
     const opts =
       (msg.options || [])
@@ -6478,8 +6944,10 @@ if(
               x.id
             )
         )
-        .join("") +
+        .join("");
 
+    const normalOptions =
+      opts +
       remoteButton(
         "⏭️ SKIP",
         "skip"
@@ -6504,7 +6972,10 @@ if(
           }
         </p>
 
-        <div class="choice-grid">
+        <div
+          id="remoteVoteOptions"
+          class="choice-grid"
+        >
 
           ${
             msg.silenced
@@ -6512,7 +6983,7 @@ if(
                   "SKIP (SILENCED)",
                   "skip"
                 )
-              : opts
+              : normalOptions
           }
 
         </div>
@@ -6524,6 +6995,7 @@ if(
         >
           CONFIRM VOTE
         </button>
+
       `;
 
     setScreen(
@@ -6532,44 +7004,45 @@ if(
 
     let selected = null;
 
-    $("onlineRemoteContent")
-      .querySelectorAll(
-        "[data-online-value]"
-      )
-      .forEach(
-        b =>
-          b.onclick =
-            () => {
+    const options =
+      $("remoteVoteOptions")
+        .querySelectorAll(
+          "[data-online-value]"
+        );
 
-              selected =
-                b.dataset.onlineValue;
+    options.forEach(
+      b =>
+        bindRemoteTap(
+          b,
+          () => {
 
-              $("onlineRemoteContent")
-                .querySelectorAll(
-                  "[data-online-value]"
+            selected =
+              b.dataset.onlineValue;
+
+            options.forEach(
+              x =>
+                x.classList.remove(
+                  "selected"
                 )
-                .forEach(
-                  x =>
-                    x.classList.remove(
-                      "selected"
-                    )
-                );
+            );
 
-              b.classList.add(
-                "selected"
-              );
-            }
-      );
+            b.classList.add(
+              "selected"
+            );
+          }
+        )
+    );
 
-    $("remoteVoteConfirm").onclick =
+    bindRemoteTap(
+      $("remoteVoteConfirm"),
       () => {
 
-        if(!selected) return;
+        if(!selected){
+          return;
+        }
 
         ONLINE.send({
-
           type:"command",
-
           command:"vote",
 
           playerId:
@@ -6578,55 +7051,11 @@ if(
           vote:selected
         });
 
-        $("remoteVoteConfirm")
-          .disabled =
-            true;
-      };
+        $("remoteVoteConfirm").disabled =
+          true;
+      }
+    );
   }
-
-
-  /* =======================================================
-     HOST REMOTE VOTE
-     ======================================================= */
-
-  function hostRemoteVote(msg) {
-
-    const alivePlayers =
-      living();
-
-    const p =
-      alivePlayers[
-        game.currentVoteIndex
-      ];
-
-    if(
-      !p ||
-      p.id !== msg.playerId
-    ) {
-
-      return;
-    }
-
-    const valid =
-      msg.vote === "skip" ||
-      alivePlayers.some(
-        x =>
-          x.id === msg.vote &&
-          x.id !== p.id
-      );
-
-    if(!valid) {
-      return;
-    }
-
-    game.votes[p.id] =
-      msg.vote;
-
-    game.currentVoteIndex++;
-
-    showVote();
-  }
-
 
   /* =======================================================
      REMOTE CAPTAIN
@@ -6634,7 +7063,7 @@ if(
 
   function renderRemoteCaptain(
     msg
-  ) {
+  ){
 
     $("onlineRemoteContent").innerHTML =
       `
@@ -6666,6 +7095,7 @@ if(
           }
 
         </div>
+
       `;
 
     setScreen(
@@ -6678,13 +7108,12 @@ if(
       )
       .forEach(
         b =>
-          b.onclick =
+          bindRemoteTap(
+            b,
             () => {
 
               ONLINE.send({
-
                 type:"command",
-
                 command:"captain",
 
                 playerId:
@@ -6694,45 +7123,11 @@ if(
                   b.dataset.onlineValue
               });
 
-              b.disabled =
-                true;
+              b.disabled = true;
             }
+          )
       );
   }
-
-
-  function hostRemoteCaptain(
-    msg
-  ) {
-
-    if(!game.pendingCaptain) {
-      return;
-    }
-
-    if(
-      game.pendingCaptain.captainId !==
-      msg.playerId
-    ) {
-      return;
-    }
-
-    if(
-      !game.pendingCaptain.tied.includes(
-        msg.target
-      )
-    ) {
-      return;
-    }
-
-    game.pendingCaptain =
-      null;
-
-    finishEjection(
-      msg.target,
-      true
-    );
-  }
-
 
   /* =======================================================
      REMOTE JUDGE
@@ -6740,7 +7135,7 @@ if(
 
   function renderRemoteJudge(
     msg
-  ) {
+  ){
 
     $("onlineRemoteContent").innerHTML =
       `
@@ -6754,7 +7149,11 @@ if(
         </h1>
 
         <p class="large-message">
-          ${esc(msg.targetName)}
+          ${
+            esc(
+              msg.targetName
+            )
+          }
           would be ejected.
           You can cancel this once per game.
         </p>
@@ -6777,60 +7176,39 @@ if(
           </button>
 
         </div>
+
       `;
 
     setScreen(
       "onlineRemoteScreen"
     );
 
-    $("remoteJudgeCancel").onclick =
-      () => {
-
+    bindRemoteTap(
+      $("remoteJudgeCancel"),
+      () =>
         sendRemoteCommand(
           "judge",
           {
             playerId:
               ONLINE.myPlayerId,
-
             cancel:true
           }
-        );
-      };
+        )
+    );
 
-    $("remoteJudgeAllow").onclick =
-      () => {
-
+    bindRemoteTap(
+      $("remoteJudgeAllow"),
+      () =>
         sendRemoteCommand(
           "judge",
           {
             playerId:
               ONLINE.myPlayerId,
-
             cancel:false
           }
-        );
-      };
-  }
-
-
-  function hostRemoteJudge(msg) {
-
-    if(!game.pendingEjection) {
-      return;
-    }
-
-    if(
-      msg.playerId !==
-      game.pendingEjection.judgeId
-    ) {
-      return;
-    }
-
-    resolveJudgeDecision(
-      !!msg.cancel
+        )
     );
   }
-
 
   /* =======================================================
      REMOTE PUBLIC SCREENS
@@ -6838,7 +7216,7 @@ if(
 
   function renderRemoteLifeline(
     data
-  ) {
+  ){
 
     $("onlineRemoteContent").innerHTML =
       `
@@ -6864,6 +7242,7 @@ if(
         <p class="muted">
           The host will continue when ready.
         </p>
+
       `;
 
     setScreen(
@@ -6871,10 +7250,9 @@ if(
     );
   }
 
-
   function renderRemoteVoteResult(
     data
-  ) {
+  ){
 
     $("onlineRemoteContent").innerHTML =
       `
@@ -6900,6 +7278,7 @@ if(
         <p class="muted">
           Waiting for the host…
         </p>
+
       `;
 
     setScreen(
@@ -6907,29 +7286,28 @@ if(
     );
   }
 
-
   function renderRemoteSystems(
     data
-  ) {
+  ){
 
     const systems =
       Object.entries(
         data.systems || {}
       )
-      .map(
-        ([k,v]) =>
-          `
-            <div>
-              ${v ? "🟢" : "🔴"}
-              <strong>
-                ${k.toUpperCase()}
-              </strong>
-              —
-              ${v ? "ONLINE" : "OFFLINE"}
-            </div>
-          `
-      )
-      .join("");
+        .map(
+          ([k,v]) =>
+            `
+              <div>
+                ${v ? "🟢" : "🔴"}
+                <strong>
+                  ${k.toUpperCase()}
+                </strong>
+                —
+                ${v ? "ONLINE" : "OFFLINE"}
+              </div>
+            `
+        )
+        .join("");
 
     $("onlineRemoteContent").innerHTML =
       `
@@ -6953,6 +7331,7 @@ if(
         <p class="muted">
           Waiting for the host to begin the next round.
         </p>
+
       `;
 
     setScreen(
@@ -6960,12 +7339,11 @@ if(
     );
   }
 
-
   function renderRemoteGameOver(
     title,
     message,
     players
-  ) {
+  ){
 
     $("onlineRemoteContent").innerHTML =
       `
@@ -6989,21 +7367,36 @@ if(
               .map(
                 p =>
                   `
-                    <div class="${p.alive ? "" : "dead"}">
+                    <div class="${
+                      p.alive
+                        ? ""
+                        : "dead"
+                    }">
 
                       <strong>
                         ${esc(p.name)}
                       </strong>
 
                       —
-                      ${ROLE_DATA[p.role]?.icon || ""}
-                      ${ROLE_DATA[p.role]?.name || p.role}
+                      ${
+                        ROLE_DATA[p.role]?.icon ||
+                        ""
+                      }
+
+                      ${
+                        ROLE_DATA[p.role]?.name ||
+                        p.role
+                      }
 
                       [
                         ${roleTeam(p.role)}
                       ]
 
-                      ${p.alive ? "ALIVE" : "DEAD"}
+                      ${
+                        p.alive
+                          ? "ALIVE"
+                          : "DEAD"
+                      }
 
                     </div>
                   `
@@ -7014,38 +7407,45 @@ if(
         </div>
 
         <button
+          id="onlinePlayAgain"
           class="primary full"
-          onclick="location.reload()"
+          type="button"
         >
           PLAY AGAIN
         </button>
+
       `;
 
     setScreen(
       "onlineRemoteScreen"
     );
+
+    bindRemoteTap(
+      $("onlinePlayAgain"),
+      () =>
+        location.reload()
+    );
   }
 
-
   /* =======================================================
-     HOOK ONLINE INTO NORMAL GAME FLOW
+     ONLINE FLOW HOOKS
      ======================================================= */
 
   const originalPassToAbility =
     passToAbility;
 
   passToAbility =
-    function() {
+    function(){
 
       if(
         ONLINE.mode &&
         ONLINE.host
-      ) {
+      ){
 
         if(
           game.abilityIndex >=
           game.abilityQueue.length
-        ) {
+        ){
 
           return resolveAbilities();
         }
@@ -7057,11 +7457,30 @@ if(
             ]
           );
 
+        /*
+         * HOST = PLAYER 1.
+         *
+         * Only Player 1 gets shown
+         * on the host's screen.
+         */
+
         if(
-          p?.clientId &&
-          p.clientId !==
-            ONLINE.clientId
-        ) {
+          p?.clientId ===
+          ONLINE.clientId
+        ){
+
+          showRole();
+
+          return;
+        }
+
+        /*
+         * Everyone else gets their
+         * private prompt on their
+         * own device.
+         */
+
+        if(p?.clientId){
 
           return ONLINE.promptRemoteAbility(
             p
@@ -7072,19 +7491,22 @@ if(
       return originalPassToAbility();
     };
 
+  /*
+   * Remote reaction hook.
+   */
 
   const originalNextReaction =
     nextReaction;
 
   nextReaction =
-    function() {
+    function(){
 
       if(
         ONLINE.mode &&
         ONLINE.host &&
         game.reactionIndex <
           game.reactionQueue.length
-      ) {
+      ){
 
         const p =
           getPlayer(
@@ -7097,18 +7519,16 @@ if(
           p?.clientId &&
           p.clientId !==
             ONLINE.clientId
-        ) {
+        ){
 
           const msg =
             game.reactionInfo[p.id] ||
-
             (
-              game.silencedUntil[p.id] &&
-              game.silencedUntil[p.id] >
-                game.round
-
-                ? `You are silenced for ${game.silencedUntil[p.id]-game.round} more round(s). You cannot vote.`
-
+              (
+                game.silencedUntil[p.id] ||
+                0
+              ) > game.round
+                ? `You have been silenced for ${game.silencedUntil[p.id]-game.round} more round(s). You cannot vote.`
                 : "Nothing happened to you this round."
             );
 
@@ -7116,9 +7536,7 @@ if(
             p.clientId,
             {
               type:"reaction_prompt",
-
-              round:
-                game.round,
+              round:game.round,
 
               title:
                 p.alive
@@ -7129,10 +7547,6 @@ if(
             }
           );
 
-          ONLINE.setHostWaiting(
-            `${p.name} is viewing their private result…`
-          );
-
           return;
         }
       }
@@ -7140,77 +7554,20 @@ if(
       return originalNextReaction();
     };
 
-
-  const originalShowDiscussion =
-    showDiscussion;
-
-  showDiscussion =
-    function() {
-
-      originalShowDiscussion();
-
-      if(
-        ONLINE.mode &&
-        ONLINE.host
-      ) {
-
-        const data = {
-
-          kind:"discussion",
-
-          round:
-            game.round,
-
-          stage:
-            game.stage,
-
-          results:
-            game.lastRoundResults
-              .join("<br>") ||
-            "No deaths this round.",
-
-          systems:{
-            ...game.systems
-          }
-        };
-
-        ONLINE.broadcastPublic(
-          data
-        );
-
-        for(
-          const p of game.players
-        ) {
-
-          if(
-            p.clientId &&
-            p.clientId !==
-              ONLINE.clientId
-          ) {
-
-            ONLINE.sendPrivate(
-              p.clientId,
-              {
-                type:"discussion",
-                data
-              }
-            );
-          }
-        }
-      }
-    };
-
+  /*
+   * Remote voting hook.
+   */
 
   const originalShowVote =
     showVote;
 
   showVote =
-    function() {
+    function(){
 
       if(
         ONLINE.mode &&
         ONLINE.host
-      ) {
+      ){
 
         const alivePlayers =
           living();
@@ -7218,7 +7575,7 @@ if(
         if(
           game.currentVoteIndex >=
           alivePlayers.length
-        ) {
+        ){
 
           return resolveVoting();
         }
@@ -7232,7 +7589,7 @@ if(
           p?.clientId &&
           p.clientId !==
             ONLINE.clientId
-        ) {
+        ){
 
           const silenced =
             (
@@ -7243,15 +7600,10 @@ if(
           ONLINE.sendPrivate(
             p.clientId,
             {
-
               type:"vote_prompt",
-
-              round:
-                game.round,
-
-              playerId:
-                p.id,
-
+              round:game.round,
+              stage:game.stage,
+              playerId:p.id,
               silenced,
 
               options:
@@ -7267,7 +7619,9 @@ if(
                         x => ({
                           id:x.id,
                           name:
-                            displayName(x.id)
+                            displayName(
+                              x.id
+                            )
                         })
                       )
             }
@@ -7284,6 +7638,9 @@ if(
       return originalShowVote();
     };
 
+  /*
+   * Remote Captain hook.
+   */
 
   const originalShowCaptainTie =
     showCaptainTie;
@@ -7292,7 +7649,7 @@ if(
     function(
       tied,
       captain
-    ) {
+    ){
 
       if(
         ONLINE.mode &&
@@ -7300,14 +7657,10 @@ if(
         captain.clientId &&
         captain.clientId !==
           ONLINE.clientId
-      ) {
+      ){
 
         game.pendingCaptain = {
-
-          tied:[
-            ...tied
-          ],
-
+          tied:[...tied],
           captainId:
             captain.id
         };
@@ -7341,100 +7694,11 @@ if(
       );
     };
 
-
-  const originalShowLifeline =
-    showLifeline;
-
-  showLifeline =
-    function() {
-
-      originalShowLifeline();
-
-      if(
-        ONLINE.mode &&
-        ONLINE.host
-      ) {
-
-        ONLINE.broadcastPublic({
-
-          kind:"lifeline",
-
-          title:
-            $("lifelineTitle").textContent,
-
-          message:
-            $("lifelineMessage").textContent
-        });
-      }
-    };
-
-
-  const originalProceedSystems =
-    proceedToSystems;
-
-  proceedToSystems =
-    function() {
-
-      originalProceedSystems();
-
-      if(
-        ONLINE.mode &&
-        ONLINE.host &&
-        !game.gameOver
-      ) {
-
-        ONLINE.broadcastPublic({
-
-          kind:"systems",
-
-          round:
-            game.round,
-
-          stage:
-            game.stage,
-
-          systems:{
-            ...game.systems
-          }
-        });
-      }
-    };
-
-
   /*
-    Re-send the current discussion state to remote players
-    without revealing roles.
-  */
+   * Online setup button.
+   */
 
-  const originalStartVoting =
-    startVoting;
-
-  startVoting =
-    function() {
-
-      if(
-        ONLINE.mode &&
-        ONLINE.host
-      ) {
-
-        ONLINE.broadcastPublic({
-
-          kind:"voting",
-
-          round:
-            game.round
-        });
-      }
-
-      return originalStartVoting();
-    };
-
-
-  /* =======================================================
-     ONLINE BINDING
-     ======================================================= */
-
-  function bindOnline() {
+  function bindOnline(){
 
     injectOnlineUI();
 
@@ -7453,25 +7717,32 @@ if(
       beginOnlineSetup;
 
     $("onlineBackButton").onclick =
-      () => {
+      async () => {
 
-        ONLINE.mode =
-          false;
+        ONLINE.mode = false;
+        ONLINE.host = false;
+        ONLINE.started = false;
 
-        ONLINE.host =
-          false;
+        document.body.classList.remove(
+          "online-active"
+        );
 
-        if(ONLINE.channel) {
+        if(
+          ONLINE.channel &&
+          supabaseClient
+        ){
 
-          try {
+          try{
 
-            supabaseClient
-              ?.removeChannel(
+            await supabaseClient
+              .removeChannel(
                 ONLINE.channel
               );
 
-          } catch(e){}
+          }catch(e){}
         }
+
+        ONLINE.channel = null;
 
         setScreen(
           "setupScreen"
@@ -7479,7 +7750,27 @@ if(
       };
   }
 
+  /*
+   * Make sure the online UI is added
+   * after the normal game UI exists.
+   */
 
-  bindOnline();
+  if(
+    document.readyState ===
+    "loading"
+  ){
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      bindOnline,
+      {
+        once:true
+      }
+    );
+
+  }else{
+
+    bindOnline();
+  }
 
 })();
