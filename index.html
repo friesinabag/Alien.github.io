@@ -1,676 +1,893 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#080b12">
-  <meta name="description" content="ALIEN — a pass-and-play social deduction game.">
-  <link rel="icon" type="image/png" sizes="512x512" href="alien-icon.png">
-  <link rel="apple-touch-icon" href="alien-icon.png">
-  <title>ALIEN</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    >
+
+    <title>ALIEN</title>
+
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
 
-<main class="app">
+    <div id="app">
 
-  <header class="topbar">
-    <div class="logo">👽 <span>ALIEN</span></div>
-    <div class="subtitle">PASS • PLAY • SURVIVE</div>
-  </header>
+        <!-- =====================================================
+             TITLE / HOME SCREEN
+        ====================================================== -->
 
-  <!-- =====================================================
-       LOCAL GAME SETUP
-       ===================================================== -->
+        <section id="homeScreen" class="screen active">
 
-  <section id="setupScreen" class="screen active">
+            <div class="home-container">
 
-    <div class="panel hero">
-      <h1>ALIEN</h1>
-      <p>One phone. Secret roles. Trust nobody.</p>
+                <div class="logo-area">
+                    <div class="logo-alien">ALIEN</div>
+                    <div class="logo-subtitle">
+                        TRUST NO ONE
+                    </div>
+                </div>
+
+                <div class="menu-buttons">
+
+                    <button
+                        id="localModeButton"
+                        class="primary big-button"
+                        type="button"
+                    >
+                        🎮 LOCAL GAME
+                    </button>
+
+                    <button
+                        id="openOnlineButton"
+                        class="big-button"
+                        type="button"
+                    >
+                        🌐 ONLINE MODE
+                    </button>
+
+                    <button
+                        id="rulesButton"
+                        class="big-button"
+                        type="button"
+                    >
+                        📖 RULES
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             LOCAL SETUP
+        ====================================================== -->
+
+        <section id="setupScreen" class="screen">
+
+            <div class="screen-container">
+
+                <div class="top-bar">
+                    <button
+                        id="setupBackButton"
+                        class="small-button"
+                        type="button"
+                    >
+                        ← BACK
+                    </button>
+
+                    <div class="screen-title">
+                        GAME SETUP
+                    </div>
+
+                    <div></div>
+                </div>
+
+                <div class="setup-content">
+
+                    <div class="setup-card">
+
+                        <label for="playerCount">
+                            NUMBER OF PLAYERS
+                        </label>
+
+                        <select id="playerCount">
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                            <option value="11">11</option>
+                            <option value="12">12</option>
+                        </select>
+
+                    </div>
+
+
+                    <div class="setup-card">
+
+                        <div class="card-heading">
+                            PLAYERS
+                        </div>
+
+                        <div id="playerSetupList"></div>
+
+                    </div>
+
+
+                    <div class="setup-card">
+
+                        <button
+                            id="randomRolesButton"
+                            class="secondary full"
+                            type="button"
+                        >
+                            🎲 RANDOMISE ROLES
+                        </button>
+
+                        <div
+                            id="randomRoleStatus"
+                            class="muted"
+                        ></div>
+
+                    </div>
+
+
+                    <div class="setup-card">
+
+                        <div class="card-heading">
+                            ROLE SETTINGS
+                        </div>
+
+                        <div id="roleSettings"></div>
+
+                    </div>
+
+
+                    <button
+                        id="startGameButton"
+                        class="primary big-button full"
+                        type="button"
+                    >
+                        START GAME
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             ROLE REVEAL
+        ====================================================== -->
+
+        <section id="roleScreen" class="screen">
+
+            <div class="screen-container centered">
+
+                <div class="eyebrow">
+                    SECRET ROLE
+                </div>
+
+                <div id="roleIcon" class="role-icon">
+                    ❓
+                </div>
+
+                <h1 id="roleName">
+                    ROLE
+                </h1>
+
+                <div
+                    id="roleTeam"
+                    class="team-badge"
+                >
+                    TEAM
+                </div>
+
+                <p
+                    id="roleDescription"
+                    class="role-description"
+                ></p>
+
+                <div
+                    id="roleAllies"
+                    class="ally-box"
+                    style="display:none;"
+                ></div>
+
+                <button
+                    id="roleContinueButton"
+                    class="primary big-button"
+                    type="button"
+                >
+                    CONTINUE
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             ABILITY SCREEN
+        ====================================================== -->
+
+        <section id="abilityScreen" class="screen">
+
+            <div class="screen-container centered">
+
+                <div class="eyebrow">
+                    ABILITY
+                </div>
+
+                <h1 id="abilityTitle">
+                    YOUR TURN
+                </h1>
+
+                <p
+                    id="abilityDescription"
+                    class="muted"
+                ></p>
+
+                <div
+                    id="abilityOptions"
+                    class="choice-grid"
+                ></div>
+
+                <button
+                    id="abilityConfirmButton"
+                    class="primary big-button full"
+                    type="button"
+                    disabled
+                >
+                    CONFIRM
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             REACTION SCREEN
+        ====================================================== -->
+
+        <section id="reactionScreen" class="screen">
+
+            <div class="screen-container centered">
+
+                <div class="eyebrow">
+                    ROUND RESULT
+                </div>
+
+                <div
+                    id="reactionIcon"
+                    class="role-icon"
+                >
+                    ⚠️
+                </div>
+
+                <h1 id="reactionTitle">
+                    WHAT HAPPENED?
+                </h1>
+
+                <p
+                    id="reactionMessage"
+                    class="large-message"
+                ></p>
+
+                <button
+                    id="reactionContinueButton"
+                    class="primary big-button"
+                    type="button"
+                >
+                    CONTINUE
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             DISCUSSION
+        ====================================================== -->
+
+        <section id="discussionScreen" class="screen">
+
+            <div class="screen-container">
+
+                <div class="eyebrow">
+                    DISCUSSION
+                </div>
+
+                <h1 id="discussionTitle">
+                    DISCUSS
+                </h1>
+
+                <div
+                    id="discussionResults"
+                    class="results-box"
+                ></div>
+
+                <div
+                    id="discussionSystems"
+                    class="systems-box"
+                ></div>
+
+                <button
+                    id="discussionContinueButton"
+                    class="primary big-button full"
+                    type="button"
+                >
+                    START VOTING
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             VOTING
+        ====================================================== -->
+
+        <section id="voteScreen" class="screen">
+
+            <div class="screen-container centered">
+
+                <div class="eyebrow">
+                    VOTING
+                </div>
+
+                <h1>
+                    WHO SHOULD BE EJECTED?
+                </h1>
+
+                <p class="muted">
+                    Choose one living player or skip.
+                </p>
+
+                <div
+                    id="voteOptions"
+                    class="choice-grid"
+                ></div>
+
+                <button
+                    id="voteConfirmButton"
+                    class="primary big-button full"
+                    type="button"
+                    disabled
+                >
+                    CONFIRM VOTE
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             JUDGE
+        ====================================================== -->
+
+        <section id="judgeScreen" class="screen">
+
+            <div class="screen-container centered">
+
+                <div class="eyebrow">
+                    SPECIAL ABILITY
+                </div>
+
+                <div class="role-icon">
+                    ⚖️
+                </div>
+
+                <h1>
+                    JUDGE
+                </h1>
+
+                <p
+                    id="judgeDescription"
+                    class="large-message"
+                ></p>
+
+                <div class="two-column-buttons">
+
+                    <button
+                        id="judgeCancelButton"
+                        class="primary big-button"
+                        type="button"
+                    >
+                        CANCEL EJECTION
+                    </button>
+
+                    <button
+                        id="judgeAllowButton"
+                        class="big-button"
+                        type="button"
+                    >
+                        ALLOW EJECTION
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             VOTE RESULT
+        ====================================================== -->
+
+        <section id="voteResultScreen" class="screen">
+
+            <div class="screen-container centered">
+
+                <div class="eyebrow">
+                    VOTE RESULT
+                </div>
+
+                <div
+                    id="voteResultIcon"
+                    class="role-icon"
+                >
+                    🗳️
+                </div>
+
+                <h1 id="voteResultTitle">
+                    RESULT
+                </h1>
+
+                <p
+                    id="voteResultMessage"
+                    class="large-message"
+                ></p>
+
+                <button
+                    id="afterVoteButton"
+                    class="primary big-button"
+                    type="button"
+                >
+                    CONTINUE
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             SHIP SYSTEMS
+        ====================================================== -->
+
+        <section id="systemsScreen" class="screen">
+
+            <div class="screen-container">
+
+                <div class="eyebrow">
+                    SHIP STATUS
+                </div>
+
+                <h1>
+                    SYSTEMS
+                </h1>
+
+                <div
+                    id="systemsDisplay"
+                    class="systems-grid"
+                ></div>
+
+                <p
+                    id="systemsMessage"
+                    class="large-message"
+                ></p>
+
+                <button
+                    id="systemsContinueButton"
+                    class="primary big-button full"
+                    type="button"
+                >
+                    NEXT ROUND
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             EARTH LIFELINE
+        ====================================================== -->
+
+        <section id="lifelineScreen" class="screen">
+
+            <div class="screen-container centered">
+
+                <div class="eyebrow">
+                    EARTH LIFELINE
+                </div>
+
+                <div class="role-icon">
+                    📡
+                </div>
+
+                <h1 id="lifelineTitle">
+                    EARTH TRANSMISSION
+                </h1>
+
+                <p
+                    id="lifelineMessage"
+                    class="large-message"
+                ></p>
+
+                <button
+                    id="lifelineContinueButton"
+                    class="primary big-button"
+                    type="button"
+                >
+                    CONTINUE
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             GAME OVER
+        ====================================================== -->
+
+        <section id="gameOverScreen" class="screen">
+
+            <div class="screen-container centered">
+
+                <div class="eyebrow">
+                    GAME OVER
+                </div>
+
+                <div
+                    id="gameOverIcon"
+                    class="role-icon"
+                >
+                    🏆
+                </div>
+
+                <h1 id="gameOverTitle">
+                    GAME OVER
+                </h1>
+
+                <p
+                    id="gameOverMessage"
+                    class="large-message"
+                ></p>
+
+                <div
+                    id="gameOverPlayers"
+                    class="results-box"
+                ></div>
+
+                <button
+                    id="restartGameButton"
+                    class="primary big-button full"
+                    type="button"
+                >
+                    PLAY AGAIN
+                </button>
+
+                <button
+                    id="homeButton"
+                    class="big-button full"
+                    type="button"
+                >
+                    MAIN MENU
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             RULES
+        ====================================================== -->
+
+        <section id="rulesScreen" class="screen">
+
+            <div class="screen-container">
+
+                <div class="top-bar">
+
+                    <button
+                        id="rulesBackButton"
+                        class="small-button"
+                        type="button"
+                    >
+                        ← BACK
+                    </button>
+
+                    <div class="screen-title">
+                        RULES
+                    </div>
+
+                    <div></div>
+
+                </div>
+
+                <div class="rules-content">
+
+                    <h2>👽 THE GOAL</h2>
+
+                    <p>
+                        Humans must survive and identify the hostile
+                        players. Hostiles must eliminate enough humans
+                        to take control of the ship.
+                    </p>
+
+
+                    <h2>🧑‍🚀 HUMANS</h2>
+
+                    <p>
+                        Engineers, Scientists, Detectives, Medics,
+                        Captains, Guards, Survivors, Radio Operators
+                        and Judges each have different abilities.
+                    </p>
+
+
+                    <h2>👽 HOSTILES</h2>
+
+                    <p>
+                        Aliens, Saboteurs, Silencers and Parasites
+                        work against the crew.
+                    </p>
+
+
+                    <h2>🦠 INFECTION</h2>
+
+                    <p>
+                        Infection is hidden. An infected player does
+                        not know they are infected. Other players
+                        cannot see the infection normally.
+                    </p>
+
+                    <p>
+                        The Scientist is able to detect infection.
+                    </p>
+
+
+                    <h2>🗳️ VOTING</h2>
+
+                    <p>
+                        At the end of each round, living players vote
+                        on who they believe should be ejected.
+                    </p>
+
+
+                    <h2>⚙️ SHIP SYSTEMS</h2>
+
+                    <p>
+                        Sabotage can disable ship systems. The
+                        Engineer can repair them.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             ONLINE MENU
+        ====================================================== -->
+
+        <section id="onlineScreen" class="screen">
+
+            <div class="screen-container centered">
+
+                <div class="eyebrow">
+                    ONLINE MULTIPLAYER
+                </div>
+
+                <h1>
+                    PLAY ONLINE
+                </h1>
+
+                <p class="muted">
+                    Create a room or join your friend's room.
+                </p>
+
+                <button
+                    id="createRoomButton"
+                    class="primary big-button full"
+                    type="button"
+                >
+                    CREATE ROOM
+                </button>
+
+                <button
+                    id="joinRoomButton"
+                    class="big-button full"
+                    type="button"
+                >
+                    JOIN ROOM
+                </button>
+
+                <button
+                    id="onlineBackButton"
+                    class="small-button"
+                    type="button"
+                >
+                    ← BACK
+                </button>
+
+                <div
+                    id="onlineStatus"
+                    class="status-message"
+                ></div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             JOIN ROOM
+        ====================================================== -->
+
+        <section id="onlineJoinScreen" class="screen">
+
+            <div class="screen-container centered">
+
+                <div class="eyebrow">
+                    JOIN ROOM
+                </div>
+
+                <h1>
+                    ENTER ROOM CODE
+                </h1>
+
+                <input
+                    id="roomCodeInput"
+                    class="room-code-input"
+                    type="text"
+                    maxlength="5"
+                    autocomplete="off"
+                    autocapitalize="characters"
+                    placeholder="ABCDE"
+                >
+
+                <input
+                    id="playerNameInput"
+                    class="name-input"
+                    type="text"
+                    maxlength="20"
+                    autocomplete="off"
+                    placeholder="Your name"
+                >
+
+                <button
+                    id="connectRoomButton"
+                    class="primary big-button full"
+                    type="button"
+                >
+                    JOIN
+                </button>
+
+                <button
+                    id="joinBackButton"
+                    class="small-button"
+                    type="button"
+                >
+                    ← BACK
+                </button>
+
+                <div
+                    id="joinStatus"
+                    class="status-message"
+                ></div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             ONLINE LOBBY
+        ====================================================== -->
+
+        <section id="onlineLobbyScreen" class="screen">
+
+            <div class="screen-container">
+
+                <div class="eyebrow">
+                    ONLINE LOBBY
+                </div>
+
+                <h1>
+                    ROOM
+                    <span id="roomCodeDisplay">
+                        -----
+                    </span>
+                </h1>
+
+                <div class="setup-card">
+
+                    <div class="card-heading">
+                        PLAYERS
+                    </div>
+
+                    <div
+                        id="onlinePlayerList"
+                        class="online-player-list"
+                    ></div>
+
+                </div>
+
+                <button
+                    id="onlineHostSetupButton"
+                    class="primary big-button full"
+                    type="button"
+                    style="display:none;"
+                >
+                    START GAME SETUP
+                </button>
+
+                <button
+                    id="onlineLeaveButton"
+                    class="small-button full"
+                    type="button"
+                >
+                    LEAVE ROOM
+                </button>
+
+                <div
+                    id="lobbyStatus"
+                    class="status-message"
+                ></div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             ONLINE REMOTE SCREEN
+        ====================================================== -->
+
+        <section id="onlineRemoteScreen" class="screen">
+
+            <div class="screen-container centered">
+
+                <div
+                    id="onlineRemoteContent"
+                ></div>
+
+            </div>
+
+        </section>
+
     </div>
 
-    <div class="panel">
 
-      <h2>GAME SETUP</h2>
+    <!-- =========================================================
+         GAME SCRIPT
+    ========================================================== -->
 
-      <label class="big-label">
-        NUMBER OF PLAYERS
-
-        <select id="playerCount">
-          <option value="4">4</option>
-          <option value="5">5</option>
-          <option value="6">6</option>
-          <option value="7">7</option>
-          <option value="8" selected>8</option>
-          <option value="9">9</option>
-          <option value="10">10</option>
-          <option value="11">11</option>
-          <option value="12">12</option>
-        </select>
-      </label>
-
-      <div id="playerValidity" class="validity"></div>
-
-      <div class="button-row">
-
-        <button
-          id="randomRolesButton"
-          type="button">
-          🎲 RANDOMISE ROLES
-        </button>
-
-        <button
-          id="roleGuideButton"
-          type="button"
-          class="secondary">
-          📖 ROLE GUIDE
-        </button>
-
-        <button
-          id="customRolesButton"
-          type="button"
-          class="secondary">
-          ⚙️ CUSTOM ROLES
-        </button>
-
-        <!-- ONLINE MODE IS NOW IN THE HTML -->
-        <button
-          id="openOnlineButton"
-          type="button"
-          class="secondary">
-          🌐 ONLINE MODE
-        </button>
-
-      </div>
-
-      <div
-        id="playersSetup"
-        class="players-setup">
-      </div>
-
-      <button
-        id="startGameButton"
-        type="button"
-        class="primary full">
-        START GAME
-      </button>
-
-    </div>
-
-  </section>
-
-
-  <!-- =====================================================
-       LOCAL PASS SCREEN
-       ===================================================== -->
-
-  <section id="passScreen" class="screen">
-
-    <div class="panel center">
-
-      <div class="eyebrow">
-        PRIVATE PASS
-      </div>
-
-      <h1>
-        PASS THE PHONE
-      </h1>
-
-      <div
-        id="passPlayerName"
-        class="big-name">
-      </div>
-
-      <div
-        id="passRound"
-        class="round-label">
-      </div>
-
-      <div
-        id="passSubtext"
-        class="muted">
-        PASS THE PHONE TO THIS PLAYER
-      </div>
-
-      <button
-        id="readyButton"
-        type="button"
-        class="primary">
-        I'M READY
-      </button>
-
-    </div>
-
-  </section>
-
-
-  <!-- =====================================================
-       ROLE SCREEN
-       ===================================================== -->
-
-  <section id="roleScreen" class="screen">
-
-    <div class="panel center">
-
-      <div class="eyebrow">
-        YOUR SECRET ROLE
-      </div>
-
-      <div
-        id="rolePlayerName"
-        class="big-name">
-      </div>
-
-      <div
-        id="roleIcon"
-        class="role-icon">
-      </div>
-
-      <h1 id="roleName"></h1>
-
-      <div
-        id="roleTeam"
-        class="team-badge">
-      </div>
-
-      <p
-        id="roleDescription"
-        class="role-description">
-      </p>
-
-      <div id="hostileList"></div>
-
-      <button
-        id="showActionButton"
-        type="button"
-        class="primary">
-        CONTINUE
-      </button>
-
-    </div>
-
-  </section>
-
-
-  <!-- =====================================================
-       ABILITY ROUND
-       ===================================================== -->
-
-  <section id="actionScreen" class="screen">
-
-    <div class="panel">
-
-      <div class="eyebrow">
-        ABILITY ROUND
-      </div>
-
-      <h1 id="actionTitle"></h1>
-
-      <p
-        id="actionDescription"
-        class="muted">
-      </p>
-
-      <div
-        id="actionOptions"
-        class="choice-grid">
-      </div>
-
-      <button
-        id="confirmActionButton"
-        type="button"
-        class="primary full">
-        CONFIRM
-      </button>
-
-    </div>
-
-  </section>
-
-
-  <!-- =====================================================
-       REACTION ROUND
-       ===================================================== -->
-
-  <section id="reactionScreen" class="screen">
-
-    <div class="panel center">
-
-      <div class="eyebrow">
-        REACTION ROUND
-      </div>
-
-      <h2 id="reactionRound"></h2>
-
-      <div
-        id="reactionStage"
-        class="round-label">
-      </div>
-
-      <div class="big-name">
-        PRIVATE RESULT
-      </div>
-
-      <p class="muted">
-        Pass the phone to the player named below.
-      </p>
-
-      <div
-        id="reactionPlayerName"
-        class="target-name">
-      </div>
-
-      <button
-        id="reactionReadyButton"
-        type="button"
-        class="primary">
-        SHOW MY RESULT
-      </button>
-
-    </div>
-
-  </section>
-
-
-  <!-- =====================================================
-       REACTION RESULT
-       ===================================================== -->
-
-  <section id="reactionResultScreen" class="screen">
-
-    <div class="panel center">
-
-      <div class="eyebrow">
-        YOUR PRIVATE RESULT
-      </div>
-
-      <h1 id="reactionResultTitle"></h1>
-
-      <p
-        id="reactionResultMessage"
-        class="large-message">
-      </p>
-
-      <button
-        id="reactionContinueButton"
-        type="button"
-        class="primary">
-        CONTINUE
-      </button>
-
-    </div>
-
-  </section>
-
-
-  <!-- =====================================================
-       DISCUSSION
-       ===================================================== -->
-
-  <section id="discussionScreen" class="screen">
-
-    <div class="panel">
-
-      <div class="eyebrow">
-        DISCUSSION
-      </div>
-
-      <h1 id="discussionRound"></h1>
-
-      <div
-        id="discussionStage"
-        class="round-label">
-      </div>
-
-      <div
-        id="roundResults"
-        class="results-box">
-      </div>
-
-      <button
-        id="startVotingButton"
-        type="button"
-        class="primary full">
-        START VOTING
-      </button>
-
-    </div>
-
-  </section>
-
-
-  <!-- =====================================================
-       VOTING
-       ===================================================== -->
-
-  <section id="votingScreen" class="screen">
-
-    <div class="panel">
-
-      <div class="eyebrow">
-        VOTING
-      </div>
-
-      <h1 id="votingRound"></h1>
-
-      <div
-        id="votingStage"
-        class="round-label">
-      </div>
-
-      <div
-        class="target-name"
-        id="voterName">
-      </div>
-
-      <div
-        id="votingSilenced"
-        class="warning">
-      </div>
-
-      <p class="muted">
-        Choose a living player or skip.
-      </p>
-
-      <div
-        id="voteOptions"
-        class="choice-grid">
-      </div>
-
-      <button
-        id="confirmVoteButton"
-        type="button"
-        class="primary full">
-        CONFIRM VOTE
-      </button>
-
-    </div>
-
-  </section>
-
-
-  <!-- =====================================================
-       CAPTAIN TIE
-       ===================================================== -->
-
-  <section id="captainTieScreen" class="screen">
-
-    <div class="panel center">
-
-      <div class="eyebrow">
-        CAPTAIN TIE-BREAKER
-      </div>
-
-      <h1>
-        TIE VOTE
-      </h1>
-
-      <div
-        id="captainTieOptions"
-        class="choice-grid">
-      </div>
-
-    </div>
-
-  </section>
-
-
-  <!-- =====================================================
-       JUDGE
-       ===================================================== -->
-
-  <section id="judgeScreen" class="screen">
-
-    <div class="panel center">
-
-      <div class="eyebrow">
-        JUDGE
-      </div>
-
-      <h1>
-        ⚖️ JUDGE
-      </h1>
-
-      <p
-        id="judgeDescription"
-        class="large-message">
-      </p>
-
-      <div class="choice-grid">
-
-        <button
-          id="judgeCancelButton"
-          type="button"
-          class="primary">
-          CANCEL VOTE
-        </button>
-
-        <button
-          id="judgeAllowButton"
-          type="button">
-          ALLOW VOTE
-        </button>
-
-      </div>
-
-    </div>
-
-  </section>
-
-
-  <!-- =====================================================
-       VOTE RESULT
-       ===================================================== -->
-
-  <section id="voteResultScreen" class="screen">
-
-    <div class="panel center">
-
-      <div class="eyebrow">
-        VOTE RESULT
-      </div>
-
-      <h1 id="voteResultTitle"></h1>
-
-      <p
-        id="voteResultMessage"
-        class="large-message">
-      </p>
-
-      <button
-        id="afterVoteButton"
-        type="button"
-        class="primary">
-        CONTINUE
-      </button>
-
-    </div>
-
-  </section>
-
-
-  <!-- =====================================================
-       EARTH LIFELINE
-       ===================================================== -->
-
-  <section id="lifelineScreen" class="screen">
-
-    <div class="panel center">
-
-      <div class="eyebrow">
-        EARTH TRANSMISSION
-      </div>
-
-      <h1 id="lifelineTitle"></h1>
-
-      <p
-        id="lifelineMessage"
-        class="large-message">
-      </p>
-
-      <button
-        id="lifelineContinue"
-        type="button"
-        class="primary">
-        CONTINUE
-      </button>
-
-    </div>
-
-  </section>
-
-
-  <!-- =====================================================
-       SYSTEMS
-       ===================================================== -->
-
-  <section id="systemsScreen" class="screen">
-
-    <div class="panel">
-
-      <div class="eyebrow">
-        SHIP STATUS
-      </div>
-
-      <h1 id="systemsRound"></h1>
-
-      <div
-        id="systemsStage"
-        class="round-label">
-      </div>
-
-      <div
-        id="systemsList"
-        class="systems-list">
-      </div>
-
-      <button
-        id="nextRoundButton"
-        type="button"
-        class="primary full">
-        NEXT ROUND
-      </button>
-
-    </div>
-
-  </section>
-
-
-  <!-- =====================================================
-       GAME OVER
-       ===================================================== -->
-
-  <section id="gameOverScreen" class="screen">
-
-    <div class="panel center">
-
-      <div class="eyebrow">
-        GAME OVER
-      </div>
-
-      <h1 id="gameOverTitle"></h1>
-
-      <p
-        id="gameOverMessage"
-        class="large-message">
-      </p>
-
-      <div
-        id="finalPlayers"
-        class="final-players">
-      </div>
-
-      <button
-        id="restartButton"
-        type="button"
-        class="primary">
-        PLAY AGAIN
-      </button>
-
-    </div>
-
-  </section>
-
-</main>
-
-
-<!-- =====================================================
-     ROLE GUIDE
-     ===================================================== -->
-
-<div
-  id="roleGuideModal"
-  class="modal">
-
-  <div class="modal-card">
-
-    <button
-      type="button"
-      class="close"
-      data-close="roleGuideModal">
-      ×
-    </button>
-
-    <h2>
-      📖 ROLE GUIDE
-    </h2>
-
-    <div id="roleGuideContent"></div>
-
-  </div>
-
-</div>
-
-
-<!-- =====================================================
-     CUSTOM ROLES
-     ===================================================== -->
-
-<div
-  id="customRoleModal"
-  class="modal">
-
-  <div class="modal-card">
-
-    <button
-      type="button"
-      class="close"
-      data-close="customRoleModal">
-      ×
-    </button>
-
-    <h2>
-      ⚙️ CUSTOM ROLES
-    </h2>
-
-    <p class="muted">
-      Enable roles and set how many of each role should be used.
-      Each starting role can be used once.
-      Engineer is always required.
-    </p>
-
-    <div id="customRoleContent"></div>
-
-    <button
-      id="applyCustomRolesButton"
-      type="button"
-      class="primary full">
-      APPLY CUSTOM SETUP
-    </button>
-
-  </div>
-
-</div>
-
-
-<!-- =====================================================
-     SUPABASE MUST LOAD BEFORE GAME.JS
-     ===================================================== -->
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="game.js"></script>
+    <script src="game.js"></script>
 
 </body>
 </html>
