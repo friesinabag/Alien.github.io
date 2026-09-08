@@ -4454,6 +4454,15 @@ function ensureOnlineUI() {
 
             <div id="onlineControls">
 
+<button
+    type="button"
+    id="onlineHostStartButton"
+    class="choice-button"
+    style="display:none; width:100%; margin-top:12px;"
+>
+    🚀 START GAME
+</button>
+
                 <button
                     type="button"
                     id="createRoomButton"
@@ -4532,25 +4541,93 @@ function ensureOnlineUI() {
             renderSetup();
         };
 
-    $("onlineModeButton").onclick =
-        async () => {
+ $("onlineModeButton").onclick =
+    async () => {
 
-            game.mode = "online";
+        game.mode = "online";
 
-            await loadSupabase();
+        await loadSupabase();
 
-            updateOnlineStatus(
-                "🌐 Online mode selected.\nCreate a room or join a room."
-            );
-        };
+        updateOnlineStatus(
+            "🌐 Online mode selected.\nCreate a room or join a room."
+        );
 
+        updateOnlineSetupUI();
+    };
+   
     $("createRoomButton").onclick =
         createOnlineRoom;
 
     $("joinRoomButton").onclick =
         joinOnlineRoom;
+
+   $("onlineHostStartButton").onclick =
+    () => {
+
+        if (!online.isHost) {
+            return;
+        }
+
+        onlineHostStartGame();
+    };
 }
 
+function updateOnlineSetupUI() {
+
+    const setupList =
+        document.querySelector("#playersSetup");
+
+    const playerValidity =
+        $("playerValidity");
+
+    const setupActions =
+        document.querySelector(".setup-actions");
+
+    const playerCount =
+        $("playerCount");
+
+    if (game.mode === "online") {
+
+        if (setupList)
+            setupList.style.display = "none";
+
+        if (playerValidity)
+            playerValidity.style.display = "none";
+
+        if (setupActions)
+            setupActions.style.display = "none";
+
+        if (playerCount)
+            playerCount.closest("label")?.style
+                && (playerCount.closest("label").style.display = "none");
+
+    } else {
+
+        if (setupList)
+            setupList.style.display = "";
+
+        if (playerValidity)
+            playerValidity.style.display = "";
+
+        if (setupActions)
+            setupActions.style.display = "";
+
+        if (playerCount)
+            playerCount.closest("label")?.style
+                && (playerCount.closest("label").style.display = "");
+    }
+
+    const hostButton =
+        $("onlineHostStartButton");
+
+    if (hostButton) {
+        hostButton.style.display =
+            game.mode === "online" &&
+            online.isHost
+                ? "block"
+                : "none";
+    }
+}
 
 function updateOnlineStatus(
     message
@@ -4705,13 +4782,17 @@ async function createOnlineRoom() {
 
         await subscribePublicRoom();
 
+       updateOnlineSetupUI();
+
         updateOnlineStatus(
             `ROOM CREATED: ${online.roomCode}\nYou are Player 1 / Host.\nShare the room code with the other players.`
         );
 
-        updateOnlinePlayersUI();
+updateOnlinePlayersUI();
 
-        renderSetup();
+renderSetup();
+
+updateOnlineSetupUI();
 
     } catch (error) {
 
@@ -4775,6 +4856,8 @@ async function joinOnlineRoom() {
         online.connected = true;
 
         await subscribePublicRoom();
+
+       updateOnlineSetupUI();
 
         updateOnlineStatus(
             `Connected to room ${room}.\nWaiting for the host...`
