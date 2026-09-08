@@ -4601,6 +4601,14 @@ function leaveOnlineLobby() {
         return;
     }
 
+        if (!online.isHost) {
+        onlineBroadcast({
+            type: "leave_request",
+            connectionId:
+                online.connectionId
+        });
+    }
+
     onlineDisconnect();
 
     game.mode = "local";
@@ -5417,6 +5425,22 @@ async function handleJoinRequest(
     updateOnlinePlayersUI();
 }
 
+function handleLeaveRequest(
+    data
+) {
+    if (!online.isHost) return;
+
+    if (!data.connectionId) {
+        return;
+    }
+
+    delete online.players[
+        data.connectionId
+    ];
+
+    broadcastRoomState();
+    updateOnlinePlayersUI();
+}
 
 /* =========================================================
    ROOM STATE
@@ -5469,6 +5493,12 @@ function handleOnlinePublicMessage(
 
             break;
 
+          case "leave_request":
+    handleLeaveRequest(
+        data
+    );
+
+    break;
 
         case "room_state":
 
