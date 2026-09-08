@@ -4606,6 +4606,12 @@ $("onlineHostStartButton").onclick =
         onlineHostStartGame();
     };
 
+$("createRoomButton").onclick =
+    ;
+
+$("joinRoomButton").onclick =
+    joinOnlineRoom;
+
 $("onlineLeaveGameButton").onclick =
     event => {
 
@@ -4613,6 +4619,16 @@ $("onlineLeaveGameButton").onclick =
 
         onlineLeaveGame();
     };
+
+   const leaveButton =
+    $("onlineLeaveGameButton");
+
+if (leaveButton) {
+    leaveButton.style.display =
+        online.connected
+            ? "block"
+            : "none";
+}
    
 $("onlineHostStartButton").onclick =
     event => {
@@ -4851,6 +4867,12 @@ updateOnlinePlayersUI();
 
 renderSetup();
 
+const leaveButton = $("onlineLeaveGameButton");
+
+if (leaveButton) {
+    leaveButton.style.display = "block";
+}
+
 updateOnlineSetupUI();
 
     } catch (error) {
@@ -4939,6 +4961,14 @@ async function joinOnlineRoom() {
             clientTime:
                 Date.now()
         });
+
+       renderSetup();
+
+       const leaveButton = $("onlineLeaveGameButton");
+
+if (leaveButton) {
+    leaveButton.style.display = "block";
+}
 
     } catch (error) {
 
@@ -5472,6 +5502,47 @@ function handleOnlinePublicMessage(
 
 
         case "room_state":
+
+          case "player_left":
+
+    if (online.isHost) {
+
+        const leavingPlayerId =
+            data.playerId;
+
+        const connection =
+            Object.values(
+                online.players
+            ).find(
+                p =>
+                    p.playerId ===
+                    leavingPlayerId
+            );
+
+        if (connection) {
+
+            delete online.players[
+                connection.connectionId
+            ];
+
+            game.players =
+                game.players.filter(
+                    p =>
+                        p.id !==
+                        leavingPlayerId
+                );
+
+            broadcastRoomState();
+
+            updateOnlinePlayersUI();
+        }
+    }
+
+    break;
+
+    
+
+              case "room_state":
 
             if (!online.isHost) {
 
@@ -7948,6 +8019,50 @@ function onlineLeaveGame() {
     );
 
     updateOnlinePlayersUI();
+}
+
+function onlineLeaveGame() {
+
+    if (
+        !online.connected &&
+        !online.roomCode
+    ) {
+        game.mode = "local";
+        renderSetup();
+        return;
+    }
+
+    const leavingPlayerId =
+        online.playerId;
+
+    if (
+        online.channel &&
+        online.connected
+    ) {
+        try {
+
+            onlineBroadcast({
+                type: "player_left",
+                playerId:
+                    leavingPlayerId
+            });
+
+        } catch {}
+    }
+
+    onlineDisconnect();
+
+    game.mode = "local";
+
+    game.players = [];
+
+    game.round = 1;
+    game.stage = 1;
+    game.gameOver = false;
+
+    resetTransient();
+
+    renderSetup();
 }
 
 function onlineDisconnect() {
