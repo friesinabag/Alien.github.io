@@ -4515,12 +4515,25 @@ function ensureOnlineUI() {
                     Local mode.
                 </div>
 
-                <div
-                    id="onlineRoomPlayers"
-                    style="
-                        margin-top:12px;
-                    "
-                ></div>
+             <div
+    id="onlineRoomPlayers"
+    style="
+        margin-top:12px;
+    "
+></div>
+
+<button
+    type="button"
+    id="leaveLobbyButton"
+    class="choice-button"
+    style="
+        display:none;
+        width:100%;
+        margin-top:12px;
+    "
+>
+    🚪 LEAVE LOBBY
+</button>
 
             </div>
 
@@ -4562,6 +4575,9 @@ function ensureOnlineUI() {
 
     $("joinRoomButton").onclick =
         joinOnlineRoom;
+
+   $("leaveLobbyButton").onclick =
+    leaveOnlineLobby;
    
 $("onlineHostStartButton").onclick =
     event => {
@@ -4580,7 +4596,41 @@ $("onlineHostStartButton").onclick =
 
 }
 
+function leaveOnlineLobby() {
+    if (game.mode !== "online") {
+        return;
+    }
+
+    onlineDisconnect();
+
+    game.mode = "local";
+
+    updateOnlineStatus(
+        "You left the lobby."
+    );
+
+    const leaveButton =
+        $("leaveLobbyButton");
+
+    if (leaveButton) {
+        leaveButton.style.display = "none";
+    }
+
+    renderSetup();
+}
+
 function updateOnlineSetupUI() {
+
+    const leaveButton =
+        $("leaveLobbyButton");
+
+    if (leaveButton) {
+        leaveButton.style.display =
+            online.roomCode &&
+            online.connected
+                ? "block"
+                : "none";
+    }
 
     const setupList =
         document.querySelector("#playersSetup");
