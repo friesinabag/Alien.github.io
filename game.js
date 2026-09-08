@@ -4556,6 +4556,12 @@ function ensureOnlineUI() {
 
         updateOnlineSetupUI();
     };
+
+   $("createRoomButton").onclick =
+    createOnlineRoom;
+
+$("joinRoomButton").onclick =
+    joinOnlineRoom;
    
  
 $("onlineHostStartButton").onclick =
@@ -8723,10 +8729,10 @@ function initGameUI() {
     $("applyCustomRolesButton").onclick =
         applyCustomRoles;
 
-    $("createRoomButton").onclick =
+$("createRoomButton").onclick =
     createOnlineRoom;
 
-    $("joinRoomButton").onclick =
+$("joinRoomButton").onclick =
     joinOnlineRoom;
 
     /*
