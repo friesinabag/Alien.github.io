@@ -8543,16 +8543,27 @@ function proceedToSystemsOnlineAware() {
             )
             .join("");
 
-    $("nextRoundButton").onclick =
-        () => {
+$("nextRoundButton").onclick =
+    () => {
 
-            game.round++;
+        game.round++;
 
-            game.lastRoundResults =
-                [];
+        game.lastRoundResults =
+            [];
 
-            startRound();
-        };
+        onlineBroadcast({
+            type:
+                "public_phase",
+            phase:
+                "ability",
+            round:
+                game.round,
+            stage:
+                game.stage
+        });
+
+        startRound();
+    };
 
     setScreen(
         "systemsScreen"
