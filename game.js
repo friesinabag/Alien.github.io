@@ -4505,6 +4505,32 @@ function ensureOnlineUI() {
                     JOIN ROOM
                 </button>
 
+                <button
+    type="button"
+    id="onlineHostStartButton"
+    class="choice-button"
+    style="
+        display:none;
+        width:100%;
+        margin-top:12px;
+    "
+>
+    🚀 START GAME
+</button>
+
+<button
+    type="button"
+    id="onlineLeaveGameButton"
+    class="choice-button"
+    style="
+        display:none;
+        width:100%;
+        margin-top:12px;
+    "
+>
+    🚪 LEAVE GAME
+</button>
+
                 <div
                     id="onlineStatus"
                     style="
@@ -4557,11 +4583,36 @@ function ensureOnlineUI() {
         updateOnlineSetupUI();
     };
 
-    $("createRoomButton").onclick =
-        createOnlineRoom;
+$("createRoomButton").onclick =
+    createOnlineRoom;
 
-    $("joinRoomButton").onclick =
-        joinOnlineRoom;
+$("joinRoomButton").onclick =
+    joinOnlineRoom;
+
+$("onlineHostStartButton").onclick =
+    event => {
+
+        event.preventDefault();
+
+        if (!online.isHost) {
+
+            updateOnlineStatus(
+                "Only the Host can start the game."
+            );
+
+            return;
+        }
+
+        onlineHostStartGame();
+    };
+
+$("onlineLeaveGameButton").onclick =
+    event => {
+
+        event.preventDefault();
+
+        onlineLeaveGame();
+    };
    
 $("onlineHostStartButton").onclick =
     event => {
@@ -7848,6 +7899,56 @@ async function sendPrivateRoleData(
 /* =========================================================
    ONLINE RECONNECT / DISCONNECT
    ========================================================= */
+
+function onlineLeaveGame() {
+
+    if (
+        !online.connected &&
+        !online.roomCode
+    ) {
+        game.mode = "local";
+        renderSetup();
+        return;
+    }
+
+    const leavingPlayerId =
+        online.playerId;
+
+    if (
+        online.channel &&
+        online.connected
+    ) {
+        try {
+
+            onlineBroadcast({
+                type: "player_left",
+                playerId:
+                    leavingPlayerId
+            });
+
+        } catch {}
+    }
+
+    onlineDisconnect();
+
+    game.mode = "local";
+
+    game.players = [];
+
+    game.round = 1;
+    game.stage = 1;
+    game.gameOver = false;
+
+    resetTransient();
+
+    renderSetup();
+
+    updateOnlineStatus(
+        "📱 Local mode selected."
+    );
+
+    updateOnlinePlayersUI();
+}
 
 function onlineDisconnect() {
 
