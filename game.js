@@ -4363,6 +4363,8 @@ const online = {
 
     connected: false,
 
+    name: "",
+
     isHost: false,
 
     roomCode: null,
@@ -4472,6 +4474,20 @@ function ensureOnlineUI() {
                 >
                     CREATE ROOM
                 </button>
+
+                <input
+    id="onlineNameInput"
+    type="text"
+    maxlength="20"
+    placeholder="YOUR NAME"
+    autocomplete="off"
+    style="
+        width:100%;
+        box-sizing:border-box;
+        padding:12px;
+        margin-bottom:12px;
+    "
+>
 
                 <div
                     style="
@@ -4844,6 +4860,23 @@ async function createOnlineRoom() {
 
         onlineDisconnect();
 
+       const nameInput =
+    $("onlineNameInput");
+
+const name =
+    nameInput?.value
+        ?.trim();
+
+if (!name) {
+    alert(
+        "Enter your name first."
+    );
+
+    return;
+}
+
+online.name = name;
+
         online.isHost = true;
 
         online.roomCode =
@@ -4876,9 +4909,8 @@ async function createOnlineRoom() {
 
             playerId: "p1",
 
-            name:
-                game.players[0]?.name ||
-                "Player 1",
+           name:
+    online.name,
 
             host: true,
 
@@ -4923,6 +4955,23 @@ async function joinOnlineRoom() {
         input?.value
             ?.trim()
             .toUpperCase();
+
+   const nameInput =
+    $("onlineNameInput");
+
+const name =
+    nameInput?.value
+        ?.trim();
+
+if (!name) {
+    alert(
+        "Enter your name first."
+    );
+
+    return;
+}
+
+online.name = name;
 
     if (
         !room ||
@@ -4978,9 +5027,8 @@ async function joinOnlineRoom() {
             connectionId:
                 online.connectionId,
 
-            name:
-                game.players[0]?.name ||
-                `Player ${Math.floor(Math.random() * 9999)}`,
+           name:
+    online.name,
 
             clientTime:
                 Date.now()
@@ -6194,6 +6242,9 @@ function handleOnlinePrivateMessage(
 
             online.playerId =
                 data.playerId;
+
+          online.name =
+    data.name;
 
             updateOnlineStatus(
                 `Joined room ${data.roomCode} as ${data.playerId}.`
