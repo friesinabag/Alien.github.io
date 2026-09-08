@@ -4617,12 +4617,7 @@ if (!online.isHost) {
 
 onlineDisconnect();
 
-const playersBox =
-    $("onlineRoomPlayers");
 
-if (playersBox) {
-    playersBox.style.display = "none";
-}
 
 game.mode = "local";
 
@@ -4637,7 +4632,13 @@ game.mode = "local";
         leaveButton.style.display = "none";
     }
 
-    renderSetup();
+   renderSetup();
+
+const playersBox =
+    $("onlineRoomPlayers");
+
+if (playersBox) {
+    playersBox.style.display = "none";
 }
 
 function updateOnlineSetupUI() {
