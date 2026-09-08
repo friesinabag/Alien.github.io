@@ -4410,12 +4410,13 @@ function ensureOnlineUI() {
 
     if (!setup) return;
 
-    if (
-        $("onlineModePanel")
-    ) {
-        return;
-    }
+const existingPanel =
+    $("onlineModePanel");
 
+if (existingPanel) {
+    existingPanel.remove();
+}
+   
     const panel =
         document.createElement("div");
 
