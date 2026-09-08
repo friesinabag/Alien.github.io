@@ -8813,16 +8813,16 @@ function initGameUI() {
     playerCount.onchange =
         resetSetupPlayers;
 
-    if (
-        !game.players.length
-    ) {
+if (
+    !game.players.length
+) {
+    resetSetupPlayers();
+} else {
+    renderSetup();
+}
 
-        resetSetupPlayers();
-
-    } else {
-
-        renderSetup();
-    }
+ensureOnlineUI();
+updateOnlineSetupUI();
 
     bindMobileRandomButton();
 
