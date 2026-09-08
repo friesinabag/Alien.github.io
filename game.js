@@ -4745,7 +4745,17 @@ function updateOnlinePlayersUI() {
         $("onlineRoomPlayers");
 
     if (!box) return;
+   
+if (
+    !online.roomCode ||
+    !online.connected
+) {
+    box.style.display = "none";
+    return;
+}
 
+box.style.display = "block";
+   
     const entries =
         Object.values(
             online.players
