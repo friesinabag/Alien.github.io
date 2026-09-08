@@ -3765,15 +3765,27 @@ function proceedToSystems() {
             )
             .join("");
 
-    $("nextRoundButton").onclick =
-        () => {
+ $("nextRoundButton").onclick =
+    () => {
 
-            game.round++;
+        if (
+            !online.connected ||
+            !online.roomCode
+        ) {
+            updateOnlineStatus(
+                "❌ Online room connection was lost."
+            );
 
-            game.lastRoundResults = [];
+            return;
+        }
 
-            startRound();
-        };
+        game.round++;
+
+        game.lastRoundResults =
+            [];
+
+        startRound();
+    };
 
     setScreen(
         "systemsScreen"
