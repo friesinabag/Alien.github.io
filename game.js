@@ -7533,6 +7533,48 @@ function hostReceiveVote(
 function handleOnlinePublicPhase(
     data
 ) {
+    if (online.isHost) return;
+
+    game.round =
+        data.round;
+
+    game.stage =
+        data.stage;
+
+    if (
+        data.phase ===
+        "ability"
+    ) {
+        handleOnlineAbilityPhase(
+            data
+        );
+
+        return;
+    }
+
+    if (
+        data.phase ===
+        "discussion"
+    ) {
+        onlineShowDiscussion({
+            round:
+                data.round,
+            stage:
+                data.stage
+        });
+
+        return;
+    }
+
+    if (
+        data.phase ===
+        "voting"
+    ) {
+        updateOnlineStatus(
+            "Voting phase started. Waiting for your private vote..."
+        );
+    }
+}
 
     if (online.isHost) return;
 
