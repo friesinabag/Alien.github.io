@@ -4576,7 +4576,7 @@ $("onlineHostStartButton").onclick =
         startGame();
     };
 
-   )
+}
 
 function updateOnlineSetupUI() {
 
