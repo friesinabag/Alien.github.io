@@ -4561,16 +4561,22 @@ function ensureOnlineUI() {
     $("joinRoomButton").onclick =
         joinOnlineRoom;
    
-   $("onlineHostStartButton").onclick =
-    () => {
+$("onlineHostStartButton").onclick =
+    event => {
+
+        event.preventDefault();
 
         if (!online.isHost) {
+            updateOnlineStatus(
+                "Only the Host can start the game."
+            );
             return;
         }
 
-        onlineHostStartGame();
+        startGame();
     };
-}
+
+   )
 
 function updateOnlineSetupUI() {
 
