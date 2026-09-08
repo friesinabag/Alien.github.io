@@ -336,6 +336,8 @@ const ALL_STARTING_ROLES = [
 ];
 
 const HOSTILE_COUNTS = {
+    2: 1,
+    3: 1,
     4: 1,
     5: 1,
     6: 2,
@@ -5645,7 +5647,7 @@ async function onlineHostStartGame() {
             );
 
     if (
-        connected.length < 4
+        connected.length < 2
     ) {
 
         alert(
@@ -5833,7 +5835,7 @@ function assignOnlineRoles() {
     if (!hostileCount) {
 
         throw new Error(
-            "Online mode supports 4–12 players."
+            "Online mode supports 2–12 players."
         );
     }
 
