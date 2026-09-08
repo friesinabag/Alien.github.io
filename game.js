@@ -336,6 +336,8 @@ const ALL_STARTING_ROLES = [
 ];
 
 const HOSTILE_COUNTS = {
+    2: 1,
+    3: 1,
     4: 1,
     5: 1,
     6: 2,
@@ -908,7 +910,7 @@ function randomiseRoles() {
     if (!hostileCount) {
 
         alert(
-            "Random roles only support 4–12 players."
+            "Random roles only support 2–12 players."
         );
 
         return;
@@ -5642,16 +5644,16 @@ async function onlineHostStartGame() {
                 p => p.connected
             );
 
-    if (
-        connected.length < 4
-    ) {
+  if (
+    connected.length < 2
+) {
 
-        alert(
-            "You need at least 4 connected players."
-        );
+    alert(
+        "You need at least 2 connected players."
+    );
 
-        return;
-    }
+    return;
+}
 
     const count =
         connected.length;
@@ -5831,7 +5833,7 @@ function assignOnlineRoles() {
     if (!hostileCount) {
 
         throw new Error(
-            "Online mode supports 4–12 players."
+            "Online mode supports 2–12 players."
         );
     }
 
