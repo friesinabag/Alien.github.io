@@ -3886,6 +3886,14 @@ function endGame(
 
     game.gameOver = true;
 
+   if (
+    game.mode === "online" &&
+    online.connected &&
+    online.roomCode
+) {
+    game.mode = "online";
+}
+
     $("gameOverTitle").textContent =
         title;
 
@@ -5727,25 +5735,23 @@ function handleOnlinePublicMessage(
 
         case "game_over":
 
-            if (!online.isHost) {
+if (!online.isHost) {
+    game.players =
+        data.players.map(
+            p => ({
+                ...p,
+                originalRole:
+                    p.role
+            })
+        );
 
-                game.players =
-                    data.players.map(
-                        p => ({
-                            ...p,
-                            originalRole:
-                                p.role
-                        })
-                    );
+    endGame(
+        data.title,
+        data.message
+    );
 
-                endGame(
-                    data.title,
-                    data.message
-                );
-            }
-
-            break;
-    }
+    game.mode = "online";
+    updateOnlineSetupUI();
 }
 
 
@@ -8911,8 +8917,17 @@ function initGameUI() {
     $("startVotingButton").onclick =
         startVoting;
 
-    $("restartButton").onclick =
-        () => location.reload();
+ $("restartButton").onclick =
+    () => {
+        if (game.mode === "online") {
+            game.gameOver = false;
+            updateOnlineSetupUI();
+            setScreen("onlineSetupScreen");
+            return;
+        }
+
+        location.reload();
+    };
 
     $("applyCustomRolesButton").onclick =
         applyCustomRoles;
