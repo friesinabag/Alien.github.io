@@ -4635,8 +4635,6 @@ game.mode = "local";
 renderSetup();
 updateOnlineSetupUI();
 
-}
-
 const playersBox =
     $("onlineRoomPlayers");
 
