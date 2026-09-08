@@ -4596,20 +4596,26 @@ $("onlineHostStartButton").onclick =
 
 }
 
-function leaveOnlineLobby() {
-    if (game.mode !== "online") {
-        return;
-    }
-
-        if (!online.isHost) {
-        onlineBroadcast({
-            type: "leave_request",
-            connectionId:
-                online.connectionId
+async function leaveOnlineLobby() {
+   
+if (!online.isHost) {
+    if (
+        online.channel &&
+        online.connected
+    ) {
+        await online.channel.send({
+            type: "broadcast",
+            event: "alien",
+            payload: {
+                type: "leave_request",
+                connectionId:
+                    online.connectionId
+            }
         });
     }
+}
 
-    onlineDisconnect();
+onlineDisconnect();
 
     game.mode = "local";
 
