@@ -4839,6 +4839,24 @@ function createRoomCode() {
 }
 
 
+
+function makeConnectionId() {
+    if (
+        window.crypto &&
+        typeof window.crypto.randomUUID === "function"
+    ) {
+        return window.crypto.randomUUID();
+    }
+
+    return (
+        "c-" +
+        Date.now().toString(36) +
+        "-" +
+        Math.random().toString(36).slice(2, 10)
+    );
+}
+
+
 /* =========================================================
    ONLINE CREATE ROOM
    ========================================================= */
@@ -4883,7 +4901,7 @@ online.name = name;
             createRoomCode();
 
         online.connectionId =
-            crypto.randomUUID();
+            makeConnectionId()
 
         online.playerId = "p1";
 
@@ -5005,8 +5023,8 @@ online.name = name;
         online.roomCode = room;
 
         online.connectionId =
-            crypto.randomUUID();
-
+            makeConnectionId()
+       
         online.connected = true;
 
         await subscribePublicRoom();
