@@ -4584,16 +4584,19 @@ if (existingPanel) {
     $("onlineModeButton").onclick =
     async () => {
 
-        game.mode = "online";
+game.mode = "online";
 
-        await loadSupabase();
+await loadSupabase();
 
-        updateOnlineStatus(
-            "🌐 Online mode selected.\nCreate a room or join a room."
-        );
+ensureOnlineUI();
 
-        updateOnlineSetupUI();
-    };
+updateOnlineStatus(
+    "🌐 Online mode selected.\nCreate a room or join a room."
+);
+
+updateOnlineSetupUI();
+
+setScreen("onlineSetupScreen");
 
     $("createRoomButton").onclick =
         createOnlineRoom;
@@ -8923,7 +8926,7 @@ updateOnlineSetupUI();
         if (game.mode === "online") {
             game.gameOver = false;
             updateOnlineSetupUI();
-            setScreen("onlineSetupScreen");
+            setScreen("setupScreen");
             return;
         }
 
@@ -9002,3 +9005,5 @@ if (
    END GAME.JS
    ========================================================= */
 
+
+   }
