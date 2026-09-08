@@ -4563,18 +4563,13 @@ $("joinRoomButton").onclick =
    
  
 $("onlineHostStartButton").onclick =
-    event => {
-
-        event.preventDefault();
+    () => {
 
         if (!online.isHost) {
-            updateOnlineStatus(
-                "Only the Host can start the game."
-            );
             return;
         }
 
-        startGame();
+        onlineHostStartGame();
     };
 
 function updateOnlineSetupUI() {
