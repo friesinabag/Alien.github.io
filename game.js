@@ -4617,7 +4617,14 @@ if (!online.isHost) {
 
 onlineDisconnect();
 
-    game.mode = "local";
+const playersBox =
+    $("onlineRoomPlayers");
+
+if (playersBox) {
+    playersBox.style.display = "none";
+}
+
+game.mode = "local";
 
     updateOnlineStatus(
         "You left the lobby."
