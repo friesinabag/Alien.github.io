@@ -4632,7 +4632,15 @@ game.mode = "local";
         leaveButton.style.display = "none";
     }
 
-   renderSetup();
+renderSetup();
+
+const playersBox =
+    $("onlineRoomPlayers");
+
+if (playersBox) {
+    playersBox.style.display =
+        "none";
+}
 
 }
 
