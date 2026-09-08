@@ -4634,11 +4634,6 @@ game.mode = "local";
 
    renderSetup();
 
-const playersBox =
-    $("onlineRoomPlayers");
-
-if (playersBox) {
-    playersBox.style.display = "none";
 }
 
 function updateOnlineSetupUI() {
@@ -4654,6 +4649,17 @@ function updateOnlineSetupUI() {
                 : "none";
     }
 
+const playersBox =
+    $("onlineRoomPlayers");
+
+if (playersBox) {
+    playersBox.style.display =
+        online.roomCode &&
+        online.connected
+            ? "block"
+            : "none";
+}
+   
     const setupList =
         document.querySelector("#playersSetup");
 
