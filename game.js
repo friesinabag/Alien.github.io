@@ -3886,14 +3886,6 @@ function endGame(
 
     game.gameOver = true;
 
-   if (
-    game.mode === "online" &&
-    online.connected &&
-    online.roomCode
-) {
-    game.mode = "online";
-}
-
     $("gameOverTitle").textContent =
         title;
 
@@ -4410,13 +4402,12 @@ function ensureOnlineUI() {
 
     if (!setup) return;
 
-const existingPanel =
-    $("onlineModePanel");
+    if (
+        $("onlineModePanel")
+    ) {
+        return;
+    }
 
-if (existingPanel) {
-    existingPanel.remove();
-}
-   
     const panel =
         document.createElement("div");
 
@@ -4584,19 +4575,16 @@ if (existingPanel) {
     $("onlineModeButton").onclick =
     async () => {
 
-game.mode = "online";
+        game.mode = "online";
 
-await loadSupabase();
+        await loadSupabase();
 
-ensureOnlineUI();
+        updateOnlineStatus(
+            "🌐 Online mode selected.\nCreate a room or join a room."
+        );
 
-updateOnlineStatus(
-    "🌐 Online mode selected.\nCreate a room or join a room."
-);
-
-updateOnlineSetupUI();
-
-setScreen("onlineSetupScreen");
+        updateOnlineSetupUI();
+    };
 
     $("createRoomButton").onclick =
         createOnlineRoom;
@@ -5739,23 +5727,25 @@ function handleOnlinePublicMessage(
 
         case "game_over":
 
-if (!online.isHost) {
-    game.players =
-        data.players.map(
-            p => ({
-                ...p,
-                originalRole:
-                    p.role
-            })
-        );
+            if (!online.isHost) {
 
-    endGame(
-        data.title,
-        data.message
-    );
+                game.players =
+                    data.players.map(
+                        p => ({
+                            ...p,
+                            originalRole:
+                                p.role
+                        })
+                    );
 
-    game.mode = "online";
-    updateOnlineSetupUI();
+                endGame(
+                    data.title,
+                    data.message
+                );
+            }
+
+            break;
+    }
 }
 
 
@@ -8816,16 +8806,16 @@ function initGameUI() {
     playerCount.onchange =
         resetSetupPlayers;
 
-if (
-    !game.players.length
-) {
-    resetSetupPlayers();
-} else {
-    renderSetup();
-}
+    if (
+        !game.players.length
+    ) {
 
-ensureOnlineUI();
-updateOnlineSetupUI();
+        resetSetupPlayers();
+
+    } else {
+
+        renderSetup();
+    }
 
     bindMobileRandomButton();
 
@@ -8921,17 +8911,8 @@ updateOnlineSetupUI();
     $("startVotingButton").onclick =
         startVoting;
 
- $("restartButton").onclick =
-    () => {
-        if (game.mode === "online") {
-            game.gameOver = false;
-            updateOnlineSetupUI();
-            setScreen("setupScreen");
-            return;
-        }
-
-        location.reload();
-    };
+    $("restartButton").onclick =
+        () => location.reload();
 
     $("applyCustomRolesButton").onclick =
         applyCustomRoles;
@@ -9004,4 +8985,5 @@ if (
 /* =========================================================
    END GAME.JS
    ========================================================= */
+
 
