@@ -4557,12 +4557,7 @@ function ensureOnlineUI() {
         updateOnlineSetupUI();
     };
    
-    $("createRoomButton").onclick =
-        createOnlineRoom;
-
-    $("joinRoomButton").onclick =
-        joinOnlineRoom;
-
+ 
 $("onlineHostStartButton").onclick =
     event => {
 
