@@ -910,7 +910,7 @@ function randomiseRoles() {
     if (!hostileCount) {
 
         alert(
-            "Random roles only support 2–12 players."
+            "Random roles only support 4–12 players."
         );
 
         return;
