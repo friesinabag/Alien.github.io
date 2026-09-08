@@ -3765,27 +3765,15 @@ function proceedToSystems() {
             )
             .join("");
 
- $("nextRoundButton").onclick =
-    () => {
+    $("nextRoundButton").onclick =
+        () => {
 
-        if (
-            !online.connected ||
-            !online.roomCode
-        ) {
-            updateOnlineStatus(
-                "❌ Online room connection was lost."
-            );
+            game.round++;
 
-            return;
-        }
+            game.lastRoundResults = [];
 
-        game.round++;
-
-        game.lastRoundResults =
-            [];
-
-        startRound();
-    };
+            startRound();
+        };
 
     setScreen(
         "systemsScreen"
@@ -7533,48 +7521,6 @@ function hostReceiveVote(
 function handleOnlinePublicPhase(
     data
 ) {
-    if (online.isHost) return;
-
-    game.round =
-        data.round;
-
-    game.stage =
-        data.stage;
-
-    if (
-        data.phase ===
-        "ability"
-    ) {
-        handleOnlineAbilityPhase(
-            data
-        );
-
-        return;
-    }
-
-    if (
-        data.phase ===
-        "discussion"
-    ) {
-        onlineShowDiscussion({
-            round:
-                data.round,
-            stage:
-                data.stage
-        });
-
-        return;
-    }
-
-    if (
-        data.phase ===
-        "voting"
-    ) {
-        updateOnlineStatus(
-            "Voting phase started. Waiting for your private vote..."
-        );
-    }
-}
 
     if (online.isHost) return;
 
@@ -8585,27 +8531,16 @@ function proceedToSystemsOnlineAware() {
             )
             .join("");
 
-$("nextRoundButton").onclick =
-    () => {
+    $("nextRoundButton").onclick =
+        () => {
 
-        game.round++;
+            game.round++;
 
-        game.lastRoundResults =
-            [];
+            game.lastRoundResults =
+                [];
 
-        onlineBroadcast({
-            type:
-                "public_phase",
-            phase:
-                "ability",
-            round:
-                game.round,
-            stage:
-                game.stage
-        });
-
-        startRound();
-    };
+            startRound();
+        };
 
     setScreen(
         "systemsScreen"
