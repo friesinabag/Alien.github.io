@@ -336,8 +336,6 @@ const ALL_STARTING_ROLES = [
 ];
 
 const HOSTILE_COUNTS = {
-    2: 1,
-    3: 1,
     4: 1,
     5: 1,
     6: 2,
@@ -4505,32 +4503,6 @@ function ensureOnlineUI() {
                     JOIN ROOM
                 </button>
 
-                <button
-    type="button"
-    id="onlineHostStartButton"
-    class="choice-button"
-    style="
-        display:none;
-        width:100%;
-        margin-top:12px;
-    "
->
-    🚀 START GAME
-</button>
-
-<button
-    type="button"
-    id="onlineLeaveGameButton"
-    class="choice-button"
-    style="
-        display:none;
-        width:100%;
-        margin-top:12px;
-    "
->
-    🚪 LEAVE GAME
-</button>
-
                 <div
                     id="onlineStatus"
                     style="
@@ -4583,52 +4555,11 @@ function ensureOnlineUI() {
         updateOnlineSetupUI();
     };
 
-$("createRoomButton").onclick =
-    createOnlineRoom;
+    $("createRoomButton").onclick =
+        createOnlineRoom;
 
-$("joinRoomButton").onclick =
-    joinOnlineRoom;
-
-$("onlineHostStartButton").onclick =
-    event => {
-
-        event.preventDefault();
-
-        if (!online.isHost) {
-
-            updateOnlineStatus(
-                "Only the Host can start the game."
-            );
-
-            return;
-        }
-
-        onlineHostStartGame();
-    };
-
-$("createRoomButton").onclick =
-    ;
-
-$("joinRoomButton").onclick =
-    joinOnlineRoom;
-
-$("onlineLeaveGameButton").onclick =
-    event => {
-
-        event.preventDefault();
-
-        onlineLeaveGame();
-    };
-
-   const leaveButton =
-    $("onlineLeaveGameButton");
-
-if (leaveButton) {
-    leaveButton.style.display =
-        online.connected
-            ? "block"
-            : "none";
-}
+    $("joinRoomButton").onclick =
+        joinOnlineRoom;
    
 $("onlineHostStartButton").onclick =
     event => {
@@ -4867,12 +4798,6 @@ updateOnlinePlayersUI();
 
 renderSetup();
 
-const leaveButton = $("onlineLeaveGameButton");
-
-if (leaveButton) {
-    leaveButton.style.display = "block";
-}
-
 updateOnlineSetupUI();
 
     } catch (error) {
@@ -4961,14 +4886,6 @@ async function joinOnlineRoom() {
             clientTime:
                 Date.now()
         });
-
-       renderSetup();
-
-       const leaveButton = $("onlineLeaveGameButton");
-
-if (leaveButton) {
-    leaveButton.style.display = "block";
-}
 
     } catch (error) {
 
@@ -5503,47 +5420,6 @@ function handleOnlinePublicMessage(
 
         case "room_state":
 
-          case "player_left":
-
-    if (online.isHost) {
-
-        const leavingPlayerId =
-            data.playerId;
-
-        const connection =
-            Object.values(
-                online.players
-            ).find(
-                p =>
-                    p.playerId ===
-                    leavingPlayerId
-            );
-
-        if (connection) {
-
-            delete online.players[
-                connection.connectionId
-            ];
-
-            game.players =
-                game.players.filter(
-                    p =>
-                        p.id !==
-                        leavingPlayerId
-                );
-
-            broadcastRoomState();
-
-            updateOnlinePlayersUI();
-        }
-    }
-
-    break;
-
-    
-
-              case "room_state":
-
             if (!online.isHost) {
 
                 online.players = {};
@@ -5769,7 +5645,7 @@ async function onlineHostStartGame() {
             );
 
     if (
-        connected.length < 2
+        connected.length < 4
     ) {
 
         alert(
@@ -5957,7 +5833,7 @@ function assignOnlineRoles() {
     if (!hostileCount) {
 
         throw new Error(
-            "Online mode supports 2–12 players."
+            "Online mode supports 4–12 players."
         );
     }
 
@@ -7970,100 +7846,6 @@ async function sendPrivateRoleData(
 /* =========================================================
    ONLINE RECONNECT / DISCONNECT
    ========================================================= */
-
-function onlineLeaveGame() {
-
-    if (
-        !online.connected &&
-        !online.roomCode
-    ) {
-        game.mode = "local";
-        renderSetup();
-        return;
-    }
-
-    const leavingPlayerId =
-        online.playerId;
-
-    if (
-        online.channel &&
-        online.connected
-    ) {
-        try {
-
-            onlineBroadcast({
-                type: "player_left",
-                playerId:
-                    leavingPlayerId
-            });
-
-        } catch {}
-    }
-
-    onlineDisconnect();
-
-    game.mode = "local";
-
-    game.players = [];
-
-    game.round = 1;
-    game.stage = 1;
-    game.gameOver = false;
-
-    resetTransient();
-
-    renderSetup();
-
-    updateOnlineStatus(
-        "📱 Local mode selected."
-    );
-
-    updateOnlinePlayersUI();
-}
-
-function onlineLeaveGame() {
-
-    if (
-        !online.connected &&
-        !online.roomCode
-    ) {
-        game.mode = "local";
-        renderSetup();
-        return;
-    }
-
-    const leavingPlayerId =
-        online.playerId;
-
-    if (
-        online.channel &&
-        online.connected
-    ) {
-        try {
-
-            onlineBroadcast({
-                type: "player_left",
-                playerId:
-                    leavingPlayerId
-            });
-
-        } catch {}
-    }
-
-    onlineDisconnect();
-
-    game.mode = "local";
-
-    game.players = [];
-
-    game.round = 1;
-    game.stage = 1;
-    game.gameOver = false;
-
-    resetTransient();
-
-    renderSetup();
-}
 
 function onlineDisconnect() {
 
