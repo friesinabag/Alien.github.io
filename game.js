@@ -8722,12 +8722,6 @@ function initGameUI() {
     $("applyCustomRolesButton").onclick =
         applyCustomRoles;
 
-$("createRoomButton").onclick =
-    createOnlineRoom;
-
-$("joinRoomButton").onclick =
-    joinOnlineRoom;
-
     /*
        Make sure mobile RANDOM is rebound after
        the rest of the setup UI has loaded.
