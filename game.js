@@ -4612,6 +4612,44 @@ $("onlineHostStartButton").onclick =
 
 }
 
+
+function setOnlineReturnButtonState(waitingForHost = false) {
+    const button = $("restartButton");
+    const status = $("onlineReturnStatus");
+
+    if (!button) return;
+
+    if (!online.connected) {
+        button.textContent = "PLAY AGAIN";
+        button.disabled = false;
+        button.classList.remove("waiting");
+
+        if (status) {
+            status.textContent = "";
+        }
+
+        return;
+    }
+
+    if (waitingForHost) {
+        button.textContent = "WAITING FOR HOST...";
+        button.disabled = true;
+        button.classList.add("waiting");
+
+        if (status) {
+            status.textContent = "Waiting for the host to return everyone to the lobby...";
+        }
+    } else {
+        button.textContent = "RETURN TO LOBBY";
+        button.disabled = false;
+        button.classList.remove("waiting");
+
+        if (status) {
+            status.textContent = "";
+        }
+    }
+}
+
 async function leaveOnlineLobby() {
    
 if (!online.isHost) {
