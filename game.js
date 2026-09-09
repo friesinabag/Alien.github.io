@@ -4145,6 +4145,8 @@ function resetGameForNewLocalGame() {
         power: true
     };
 
+   game.o2RoundsRemaining = 3;
+
     game.currentPlayerIndex = 0;
 
     game.pendingEjection = null;
