@@ -3899,30 +3899,63 @@ function earthCheck() {
    ========================================================= */
 
 function checkVictory() {
-
     if (game.gameOver) return true;
 
+    const alivePlayers = living();
+
     const hostiles =
-        living().filter(
+        alivePlayers.filter(
             isHostile
         ).length;
 
+    const neutrals =
+        alivePlayers.filter(
+            isNeutral
+        ).length;
+
     const nonHostiles =
-        living().filter(
+        alivePlayers.filter(
             p =>
                 !isHostile(p)
         ).length;
 
-if (game.mode === "local") {
+    /*
+       SURVIVOR KING
 
-    const neutrals =
-        living().filter(
-            isNeutral
-        ).length;
+       The King wins independently if they are
+       one of the final 2 living players.
 
-    // Human victory only when BOTH Hostiles
-    // AND Neutrals are gone.
+       This MUST happen before Hostile victory.
+    */
+
     if (
+        alivePlayers.length === 2
+    ) {
+        const king =
+            alivePlayers.find(
+                p =>
+                    p.role === "king"
+            );
+
+        if (king) {
+            endGame(
+                "SURVIVOR KING WINS",
+                `${king.name} is one of the final 2 living players.`
+            );
+
+            return true;
+        }
+    }
+
+    /*
+       LOCAL HUMAN VICTORY
+
+       Humans only win when BOTH Hostiles
+       AND Neutrals are completely gone.
+    */
+
+    if (
+        game.mode === "local" &&
         hostiles === 0 &&
         neutrals === 0
     ) {
@@ -3933,47 +3966,18 @@ if (game.mode === "local") {
 
         return true;
     }
-}
-
-   
-    /*
-       Survivor King wins if one of final two.
-       This MUST be checked before Hostile parity,
-       because the other final player may be Hostile.
-    */
-
-    if (
-        living().length === 2
-    ) {
-
-        const kings =
-            living().filter(
-                p =>
-                    p.role === "king"
-            );
-
-        if (kings.length) {
-
-            endGame(
-                "SURVIVOR KING WINS",
-                `${kings[0].name} is one of the final 2 living players.`
-            );
-
-            return true;
-        }
-    }
-
 
     /*
+       HOSTILE VICTORY
+
        Hostiles win when they equal or outnumber
-       everyone else.
+       everyone else alive.
     */
 
     if (
         hostiles > 0 &&
         hostiles >= nonHostiles
     ) {
-
         endGame(
             "HOSTILE VICTORY",
             "The Hostile team now equals or outnumbers everyone else alive."
@@ -3984,7 +3988,6 @@ if (game.mode === "local") {
 
     return false;
 }
-
 
 /* =========================================================
    END GAME
