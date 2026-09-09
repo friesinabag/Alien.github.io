@@ -6539,119 +6539,151 @@ function assignOnlineRoles() {
                     game.randomRoles[i]
             );
 
-    } else {
+} else {
 
-        const enabledHostiles =
-            HOSTILES.filter(
-                role =>
-                    settings.enabled[role]
-            );
+    const enabledHostiles =
+        HOSTILES.filter(
+            role =>
+                settings.enabled[role]
+        );
 
-        if (
-            enabledHostiles.length <
+    if (
+        enabledHostiles.length <
+        hostileCount
+    ) {
+        throw new Error(
+            "Enable enough Hostile roles."
+        );
+    }
+
+    /*
+       HOSTILES
+    */
+
+    roles.push(
+        ...shuffle(
+            enabledHostiles
+        ).slice(
+            0,
             hostileCount
-        ) {
+        )
+    );
 
-            throw new Error(
-                "Enable enough Hostile roles."
-            );
-        }
+    /*
+       ENGINEER
+       Always exactly one.
+    */
 
-        roles.push(
-            ...shuffle(
-                enabledHostiles
-            ).slice(
-                0,
-                hostileCount
-            )
-        );
+    roles.push(
+        "engineer"
+    );
 
-        roles.push(
-            "engineer"
-        );
+    /*
+       Work out remaining slots.
+    */
 
-        const humanNeeded =
-            count -
-            hostileCount -
-            1;
+    let remaining =
+        count -
+        roles.length;
 
-        let pool =
-            HUMANS.filter(
+    /*
+       Give Neutral roles a chance
+       before filling the remaining
+       slots with Humans.
+
+       This allows King/Jester to
+       actually appear in online games.
+    */
+
+    const enabledNeutrals =
+        [...NEUTRALS, ...CONCEPTS]
+            .filter(
                 role =>
-                    role !==
-                    "engineer" &&
                     settings.enabled[role]
             );
 
-        if (
-            pool.length <
-            humanNeeded
-        ) {
+    let neutralCount = 0;
 
-            throw new Error(
-                "Not enough enabled Human roles."
+    /*
+       2 players:
+       Hostile + Engineer
+
+       3+ players:
+       allow one Neutral when enabled.
+    */
+
+    if (
+        remaining >= 1 &&
+        enabledNeutrals.length > 0 &&
+        count >= 3
+    ) {
+        neutralCount = 1;
+    }
+
+    if (neutralCount) {
+
+        const neutral =
+            shuffle(
+                enabledNeutrals
+            )[0];
+
+        roles.push(
+            neutral
+        );
+
+        remaining--;
+    }
+
+    /*
+       Fill the remaining slots
+       with unique Human roles.
+    */
+
+    let pool =
+        HUMANS.filter(
+            role =>
+                role !== "engineer" &&
+                settings.enabled[role]
+        );
+
+    if (
+        pool.length <
+        remaining
+    ) {
+        throw new Error(
+            "Not enough enabled Human roles."
+        );
+    }
+
+    for (
+        let i = 0;
+        i < remaining;
+        i++
+    ) {
+
+        const chosen =
+            weightedPick(
+                pool,
+                HUMAN_WEIGHTS
             );
-        }
 
-        for (
-            let i = 0;
-            i < humanNeeded;
-            i++
-        ) {
+        roles.push(
+            chosen
+        );
 
-            const chosen =
-                weightedPick(
-                    pool,
-                    HUMAN_WEIGHTS
-                );
-
-            roles.push(chosen);
-
-            pool =
-                pool.filter(
-                    r =>
-                        r !==
-                        chosen
-                );
-        }
-
-        const neutralSlots =
-            count -
-            roles.length;
-
-        if (neutralSlots > 0) {
-
-            const neutrals =
-                [...NEUTRALS, ...CONCEPTS]
-                    .filter(
-                        role =>
-                            settings.enabled[
-                                role
-                            ]
-                    );
-
-            if (
-                neutrals.length <
-                neutralSlots
-            ) {
-
-                throw new Error(
-                    "Enable enough Neutral roles."
-                );
-            }
-
-            roles.push(
-                ...shuffle(
-                    neutrals
-                ).slice(
-                    0,
-                    neutralSlots
-                )
+        pool =
+            pool.filter(
+                r =>
+                    r !== chosen
             );
-        }
+    }
 
-        roles =
-            shuffle(roles);
+    /*
+       Final shuffle.
+    */
+
+    roles =
+        shuffle(roles);
     }
 
     if (
