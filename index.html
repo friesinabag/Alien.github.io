@@ -549,36 +549,47 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
 
   </section>    <!-- =====================================================  
        GAME OVER  
-       ===================================================== -->    <section id="gameOverScreen" class="screen">  <div class="panel center">  
+       ===================================================== -->   
+  
+<section id="gameOverScreen" class="screen">
+  <div class="panel center">
 
-  <div class="eyebrow">  
-    GAME OVER  
-  </div>  
+    <div class="eyebrow">
+      GAME OVER
+    </div>
 
-  <div  
-    id="gameOverTitle"  
-    class="result-title"  
-  ></div>  
+    <div
+      id="gameOverTitle"
+      class="result-title"
+    ></div>
 
-  <p  
-    id="gameOverMessage"  
-    class="large-message"  
-  ></p>  
+    <p
+      id="gameOverMessage"
+      class="large-message"
+    ></p>
 
-  <div  
-    id="finalPlayers"  
-    class="final-players"  
-  ></div>  
+    <div
+      id="finalPlayers"
+      class="final-players"
+    ></div>
 
-  <button  
-    id="restartButton"  
-    type="button"  
-    class="primary full mt"  
-  >  
-    PLAY AGAIN  
-  </button>  
+    <!-- Online post-game status -->
+    <div
+      id="onlineReturnStatus"
+      class="online-return-status"
+      aria-live="polite"
+    ></div>
 
-</div>
+    <button
+      id="restartButton"
+      type="button"
+      class="primary full mt online-return-button"
+    >
+      PLAY AGAIN
+    </button>
+
+  </div>
+</section>
 
   </section>  </div>  <!-- =====================================================  
      ROLE GUIDE MODAL  
