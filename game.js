@@ -679,13 +679,13 @@ function button(text, value, cls = "choice-button") {
 
 function resetSetupPlayers() {
 
-    const count = Math.max(
-        4,
-        Math.min(
-            12,
-            Number($("playerCount")?.value || 4)
-        )
-    );
+const count = Math.max(
+    2,
+    Math.min(
+        12,
+        Number($("playerCount")?.value || 2)
+    )
+);
 
     game.players = Array.from(
         { length: count },
@@ -905,15 +905,15 @@ function weightedPick(items, weights) {
 
 function randomiseRoles() {
 
-    const count = game.players.length;
+    const count =
+        game.players.length;
 
     const hostileCount =
         HOSTILE_COUNTS[count];
 
     if (!hostileCount) {
-
         alert(
-            "Random roles only support 4–12 players."
+            "Random roles only support 2–12 players."
         );
 
         return;
@@ -921,14 +921,14 @@ function randomiseRoles() {
 
     const enabledHostiles =
         HOSTILES.filter(
-            role => settings.enabled[role]
+            role =>
+                settings.enabled[role]
         );
 
     if (
         enabledHostiles.length <
         hostileCount
     ) {
-
         alert(
             "Enable enough Hostile roles for this player count."
         );
@@ -936,18 +936,105 @@ function randomiseRoles() {
         return;
     }
 
-    const enabledHumans =
+    /*
+       HOSTILES
+    */
+
+    const roles = [];
+
+    roles.push(
+        ...shuffle(
+            enabledHostiles
+        ).slice(
+            0,
+            hostileCount
+        )
+    );
+
+    /*
+       ENGINEER
+       Always exactly one.
+    */
+
+    roles.push(
+        "engineer"
+    );
+
+    /*
+       Remaining slots.
+    */
+
+    let remaining =
+        count - roles.length;
+
+    /*
+       Give Neutral roles a chance
+       when they are enabled.
+
+       This is especially important for
+       small games so King/Jester can
+       actually appear.
+    */
+
+    const enabledNeutrals =
+        [...NEUTRALS, ...CONCEPTS]
+            .filter(
+                role =>
+                    settings.enabled[role]
+            );
+
+    /*
+       At least one Neutral is allowed
+       in games with enough room.
+
+       For 2 players there is no room:
+       Hostile + Engineer.
+    */
+
+    let neutralCount = 0;
+
+    if (
+        remaining >= 1 &&
+        enabledNeutrals.length > 0 &&
+        count >= 3
+    ) {
+        neutralCount = 1;
+    }
+
+    /*
+       Add a Neutral first.
+    */
+
+    if (neutralCount) {
+
+        const neutral =
+            shuffle(
+                enabledNeutrals
+            )[0];
+
+        roles.push(
+            neutral
+        );
+
+        remaining--;
+    }
+
+    /*
+       Fill all remaining slots
+       with unique Human roles.
+    */
+
+    let humanPool =
         HUMANS.filter(
             role =>
-                settings.enabled[role] ||
-                role === "engineer"
+                role !== "engineer" &&
+                settings.enabled[role]
         );
 
     if (
-        enabledHumans.length <
-        count - hostileCount
+        humanPool.length <
+        remaining
     ) {
-
         alert(
             "Enable enough Human roles for this player count."
         );
@@ -955,54 +1042,9 @@ function randomiseRoles() {
         return;
     }
 
-    const roles = [];
-
-    /*
-       Hostiles.
-       No duplicates.
-    */
-
-    roles.push(
-        ...shuffle(enabledHostiles)
-            .slice(0, hostileCount)
-    );
-
-    /*
-       Engineer is ALWAYS guaranteed.
-    */
-
-    roles.push("engineer");
-
-    const humanNeeded =
-        count -
-        hostileCount -
-        1;
-
-    let humanPool =
-        enabledHumans.filter(
-            role => role !== "engineer"
-        );
-
-    if (
-        humanPool.length <
-        humanNeeded
-    ) {
-
-        alert(
-            "Not enough enabled Human roles."
-        );
-
-        return;
-    }
-
-    /*
-       Weighted human selection.
-       No duplicate roles.
-    */
-
     for (
         let i = 0;
-        i < humanNeeded;
+        i < remaining;
         i++
     ) {
 
@@ -1012,48 +1054,34 @@ function randomiseRoles() {
                 HUMAN_WEIGHTS
             );
 
-        roles.push(chosen);
+        roles.push(
+            chosen
+        );
 
         humanPool =
             humanPool.filter(
-                role => role !== chosen
+                role =>
+                    role !== chosen
             );
     }
 
     /*
-       If there are remaining player slots,
-       use enabled Neutral roles.
+       Safety check.
     */
 
-    const neutralSlots =
-        count - roles.length;
-
-    if (neutralSlots > 0) {
-
-        const enabledNeutrals =
-            [...NEUTRALS, ...CONCEPTS]
-                .filter(
-                    role =>
-                        settings.enabled[role]
-                );
-
-        if (
-            enabledNeutrals.length <
-            neutralSlots
-        ) {
-
-            alert(
-                "Enable enough Neutral roles for this setup."
-            );
-
-            return;
-        }
-
-        roles.push(
-            ...shuffle(enabledNeutrals)
-                .slice(0, neutralSlots)
+    if (
+        roles.length !== count
+    ) {
+        alert(
+            "Could not create a valid role setup."
         );
+
+        return;
     }
+
+    /*
+       Shuffle the final roles.
+    */
 
     const shuffledRoles =
         shuffle(roles);
@@ -1066,11 +1094,11 @@ function randomiseRoles() {
             )
         );
 
-    game.randomisedRoles = true;
+    game.randomisedRoles =
+        true;
 
     renderSetup();
 }
-
 
 /* =========================================================
    START GAME
