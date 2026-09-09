@@ -3934,6 +3934,7 @@ if (game.mode === "local") {
         return true;
     }
 }
+
    
     /*
        Survivor King wins if one of final two.
