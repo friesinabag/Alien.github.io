@@ -903,3 +903,33 @@ button.full{
 .online-return-button.waiting {
   opacity: 0.6;
 }
+
+
+/* =========================================================
+   POST-GAME ONLINE LOBBY
+   ========================================================= */
+
+.online-return-status {
+    min-height: 24px;
+    margin-top: 12px;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.4;
+    text-align: center;
+}
+
+#restartButton:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+}
+
+@media(max-width:600px) {
+
+    .online-return-status {
+        min-height: 20px;
+        margin-top: 9px;
+        font-size: 11px;
+    }
+
+}
