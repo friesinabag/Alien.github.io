@@ -3849,6 +3849,7 @@ if (game.mode === "local") {
         return true;
     }
 }
+   
     /*
        Hostiles win when they equal or outnumber
        everyone else.
