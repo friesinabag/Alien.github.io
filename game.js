@@ -3132,10 +3132,6 @@ return `⚠️ OXYGEN WILL RUN OUT IN ${rounds} ${
         ? "ROUND"
         : "ROUNDS"
 }.`;
-        rounds === 1
-            ? "ROUND"
-            : "ROUNDS"
-    } OXYGEN WILL RUN OUT.`;
 }
 
 function advanceOxygenCountdown() {
@@ -9543,5 +9539,3 @@ if (
 /* =========================================================
    END GAME.JS
    ========================================================= */
-
-
