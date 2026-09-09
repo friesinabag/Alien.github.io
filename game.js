@@ -3938,6 +3938,39 @@ function endGame(
         "gameOverScreen"
     );
 
+   const returnButton =
+    $("restartButton");
+
+const returnStatus =
+    $("onlineReturnStatus");
+
+if (game.mode === "online") {
+
+    if (returnButton) {
+        returnButton.textContent =
+            "RETURN TO LOBBY";
+
+        returnButton.disabled = false;
+    }
+
+    if (returnStatus) {
+        returnStatus.textContent = "";
+    }
+
+} else {
+
+    if (returnButton) {
+        returnButton.textContent =
+            "PLAY AGAIN";
+
+        returnButton.disabled = false;
+    }
+
+    if (returnStatus) {
+        returnStatus.textContent = "";
+    }
+}
+   
     if (
         game.mode === "online" &&
         online.isHost
@@ -3967,6 +4000,251 @@ function showGameOver() {
         $("voteResultTitle").textContent,
         $("voteResultMessage").textContent
     );
+}
+
+
+/* =========================================================
+   POST-GAME RETURN TO LOBBY
+   ========================================================= */
+
+function resetGameForNewLocalGame() {
+    const oldPlayers = game.players.map(player => ({
+        id: player.id,
+        name: player.name || `Player ${player.id.replace("p", "")}`
+    }));
+
+    game.mode = "local";
+
+    game.players = oldPlayers.map(player => ({
+        id: player.id,
+        name: player.name,
+        role: "survivor",
+        originalRole: "survivor",
+        alive: true,
+        infectionRound: null,
+        hasInfected: false
+    }));
+
+    game.round = 1;
+    game.stage = 1;
+
+    game.abilityQueue = [];
+    game.abilityIndex = 0;
+
+    game.reactionQueue = [];
+    game.reactionIndex = 0;
+
+    game.currentVoteIndex = 0;
+    game.roundStartAliveIds = [];
+
+    game.actions = {};
+    game.previousActions = {};
+
+    game.blockedPlayers = new Set();
+    game.protectedPlayers = new Set();
+
+    game.silencedUntil = {};
+    game.votes = {};
+
+    game.selectedAction = null;
+    game.selectedVote = null;
+
+    game.reactionInfo = {};
+    game.lastRoundResults = [];
+
+    game.lifelineNumber = 0;
+
+    game.gameOver = false;
+
+    game.tricksterUsed = false;
+    game.displaySwap = null;
+
+    game.judgeUsed = false;
+
+    game.systems = {
+        engines: true,
+        o2: true,
+        communications: true,
+        power: true
+    };
+
+    game.currentPlayerIndex = 0;
+
+    game.pendingEjection = null;
+    game.pendingJudge = false;
+
+    game.randomisedRoles = false;
+    game.randomRoles = {};
+
+    renderSetup();
+    setScreen("setupScreen");
+}
+
+
+function resetGameForOnlineLobby() {
+    /*
+       Keep the ONLINE connection and room exactly as they are.
+       Only reset the actual game state.
+    */
+
+    game.mode = "online";
+
+    const roomPlayers = Object.values(online.players)
+        .filter(player => player.connected)
+        .sort((a, b) => {
+            return Number(a.playerId.slice(1)) -
+                   Number(b.playerId.slice(1));
+        });
+
+    game.players = roomPlayers.map(player => ({
+        id: player.playerId,
+        name: player.name,
+        role: "survivor",
+        originalRole: "survivor",
+        alive: true,
+        infectionRound: null,
+        hasInfected: false
+    }));
+
+    game.round = 1;
+    game.stage = 1;
+
+    game.abilityQueue = [];
+    game.abilityIndex = 0;
+
+    game.reactionQueue = [];
+    game.reactionIndex = 0;
+
+    game.currentVoteIndex = 0;
+    game.roundStartAliveIds = [];
+
+    game.actions = {};
+    game.previousActions = {};
+
+    game.blockedPlayers = new Set();
+    game.protectedPlayers = new Set();
+
+    game.silencedUntil = {};
+    game.votes = {};
+
+    game.selectedAction = null;
+    game.selectedVote = null;
+
+    game.reactionInfo = {};
+    game.lastRoundResults = [];
+
+    game.lifelineNumber = 0;
+
+    game.gameOver = false;
+
+    game.tricksterUsed = false;
+    game.displaySwap = null;
+
+    game.judgeUsed = false;
+
+    game.systems = {
+        engines: true,
+        o2: true,
+        communications: true,
+        power: true
+    };
+
+    game.currentPlayerIndex = 0;
+
+    game.pendingEjection = null;
+    game.pendingJudge = false;
+
+    game.randomisedRoles = false;
+    game.randomRoles = {};
+
+    renderSetup();
+    updateOnlinePlayersUI();
+    updateOnlineSetupUI();
+
+    setScreen("setupScreen");
+
+    updateOnlineStatus(
+        `ROOM ${online.roomCode}\nWaiting in lobby...`
+    );
+}
+
+
+function hostReturnEveryoneToLobby() {
+    if (!online.isHost) return;
+
+    /*
+       Tell every connected player to return to the lobby.
+    */
+    onlineBroadcast({
+        type: "return_to_lobby",
+        roomCode: online.roomCode
+    });
+
+    /*
+       Host also returns locally.
+    */
+    resetGameForOnlineLobby();
+}
+
+
+function requestReturnToLobby() {
+    /*
+       Local Pass & Play.
+    */
+    if (game.mode !== "online") {
+        resetGameForNewLocalGame();
+        return;
+    }
+
+    /*
+       ONLINE HOST.
+       Host immediately sends everyone back.
+    */
+    if (online.isHost) {
+        hostReturnEveryoneToLobby();
+        return;
+    }
+
+    /*
+       ONLINE PLAYER.
+       Tell the host that this player wants to return.
+    */
+    if (
+        online.channel &&
+        online.connected
+    ) {
+        online.channel.send({
+            type: "broadcast",
+            event: "alien",
+            payload: {
+                type: "return_to_lobby_request",
+                playerId: online.playerId,
+                connectionId: online.connectionId
+            }
+        });
+    }
+
+    const button = $("restartButton");
+
+    if (button) {
+        button.textContent =
+            "WAITING FOR HOST...";
+
+        button.disabled = true;
+    }
+
+    const status =
+        $("onlineReturnStatus");
+
+    if (status) {
+        status.textContent =
+            "Waiting for the host to return everyone to the lobby...";
+    }
+}
+
+
+function handlePostGameButton() {
+    requestReturnToLobby();
 }
 
 
@@ -5783,6 +6061,35 @@ function handleOnlinePublicMessage(
             }
 
             break;
+
+
+case "return_to_lobby_request":
+
+    if (online.isHost) {
+
+        const status =
+            $("onlineReturnStatus");
+
+        if (status) {
+            status.textContent =
+                "A player is waiting for the host to return everyone to the lobby.";
+        }
+    }
+
+    break;
+
+
+case "return_to_lobby":
+
+    if (
+        !online.isHost &&
+        data.roomCode === online.roomCode
+    ) {
+        resetGameForOnlineLobby();
+    }
+
+    break; 
+
     }
 }
 
@@ -8949,8 +9256,8 @@ function initGameUI() {
     $("startVotingButton").onclick =
         startVoting;
 
-    $("restartButton").onclick =
-        () => location.reload();
+$("restartButton").onclick =
+    handlePostGameButton;
 
     $("applyCustomRolesButton").onclick =
         applyCustomRoles;
