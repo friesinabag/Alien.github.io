@@ -1244,6 +1244,8 @@ function startGame() {
         power: true
     };
 
+   game.o2RoundsRemaining = 3;
+
     resetTransient();
 
     startRound();
@@ -1309,24 +1311,6 @@ function progressInfections() {
 function startRound() {
 
     if (checkVictory()) return;
-
-   if (
-    !game.systems.o2 &&
-    game.round > 1
-) {
-    game.o2RoundsRemaining--;
-
-    if (
-        game.o2RoundsRemaining <= 0
-    ) {
-        endGame(
-            "HOSTILE VICTORY",
-            "OXYGEN HAS RUN OUT. The Hostile team wins."
-        );
-
-        return;
-    }
-}
    
     /*
        IMPORTANT:
@@ -3112,28 +3096,27 @@ function showDiscussion() {
     $("discussionStage").textContent =
         `STAGE ${game.stage} / 10`;
 
-    const oxygenMessage =
-        updateOxygenCountdown();
+    const results = [];
 
-    const oxygenResult =
-        oxygenMessage
-            ? [oxygenMessage]
-            : [];
+    if (!game.systems.o2) {
+        const rounds = game.o2RoundsRemaining;
 
-    const results =
-        [
-            ...oxygenResult,
-            ...(
-                game.lastRoundResults.length
-                    ? game.lastRoundResults
-                    : ["No public eliminations this round."]
-            )
-        ];
+        results.push(
+            `⚠️ OXYGEN WILL RUN OUT IN ${rounds} ${
+                rounds === 1 ? "ROUND" : "ROUNDS"
+            }.`
+        );
+    }
 
-    const results =
-        game.lastRoundResults.length
-            ? game.lastRoundResults
-            : ["No public eliminations this round."];
+    if (game.lastRoundResults.length) {
+        results.push(
+            ...game.lastRoundResults
+        );
+    } else if (!results.length) {
+        results.push(
+            "No public eliminations this round."
+        );
+    }
 
     $("roundResults").innerHTML =
         results
@@ -3148,7 +3131,6 @@ function showDiscussion() {
 
     setScreen("discussionScreen");
 }
-
 
 /* =========================================================
    VOTING
@@ -6347,14 +6329,16 @@ if (
 
     game.displaySwap = null;
 
-    game.systems = {
-        engines: true,
-        o2: true,
-        communications: true,
-        power: true
-    };
+game.systems = {
+    engines: true,
+    o2: true,
+    communications: true,
+    power: true
+};
 
-    resetTransient();
+game.o2RoundsRemaining = 3;
+
+resetTransient();
 
     /*
        Public game start contains NO roles.
