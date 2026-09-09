@@ -431,12 +431,14 @@ let game = {
 
     judgeUsed: false,
 
-    systems: {
-        engines: true,
-        o2: true,
-        communications: true,
-        power: true
-    },
+systems: {
+    engines: true,
+    o2: true,
+    communications: true,
+    power: true
+},
+
+o2RoundsRemaining: 3,
 
     currentPlayerIndex: 0,
 
@@ -1308,6 +1310,24 @@ function startRound() {
 
     if (checkVictory()) return;
 
+   if (
+    !game.systems.o2 &&
+    game.round > 1
+) {
+    game.o2RoundsRemaining--;
+
+    if (
+        game.o2RoundsRemaining <= 0
+    ) {
+        endGame(
+            "HOSTILE VICTORY",
+            "OXYGEN HAS RUN OUT. The Hostile team wins."
+        );
+
+        return;
+    }
+}
+   
     /*
        IMPORTANT:
        Previous actions MUST be captured BEFORE
@@ -3063,6 +3083,23 @@ function advanceReaction() {
 }
 
 
+function updateOxygenCountdown() {
+
+    if (game.systems.o2) {
+        return "";
+    }
+
+    const rounds = game.o2RoundsRemaining;
+
+    if (rounds <= 0) {
+        return "☠️ OXYGEN HAS RUN OUT. THE HOSTILE TEAM WINS.";
+    }
+
+    return `⚠️ OXYGEN WILL RUN OUT IN ${rounds} ${
+        rounds === 1 ? "ROUND" : "ROUNDS"
+    }.`;
+}
+
 /* =========================================================
    DISCUSSION
    ========================================================= */
@@ -3074,6 +3111,24 @@ function showDiscussion() {
 
     $("discussionStage").textContent =
         `STAGE ${game.stage} / 10`;
+
+    const oxygenMessage =
+        updateOxygenCountdown();
+
+    const oxygenResult =
+        oxygenMessage
+            ? [oxygenMessage]
+            : [];
+
+    const results =
+        [
+            ...oxygenResult,
+            ...(
+                game.lastRoundResults.length
+                    ? game.lastRoundResults
+                    : ["No public eliminations this round."]
+            )
+        ];
 
     const results =
         game.lastRoundResults.length
