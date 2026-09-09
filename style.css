@@ -873,3 +873,33 @@ button.full{
 }
 
 
+/* =====================================================
+   ONLINE POST-GAME LOBBY
+   ===================================================== */
+
+.online-return-status {
+  min-height: 24px;
+  margin: 14px 0 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  opacity: 0.85;
+}
+
+.online-return-button {
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.online-return-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.online-return-button.waiting {
+  opacity: 0.6;
+}
