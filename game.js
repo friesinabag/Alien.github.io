@@ -3936,25 +3936,9 @@ if (game.mode === "local") {
 }
    
     /*
-       Hostiles win when they equal or outnumber
-       everyone else.
-    */
-
-    if (
-        hostiles > 0 &&
-        hostiles >= nonHostiles
-    ) {
-
-        endGame(
-            "HOSTILE VICTORY",
-            "The Hostile team now equals or outnumbers everyone else alive."
-        );
-
-        return true;
-    }
-
-    /*
        Survivor King wins if one of final two.
+       This MUST be checked before Hostile parity,
+       because the other final player may be Hostile.
     */
 
     if (
@@ -3976,6 +3960,25 @@ if (game.mode === "local") {
 
             return true;
         }
+    }
+
+
+    /*
+       Hostiles win when they equal or outnumber
+       everyone else.
+    */
+
+    if (
+        hostiles > 0 &&
+        hostiles >= nonHostiles
+    ) {
+
+        endGame(
+            "HOSTILE VICTORY",
+            "The Hostile team now equals or outnumbers everyone else alive."
+        );
+
+        return true;
     }
 
     return false;
