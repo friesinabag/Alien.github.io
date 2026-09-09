@@ -1311,6 +1311,15 @@ function progressInfections() {
 function startRound() {
 
     if (checkVictory()) return;
+
+       if (
+        game.round > 1 &&
+        !game.systems.o2
+    ) {
+        if (advanceOxygenCountdown()) {
+            return;
+        }
+    }
    
     /*
        IMPORTANT:
@@ -2342,11 +2351,15 @@ function applyImmediateAction(
             game.systems[action.system] === false
         ) {
 
-            game.systems[action.system] =
-                true;
+game.systems[action.system] =
+    true;
 
-            game.reactionInfo[player.id] =
-                `ENGINEER: ${action.system.toUpperCase()} repaired.`;
+if (action.system === "o2") {
+    game.o2RoundsRemaining = 3;
+}
+
+game.reactionInfo[player.id] =
+    `ENGINEER: ${action.system.toUpperCase()} repaired.`;
         }
 
         return;
@@ -2385,11 +2398,16 @@ function applyImmediateAction(
             undefined
         ) {
 
-            game.systems[action.system] =
-                false;
+           game.systems[action.system] =
+    false;
 
-            game.reactionInfo[player.id] =
-                `SABOTAGE: ${action.system.toUpperCase()} is OFFLINE.`;
+if (action.system === "o2") {
+    game.o2RoundsRemaining = 3;
+}
+
+game.reactionInfo[player.id] =
+    `SABOTAGE: ${action.system.toUpperCase()} is OFFLINE.`;
+           
         }
 
         return;
@@ -3073,15 +3091,44 @@ function updateOxygenCountdown() {
         return "";
     }
 
-    const rounds = game.o2RoundsRemaining;
+    const rounds =
+        game.o2RoundsRemaining;
 
     if (rounds <= 0) {
         return "☠️ OXYGEN HAS RUN OUT. THE HOSTILE TEAM WINS.";
     }
 
-    return `⚠️ OXYGEN WILL RUN OUT IN ${rounds} ${
-        rounds === 1 ? "ROUND" : "ROUNDS"
-    }.`;
+return `⚠️ OXYGEN WILL RUN OUT IN ${rounds} ${
+    rounds === 1
+        ? "ROUND"
+        : "ROUNDS"
+}.`;
+        rounds === 1
+            ? "ROUND"
+            : "ROUNDS"
+    } OXYGEN WILL RUN OUT.`;
+}
+
+function advanceOxygenCountdown() {
+
+    if (game.systems.o2) {
+        return false;
+    }
+
+    game.o2RoundsRemaining--;
+
+    if (
+        game.o2RoundsRemaining <= 0
+    ) {
+        endGame(
+            "HOSTILE VICTORY",
+            "OXYGEN HAS RUN OUT. The Hostile team wins."
+        );
+
+        return true;
+    }
+
+    return false;
 }
 
 /* =========================================================
@@ -7950,6 +7997,19 @@ function handleOnlinePublicPhase(
 
     if (online.isHost) return;
 
+if (
+    data.o2RoundsRemaining !==
+    undefined
+) {
+    game.o2RoundsRemaining =
+        data.o2RoundsRemaining;
+}
+
+if (data.systems) {
+    game.systems =
+        data.systems;
+}
+   
     if (
         data.phase ===
         "discussion"
@@ -7988,8 +8048,14 @@ function onlineShowDiscussion(
     $("discussionStage").textContent =
         `STAGE ${data.stage} / 10`;
 
-    $("roundResults").innerHTML =
-        `<div>Discuss what happened this round.</div>`;
+const oxygenMessage =
+    updateOxygenCountdown();
+
+$("roundResults").innerHTML =
+    oxygenMessage
+        ? `<div>${esc(oxygenMessage)}</div>
+           <div>Discuss what happened this round.</div>`
+        : `<div>Discuss what happened this round.</div>`;
 
     $("startVotingButton").onclick =
         () => {
@@ -8543,11 +8609,18 @@ function onlineHostPhaseBroadcast(
 
         phase,
 
-        round:
-            game.round,
+round:
+    game.round,
 
-        stage:
-            game.stage
+stage:
+    game.stage,
+
+systems:
+    game.systems,
+
+o2RoundsRemaining:
+    game.o2RoundsRemaining
+       
     });
 }
 
@@ -8576,9 +8649,18 @@ function startRoundOnlineAware() {
        but private actions are distributed.
     */
 
-    if (checkVictory()) return;
+if (checkVictory()) return;
 
-    game.previousActions = {
+if (
+    game.round > 1 &&
+    !game.systems.o2
+) {
+    if (advanceOxygenCountdown()) {
+        return;
+    }
+}
+
+game.previousActions = {
         ...game.actions
     };
 
