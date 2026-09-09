@@ -3828,34 +3828,27 @@ function checkVictory() {
                 !isHostile(p)
         ).length;
 
-   if (game.mode === "local") {
+if (game.mode === "local") {
 
     const neutrals =
         living().filter(
             isNeutral
         ).length;
 
-    // No Hostiles left = Human victory
-    if (hostiles === 0) {
+    // Human victory only when BOTH Hostiles
+    // AND Neutrals are gone.
+    if (
+        hostiles === 0 &&
+        neutrals === 0
+    ) {
         endGame(
             "HUMAN VICTORY",
-            "All Hostiles have been eliminated."
-        );
-
-        return true;
-    }
-
-    // No Neutrals left = Human victory
-    if (neutrals === 0) {
-        endGame(
-            "HUMAN VICTORY",
-            "All Neutral players have been eliminated."
+            "All Hostile and Neutral players have been eliminated."
         );
 
         return true;
     }
 }
-
     /*
        Hostiles win when they equal or outnumber
        everyone else.
